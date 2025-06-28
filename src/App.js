@@ -9,6 +9,10 @@ import TestimonialsPage from './pages/TestimonialsPage';
 import './App.css';
 import Hero from './components/Hero';
 import Homepage from './pages/Homepage';
+import Inscription from './authentification/inscription';
+import Login from './authentification/login';
+import Dashboard from './pages/Dashboard';
+
 
 function App() {
   return (
@@ -17,6 +21,10 @@ function App() {
         <main>
           <Routes>
             <Route path="/" element={<Homepage />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Inscription />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+
           </Routes>
         </main>
         <Footer />
