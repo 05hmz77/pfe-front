@@ -33,7 +33,6 @@ const Login = ({ onLogin }) => {
 
       if (response.status === 200) {
         const { access, refresh, user } = response.data;
-        
         // Stocker les tokens et les infos utilisateur
         localStorage.setItem('accessToken', access);
         localStorage.setItem('refreshToken', refresh);
@@ -43,9 +42,14 @@ const Login = ({ onLogin }) => {
         if (onLogin) {
           onLogin(user, access);
         }
-        
+        if(user.type == "ADMIN"){
+          navigate('/welcome/admin');
+        }else if(user.type == "CITOYEN"){
+          navigate("/welcome/citoyen")
+        }else{
+          navigate("/welcome/association")
+        }
         // Rediriger vers la page d'accueil
-        navigate('/dashboard');
       }
     } catch (err) {
       setError(err.response?.data?.detail || 'Identifiants incorrects');

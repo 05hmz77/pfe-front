@@ -12,6 +12,9 @@ import Homepage from './pages/Homepage';
 import Inscription from './authentification/inscription';
 import Login from './authentification/login';
 import Dashboard from './pages/Dashboard';
+import HomePageAdmin from './home page users/homepageadmin';
+import HomePageCitoyen from './home page users/homepagecitoyen';
+import HomePageAssociation from './home page users/homepageassociation';
 
 
 function App() {
@@ -24,6 +27,9 @@ function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Inscription />} />
             <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/welcome/admin" element={<HomePageAdmin/>}/>
+            <Route path="/welcome/citoyen" element={<HomePageCitoyen/>}/>
+            <Route path="/welcome/association" element={<HomePageAssociation/>}/>
 
           </Routes>
         </main>
