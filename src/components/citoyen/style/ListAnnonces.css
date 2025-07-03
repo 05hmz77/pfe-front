@@ -1,0 +1,197 @@
+/* ListAnnonces.css */
+
+.social-feed {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.feed-header {
+  margin-bottom: 30px;
+  text-align: center; /* Center the header */
+}
+
+.feed-header h1 {
+  font-size: 28px;
+  color: #333;
+  margin: 0;
+}
+
+/* Posts container */
+.posts-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.empty-feed {
+  text-align: center;
+  padding: 40px 20px;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+}
+
+.empty-feed p {
+  color: #666;
+  margin-bottom: 15px;
+}
+
+/* Post card styles */
+.post-card {
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+}
+
+.post-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 15px 20px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.user-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.user-info h3 {
+  margin: 0;
+  font-size: 16px;
+  color: #333;
+}
+
+.post-time {
+  font-size: 12px;
+  color: #777;
+}
+
+.post-type-badge span {
+  font-size: 12px;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-weight: 600;
+}
+
+.event-badge {
+  background-color: #e3f2fd;
+  color: #1976d2;
+}
+
+.need-badge {
+  background-color: #ffebee;
+  color: #d32f2f;
+}
+
+.offer-badge {
+  background-color: #e8f5e9;
+  color: #388e3c;
+}
+
+.post-content {
+  padding: 15px 20px;
+}
+
+.post-title {
+  margin: 0 0 10px 0;
+  font-size: 18px;
+  color: #333;
+}
+
+.post-text {
+  margin: 0 0 15px 0;
+  color: #555;
+  line-height: 1.5;
+}
+
+.post-details {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  margin-top: 15px;
+}
+
+.detail-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 14px;
+  color: #666;
+}
+
+.detail-item i {
+  color: #888;
+}
+
+.post-actions {
+  display: flex;
+  border-top: 1px solid #f0f0f0;
+  padding: 10px 20px;
+}
+
+.action-btn {
+  flex: 1;
+  background: none;
+  border: none;
+  padding: 8px;
+  cursor: pointer;
+  color: #666;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  transition: color 0.2s;
+}
+
+.action-btn:hover {
+  color: #333;
+}
+
+.action-btn i {
+  font-size: 16px;
+}
+
+/* Loading and error states */
+.dashboard.loading,
+.dashboard.error {
+  text-align: center;
+  padding: 40px;
+  font-size: 18px;
+}
+
+.dashboard.loading {
+  color: #666;
+}
+
+.dashboard.error {
+  color: #d32f2f;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .post-details {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .post-actions {
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .action-btn {
+    justify-content: flex-start;
+  }
+}
