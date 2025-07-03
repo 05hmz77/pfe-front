@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Outlet } from 'react-router-dom';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import Home from './pages/Home';
@@ -16,6 +16,9 @@ import HomePageAdmin from './home page users/homepageadmin';
 import HomePageCitoyen from './home page users/homepagecitoyen';
 import HomePageAssociation from './home page users/homepageassociation';
 
+import Sidebar from './components/admin/Sidebar.jsx';
+import AdminLayout from './components/admin/AdminLayout.jsx';
+
 
 function App() {
   return (
@@ -27,11 +30,18 @@ function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Inscription />} />
             <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/welcome/admin" element={<HomePageAdmin/>}/>
-            <Route path="/welcome/citoyen" element={<HomePageCitoyen/>}/>
-            <Route path="/welcome/association" element={<HomePageAssociation/>}/>
+            <Route path="/welcome/admin" element={<HomePageAdmin />} />
+            <Route path="/welcome/citoyen" element={<HomePageCitoyen />} />
+            <Route
+              path="/welcome/association"
+              element={<HomePageAssociation />}
+            />
 
+            <Route path="/welcome/admin/*" element={<AdminLayout />} />
           </Routes>
+        </main>
+        <main className="main-content">
+          <Outlet />
         </main>
         <Footer />
       </div>
