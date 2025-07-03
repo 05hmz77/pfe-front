@@ -1,3 +1,4 @@
+// <<<<<<< HEAD
 import React from 'react';
 import '../styles/HomePageAdmin.css';
 
@@ -76,3 +77,27 @@ const HomePageAdmin = () => {
 };
 
 export default HomePageAdmin;
+// =======
+// import React, { useState } from "react";
+// import Sidebar from "../components/admin/Sidebar";
+// import "./home.css";
+// import { Outlet } from 'react-router-dom';
+
+// export default function HomePageAdmin() {
+//   const [sidebarOpen, setSidebarOpen] = useState(true);
+
+//   const toggleSidebar = () => {
+//     setSidebarOpen(!sidebarOpen);
+//   };
+
+//   return (
+//     <div className="admin-layout">
+//       <Sidebar isOpen={sidebarOpen} toggleSidebar={toggleSidebar} />
+//       <main className={`admin-content ${sidebarOpen ? "" : "collapsed"}`}>
+//         <Outlet />
+//       </main>
+//       <h1>hello</h1>
+//     </div>
+//   );
+// }
+// >>>>>>> d70ee582d7fa5e2bf849b6aeb6825fa2a60f5203

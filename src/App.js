@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Outlet } from 'react-router-dom';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import Home from './pages/Home';
@@ -12,9 +12,13 @@ import Homepage from './pages/Homepage';
 import Inscription from './authentification/inscription';
 import Login from './authentification/login';
 import Dashboard from './pages/Dashboard';
-import HomePageAdmin from './home page users/HomePageAdmin';
+import HomePageAdmin from './home page users/homepageadmin';
 import HomePageCitoyen from './home page users/HomePageCitoyen';
 import HomePageAssociation from './home page users/HomePageAssociation';
+
+import Sidebar from './components/admin/Sidebar.jsx';
+import AdminLayout from './components/admin/AdminLayout.jsx';
+import AssociationLayout from './components/association/AssociationLayout.jsx';
 
 
 function App() {
@@ -27,11 +31,16 @@ function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Inscription />} />
             <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/welcome/admin" element={<HomePageAdmin/>}/>
-            <Route path="/welcome/citoyen" element={<HomePageCitoyen/>}/>
-            <Route path="/welcome/association" element={<HomePageAssociation/>}/>
+            
+            <Route path="/welcome/citoyen" element={<HomePageCitoyen />} />
+            
 
+            <Route path="/welcome/admin/*" element={<AdminLayout />} />
+            <Route path="/welcome/association/*" element={<AssociationLayout />} />
           </Routes>
+        </main>
+        <main className="main-content">
+          <Outlet />
         </main>
         <Footer />
       </div>
