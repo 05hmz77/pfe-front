@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import './Dashboard.css';
+import "./Dashboard.css";
 
 const UserDetailsModal = ({ user, onClose }) => {
   const token = localStorage.getItem("accessToken");
-  const [userCheck, setUserC] = useState(null);  // Changed from UserCheck to userCheck
+  const [userCheck, setUserC] = useState(null); // Changed from UserCheck to userCheck
   const [msgErr, setMsgErr] = useState(null);
 
   useEffect(() => {
@@ -12,18 +12,26 @@ const UserDetailsModal = ({ user, onClose }) => {
 
     const fetchUserDetails = async () => {
       try {
-        const res = await axios.get(`http://127.0.0.1:8000/api/users/${user.id}/`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const res = await axios.get(
+          `http://127.0.0.1:8000/api/users/${user.id}/`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
         if (res.status === 200) {
-          console.log(res.data)
+          console.log(res.data);
           setUserC(res.data);
         } else {
           handleError(res.status);
         }
       } catch (err) {
-        console.error("Erreur lors de la récupération des détails utilisateur:", err);
-        setMsgErr("Une erreur est survenue lors de la récupération des données");
+        console.error(
+          "Erreur lors de la récupération des détails utilisateur:",
+          err
+        );
+        setMsgErr(
+          "Une erreur est survenue lors de la récupération des données"
+        );
       }
     };
 
@@ -40,92 +48,92 @@ const UserDetailsModal = ({ user, onClose }) => {
 
   if (!user) return null;
 
-   return (
+  return (
     <div className="user-details-modal">
       <div className="user-details-content">
         <div className="user-details-header">
           <h2>Détails de l'utilisateur</h2>
-          <button className="close-btn" onClick={onClose}>×</button>
+          <button className="close-btn" onClick={onClose}>
+            ×
+          </button>
         </div>
-        
+
         <div className="user-details-body">
           <div className="section-title">Informations de base</div>
-          
+
           <div className="detail-row">
             <span className="detail-label">Username:</span>
             <span>{user.username}</span>
           </div>
-          
+
           <div className="detail-row">
             <span className="detail-label">Email:</span>
             <span>{user.email}</span>
           </div>
-          
+
           <div className="detail-row">
             <span className="detail-label">Type:</span>
             <span>{user.user_type}</span>
           </div>
-          
+
           <div className="detail-row">
             <span className="detail-label">Statut:</span>
-            <span style={{ color: user.is_active ? 'green' : 'red' }}>
-              {user.is_active ? 'Actif' : 'Inactif'}
+            <span style={{ color: user.is_active ? "green" : "red" }}>
+              {user.is_active ? "Actif" : "Inactif"}
             </span>
           </div>
 
-          {userCheck!=null && userCheck.type === 'CITOYEN' && userCheck.profile ? (
+          {userCheck != null &&
+          userCheck.type === "CITOYEN" &&
+          userCheck.profile ? (
             <>
               <div className="section-title">Profil Citoyen</div>
-              
+
               <div className="detail-row">
                 <span className="detail-label">Nom:</span>
                 <span>{userCheck.profile.nom}</span>
-                
               </div>
-              
+
               <div className="detail-row">
                 <span className="detail-label">Prénom:</span>
                 <span>{userCheck.profile.prenom}</span>
               </div>
-              
+
               <div className="detail-row">
                 <span className="detail-label">Bio:</span>
-                <span>{userCheck.profile.bio || 'Non renseigné'}</span>
+                <span>{userCheck.profile.bio || "Non renseigné"}</span>
               </div>
-              
+
               <div className="detail-row">
                 <span className="detail-label">Expériences:</span>
-                <span>{userCheck.profile.experiences || 'Non renseigné'}</span>
+                <span>{userCheck.profile.experiences || "Non renseigné"}</span>
               </div>
             </>
-          ):null}
+          ) : null}
 
-          {userCheck!=null && userCheck.type === 'ASSOCIATION' && userCheck.profile ? (
-            
+          {userCheck != null &&
+          userCheck.type === "ASSOCIATION" &&
+          userCheck.profile ? (
             <>
-            {console.log("je suid dans assosososos")}
+              {console.log("je suid dans assosososos")}
               <div className="section-title">Profil Association</div>
-              
+
               <div className="detail-row">
                 <span className="detail-label">Nom:</span>
                 <span>{userCheck.profile.nom}</span>
               </div>
-              
+
               <div className="detail-row">
                 <span className="detail-label">Description:</span>
-                <span>{userCheck.profile.description || 'Non renseigné'}</span>
+                <span>{userCheck.profile.description || "Non renseigné"}</span>
               </div>
-              
+
               <div className="detail-row">
                 <span className="detail-label">Contact:</span>
-                <span>{userCheck.profile.contact || 'Non renseigné'}</span>
+                <span>{userCheck.profile.contact || "Non renseigné"}</span>
               </div>
-              
-              
-              
-             
             </>
-          ):null}
+          ) : null}
         </div>
       </div>
     </div>
@@ -142,15 +150,11 @@ export default function Dashboard() {
   const [nbAssociation, setNbAssociation] = useState(0);
   const [listUserUnactive, setListUserUnactive] = useState(null);
   const [selectedUser, setSelectedUser] = useState(null);
-  
+
   useEffect(() => {
     const fetchData = async () => {
       try {
-        await Promise.all([
-          fetchAnnonce(),
-          fetchCandidature(),
-          fetchUsers()
-        ]);
+        await Promise.all([fetchAnnonce(), fetchCandidature(), fetchUsers()]);
       } catch (err) {
         console.error("Erreur lors du chargement des données:", err);
         setMsgErr("Une erreur est survenue lors du chargement des données");
@@ -170,11 +174,12 @@ export default function Dashboard() {
         setNbUsers(res.data.length);
         setNbAssociation(
           res.data.filter(
-            i => i.user_type.toUpperCase() === association.toUpperCase() &&
-                 i.is_active === true
+            (i) =>
+              i.user_type.toUpperCase() === association.toUpperCase() &&
+              i.is_active === true
           ).length
         );
-        setListUserUnactive(res.data.filter(i => i.is_active === false));
+        setListUserUnactive(res.data.filter((i) => i.is_active === false));
       } else {
         handleError(res.status);
       }
@@ -233,7 +238,7 @@ export default function Dashboard() {
       );
 
       if (res.status === 200) {
-        setListUserUnactive(listUserUnactive.filter(i => i.id !== id));
+        setListUserUnactive(listUserUnactive.filter((i) => i.id !== id));
       } else {
         handleError(res.status);
       }
@@ -250,7 +255,7 @@ export default function Dashboard() {
   return (
     <div className="dashboard">
       {msgErr && <div className="error-message">{msgErr}</div>}
-      
+
       <header className="dashboard-header">
         <h1>
           Bonjour <span className="username">{currentUser.username}</span> dans
@@ -278,74 +283,110 @@ export default function Dashboard() {
         </div>
       </section>
 
-      <section className="validate-users">
-        <div>
-          <ul>
+      <section className="dashboard-section">
+        <section class="pending-section">
+          <div className="section-header">
+            <h2>Associations en attente</h2>
+            <p className="section-subtitle">Demandes de validation à traiter</p>
+          </div>
+
+          <ul className="association-list">
             {listUserUnactive && listUserUnactive.length > 0 ? (
-              listUserUnactive.slice(0, 6).map(i => (
-                <li key={i.id} className="user-card">
-                  <div className="user-info">
-                    <div className="user-name">
-                      <span className="label">Nom:</span>
-                      <strong>{i.username}</strong>
-                    </div>
-                    <div className="user-status">
-                      <span className="label">Statut:</span>
-                      <span className={i.is_active ? "active" : "inactive"}>
-                        {i.is_active ? "Actif" : "Inactif"}
+              listUserUnactive.slice(0, 6).map((i) => (
+                <li key={i.id} className="association-card">
+                  <div className="association-info">
+                    <h3 className="association-name">{i.username}</h3>
+                    <div className="association-category">
+                      <span className="label">Domaine:</span>
+                      <span>
+                        {i.user_type === "association"
+                          ? "Association"
+                          : i.user_type}
                       </span>
                     </div>
-                    <div className="user-type">
-                      <span className="label">Type:</span>
-                      <strong>{i.user_type}</strong>
+                    <div className="association-address">
+                      <span className="label">Adresse:</span>
+                      <span>{i.address || "Adresse non renseignée"}</span>
                     </div>
                   </div>
-                  <div className="actions">
+                  <div className="association-actions">
                     <button
                       onClick={() => activateUsers(i.id)}
-                      className="activate-btn"
+                      className="validate-btn"
                     >
-                      Activer
+                      Valider
                     </button>
-                    <button 
-                      onClick={() => handleView(i)} 
-                      className="view-btn"
-                    >
-                      Voir
-                    </button>
+                    <button>Rejeter</button>
                   </div>
                 </li>
               ))
             ) : (
-              <div className="no-users">
-                <p>Aucun utilisateur inactif pour le moment</p>
+              <div className="no-associations">
+                <p>Aucune association en attente de validation</p>
               </div>
             )}
           </ul>
-          {selectedUser && (
-            <UserDetailsModal 
-              user={selectedUser} 
-              onClose={() => setSelectedUser(null)} 
-            />
-          )}
-        </div>
+        </section>
+
+        <section class="activity-section">
+          <div className="section-header">
+            <h2>Activité récente</h2>
+            <p className="section-subtitle">
+              Dernières actions sur la plateforme
+            </p>
+          </div>
+
+          <div className="activity-list">
+            <div className="activity-item">
+              <div className="activity-icon">👤</div>
+              <div className="activity-content">
+                <h4>Nouvelle inscription</h4>
+                <p>
+                  Marie Dubois s'est inscrite comme citoyenne il y a 2 heures
+                </p>
+              </div>
+            </div>
+
+            <div className="activity-item">
+              <div className="activity-icon">📢</div>
+              <div className="activity-content">
+                <h4>Annonce publiée</h4>
+                <p>
+                  Les Amis de la Terre ont publié "Nettoyage de plage" il y a 4
+                  heures
+                </p>
+              </div>
+            </div>
+
+            <div className="activity-item">
+              <div className="activity-icon">✅</div>
+              <div className="activity-content">
+                <h4>Association validée</h4>
+                <p>La Croix-Rouge a été validée il y a 6 heures</p>
+              </div>
+            </div>
+
+            <div className="activity-item">
+              <div className="activity-icon">👥</div>
+              <div className="activity-content">
+                <h4>Nouveau bénévole</h4>
+                <p>
+                  Jean Dupont a rejoint l'association Secours Populaire il y a 8
+                  heures
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
       </section>
 
       <section className="quick-actions">
-        <div className="quick-actions">
-          <h1>Actions rapides</h1>
-          <p>Accédez rapidement aux fonctionnalités d'administration</p>
-          <div className="action-item">
-            <label htmlFor="associations">Gérer les associations</label>
-          </div>
-
-          <div className="action-item checked">
-            <label htmlFor="utilisateurs">Gérer les utilisateurs</label>
-          </div>
-
-          <div className="action-item">
-            <label htmlFor="statistiques">Voir les statistiques</label>
-          </div>
+        <h1>Actions rapides</h1>
+        <p>Accédez rapidement aux fonctionnalités d'administration</p>
+        <div className="action-list">
+          <div className="action-item">Gérer les associations</div>
+          <div className="action-item checked">Gérer les utilisateurs</div>
+          <div className="action-item">Voir les statistiques</div>
         </div>
       </section>
     </div>
