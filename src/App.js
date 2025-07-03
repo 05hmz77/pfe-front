@@ -18,6 +18,7 @@ import HomePageAssociation from './home page users/homepageassociation';
 
 import Sidebar from './components/admin/Sidebar.jsx';
 import AdminLayout from './components/admin/AdminLayout.jsx';
+import AssociationLayout from './components/association/AssociationLayout.jsx';
 
 
 function App() {
@@ -30,14 +31,12 @@ function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Inscription />} />
             <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/welcome/admin" element={<HomePageAdmin />} />
+            
             <Route path="/welcome/citoyen" element={<HomePageCitoyen />} />
-            <Route
-              path="/welcome/association"
-              element={<HomePageAssociation />}
-            />
+            
 
             <Route path="/welcome/admin/*" element={<AdminLayout />} />
+            <Route path="/welcome/association/*" element={<AssociationLayout />} />
           </Routes>
         </main>
         <main className="main-content">

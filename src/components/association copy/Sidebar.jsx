@@ -34,26 +34,33 @@ export default function Sidebar({ isOpen, toggleSidebar }) {
             <ul>
               <NavItem 
                 icon={<Home size={20} />} 
-                path="/welcome/admin/dashboard" 
+                path="/welcome/association/dashboard" 
                 label="Dashboard" 
                 isOpen={isOpen} 
               />
               <NavItem 
                 icon={<UsersIcon size={20} />} 
-                path="/welcome/admin/users/citoyen" 
-                label="gerer citoyen users" 
+                path="/welcome/association/listannonce" 
+                label="Annonces" 
                 isOpen={isOpen} 
               />
               <NavItem 
                 icon={<BarChart2 size={20} />} 
-                path="/welcome/admin/users/association" 
-                label="association" 
+                path="/welcome/association/mesannonces" 
+                label="Mes annonces" 
                 isOpen={isOpen} 
               />
               <NavItem 
                 icon={<BarChart2 size={20} />} 
-                path="/welcome/admin/stats" 
-                label="Statistics" 
+                path="/welcome/association/candidature" 
+                label="Mes candidatures" 
+                isOpen={isOpen} 
+              />
+
+              <NavItem 
+                icon={<BarChart2 size={20} />} 
+                path="/welcome/association/benevoles" 
+                label="List Benevoles" 
                 isOpen={isOpen} 
               />
             </ul>

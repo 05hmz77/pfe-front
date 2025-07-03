@@ -2,12 +2,12 @@ import React, { useState } from "react";
 import { Routes, Route, Outlet } from "react-router-dom";
 import Sidebar from "./Sidebar";
 import Dashboard from "./Dashboard";
+import MyCandidature from "./MyCandidature";
+import ListBenevoles from "./ListBenevolas";
+import MyAnnonces from "./MyAnnonces";
+import ListAnnonce from "./ListAnnonces";
 
-import Statistics from "./Statistics";
-import Citoyen from "./Citoyen";
-import Association from "./Association";
-
-export default function AdminLayout() {
+export default function AssociationLayout() {
   // Gérer l'état du sidebar ici
   const [isOpen, setIsOpen] = useState(true);
   const toggleSidebar = () => setIsOpen(!isOpen);
@@ -20,15 +20,21 @@ export default function AdminLayout() {
           {/* Les chemins sont relatifs à /welcome/admin */}
           <Route index element={<Dashboard />} />
           <Route path="dashboard" element={<Dashboard />} />
-          <Route path="users/citoyen" element={<Citoyen />} />
-          <Route path="users/association" element={<Association />} />
-          <Route path="stats" element={<Statistics />} />
-          {/* Optionnel: route fallback */}
+          <Route
+            path="/listannonce"
+            element={<ListAnnonce />}
+          />
+          <Route
+            path="/mesannonces"
+            element={<MyAnnonces />}
+          />
+          <Route path="/candidature" element={<MyCandidature />} />
+          <Route path="/benevoles" element={<ListBenevoles />} />
+          
           <Route path="*" element={<Dashboard />} />
         </Routes>
         <Outlet />
       </main>
     </div>
-     
   );
 }

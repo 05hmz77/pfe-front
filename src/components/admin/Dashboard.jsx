@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import "./Dashboard.css";
+import "./style/Dashboard.css";
 
 const UserDetailsModal = ({ user, onClose }) => {
   const token = localStorage.getItem("accessToken");
