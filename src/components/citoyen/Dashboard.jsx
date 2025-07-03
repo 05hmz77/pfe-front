@@ -3,11 +3,11 @@ import axios from "axios";
 import "./style/Dashboard.css";
 
 
-export default function ListBenevoles() {
+export default function Dashboard() {
   
   return (
     <div className="dashboard">
-      hello in listBenevoles
+      hello in dachbord citoyen
     </div>
   );
 }
