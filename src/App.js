@@ -13,12 +13,13 @@ import Inscription from './authentification/inscription';
 import Login from './authentification/login';
 import Dashboard from './pages/Dashboard';
 import HomePageAdmin from './home page users/homepageadmin';
-import HomePageCitoyen from './home page users/homepagecitoyen';
-import HomePageAssociation from './home page users/homepageassociation';
+import HomePageCitoyen from './home page users/HomePageCitoyen';
+import HomePageAssociation from './home page users/HomePageAssociation';
 
 import Sidebar from './components/admin/Sidebar.jsx';
 import AdminLayout from './components/admin/AdminLayout.jsx';
 import AssociationLayout from './components/association/AssociationLayout.jsx';
+import CitoyenLayout from './components/citoyen/CitoyenLayout.jsx';
 
 
 function App() {
@@ -31,12 +32,18 @@ function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Inscription />} />
             <Route path="/dashboard" element={<Dashboard />} />
-            
-            <Route path="/welcome/citoyen" element={<HomePageCitoyen />} />
+
             
 
             <Route path="/welcome/admin/*" element={<AdminLayout />} />
-            <Route path="/welcome/association/*" element={<AssociationLayout />} />
+            <Route
+              path="/welcome/association/*"
+              element={<AssociationLayout />}
+            />
+            <Route
+              path="/welcome/citoyen/*"
+              element={<CitoyenLayout />}
+            />
           </Routes>
         </main>
         <main className="main-content">
