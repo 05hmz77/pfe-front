@@ -52,6 +52,13 @@ export default function Sidebar({ isOpen, toggleSidebar }) {
                 isOpen={isOpen} 
               />
 
+              <NavItem 
+                icon={<BarChart2 size={20} />} 
+                path="/welcome/citoyen/chat" 
+                label="Mes chat message" 
+                isOpen={isOpen} 
+              />
+
               
             </ul>
           </nav>

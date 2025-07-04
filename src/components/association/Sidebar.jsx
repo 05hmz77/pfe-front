@@ -1,14 +1,16 @@
 import React from "react";
-import { 
-  Home, 
-  Users as UsersIcon, 
-  BarChart2, 
-  Sun, 
-  LogOut, 
-  ChevronLeft, 
-  ChevronRight 
+import {
+  Home,
+  Users as UsersIcon,
+  FileText,
+  ClipboardList,
+  UserCheck,
+  Sun,
+  LogOut,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
-import { NavLink, Outlet } from 'react-router-dom';
+import { NavLink, Outlet } from "react-router-dom";
 import "./style/admin.css";
 
 export default function Sidebar({ isOpen, toggleSidebar }) {
@@ -16,11 +18,14 @@ export default function Sidebar({ isOpen, toggleSidebar }) {
     <div className="admin-container">
       <aside className={`admin-sidebar ${isOpen ? "" : "collapsed"}`}>
         <div className="sidebar-inner">
+          {/* Header Logo */}
           <div className="sidebar-header">
             {isOpen ? (
               <>
                 <span className="logo-icon">❤️</span>
-                <NavLink to="/welcome/admin" className="logo-text">SolidarLink</NavLink>
+                <NavLink to="/welcome/admin" className="logo-text">
+                  SolidarLink
+                </NavLink>
               </>
             ) : (
               <span className="logo-icon">❤️</span>
@@ -30,42 +35,43 @@ export default function Sidebar({ isOpen, toggleSidebar }) {
             </button>
           </div>
 
+          {/* Navigation */}
           <nav className="sidebar-nav">
             <ul>
-              <NavItem 
-                icon={<Home size={20} />} 
-                path="/welcome/association/dashboard" 
-                label="Dashboard" 
-                isOpen={isOpen} 
+              <NavItem
+                icon={<Home size={20} />}
+                path="/welcome/association/dashboard"
+                label="Dashboard"
+                isOpen={isOpen}
               />
-              <NavItem 
-                icon={<UsersIcon size={20} />} 
-                path="/welcome/association/listannonce" 
-                label="Annonces" 
-                isOpen={isOpen} 
+              <NavItem
+                icon={<FileText size={20} />}
+                path="/welcome/association/listannonce"
+                label="Annonces"
+                isOpen={isOpen}
               />
-              <NavItem 
-                icon={<BarChart2 size={20} />} 
-                path="/welcome/association/mesannonces" 
-                label="Mes annonces" 
-                isOpen={isOpen} 
+              <NavItem
+                icon={<ClipboardList size={20} />}
+                path="/welcome/association/mesannonces"
+                label="Mes annonces"
+                isOpen={isOpen}
               />
-              <NavItem 
-                icon={<BarChart2 size={20} />} 
-                path="/welcome/association/candidature" 
-                label="Mes candidatures" 
-                isOpen={isOpen} 
+              <NavItem
+                icon={<UserCheck size={20} />}
+                path="/welcome/association/candidature"
+                label="Mes candidatures"
+                isOpen={isOpen}
               />
-
-              <NavItem 
-                icon={<BarChart2 size={20} />} 
-                path="/welcome/association/benevoles" 
-                label="List Benevoles" 
-                isOpen={isOpen} 
+              <NavItem
+                icon={<UsersIcon size={20} />}
+                path="/welcome/association/benevoles"
+                label="Liste bénévoles"
+                isOpen={isOpen}
               />
             </ul>
           </nav>
 
+          {/* Footer User Info */}
           <div className="sidebar-footer">
             <div className="user-info">
               {isOpen ? (
@@ -89,6 +95,7 @@ export default function Sidebar({ isOpen, toggleSidebar }) {
         </div>
       </aside>
 
+      {/* Contenu principal */}
       <main className={`admin-content ${isOpen ? "" : "expanded"}`}>
         <Outlet />
       </main>

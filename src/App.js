@@ -12,9 +12,6 @@ import Homepage from './pages/Homepage';
 import Inscription from './authentification/inscription';
 import Login from './authentification/login';
 import Dashboard from './pages/Dashboard';
-import HomePageAdmin from './home page users/homepageadmin';
-import HomePageCitoyen from './home page users/HomePageCitoyen';
-import HomePageAssociation from './home page users/HomePageAssociation';
 
 import Sidebar from './components/admin/Sidebar.jsx';
 import AdminLayout from './components/admin/AdminLayout.jsx';

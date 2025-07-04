@@ -1,10 +1,9 @@
-/* Dashboard.css */
 .dashboard {
   width: 100%;
+  max-width: none;
   padding: 2rem;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   box-sizing: border-box;
-  max-width: 100%;
 }
 
 .dashboard-header {
@@ -14,14 +13,13 @@
 
 .dashboard-header h1 {
   color: #2c3e50;
-  margin: 0 0 0.5rem 0;
+  margin-bottom: 0.5rem;
   font-size: 2rem;
-  font-weight: 600;
 }
 
 .dashboard-header p {
   color: #7f8c8d;
-  margin: 0;
+  margin-top: 0;
   font-size: 1.1rem;
 }
 
@@ -40,23 +38,21 @@
   box-shadow: 0 1px 3px rgba(0,0,0,0.1);
   text-align: center;
   width: 100%;
-  box-sizing: border-box;
 }
 
 .stat-card h3 {
   color: #7f8c8d;
   font-size: 0.9rem;
-  margin: 0 0 0.5rem 0;
+  margin-top: 0;
+  margin-bottom: 0.5rem;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
 }
 
 .stat-value {
   font-size: 2.5rem;
-  font-weight: 700;
+  font-weight: bold;
   color: #2c3e50;
   margin: 0.5rem 0;
-  line-height: 1;
 }
 
 .stat-delta {
@@ -65,63 +61,61 @@
   font-weight: 500;
 }
 
-.content-grid {
+.dashboard-sections {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 2rem;
   width: 100%;
 }
 
-.recent-list {
+.dashboard-section {
   background: white;
   border-radius: 0.5rem;
   padding: 1.5rem;
   box-shadow: 0 1px 3px rgba(0,0,0,0.1);
   width: 100%;
-  box-sizing: border-box;
 }
 
-.recent-list h2 {
+.dashboard-section h2 {
   color: #2c3e50;
-  margin: 0 0 0.5rem 0;
+  margin-top: 0;
+  margin-bottom: 0.5rem;
   font-size: 1.3rem;
-  font-weight: 600;
 }
 
-.recent-list .subtitle {
+.dashboard-section p {
   color: #7f8c8d;
-  margin: 0 0 1.5rem 0;
+  margin-top: 0;
+  margin-bottom: 1.5rem;
   font-size: 0.95rem;
 }
 
-.list-container {
-  width: 100%;
-}
-
-.list-item {
+/* Style pour les listes verticales */
+.annonce-card, .candidature-card {
   padding: 1.2rem 0;
   border-bottom: 1px solid #f0f0f0;
-  width: 100%;
+  margin-bottom: 1rem;
 }
 
-.list-item:last-child {
+.annonce-card:last-child, .candidature-card:last-child {
   border-bottom: none;
+  margin-bottom: 0;
 }
 
-.list-item h3 {
+.annonce-card h3, .candidature-card h3 {
   color: #2c3e50;
-  margin: 0 0 0.3rem 0;
+  margin: 0 0 0.5rem 0;
   font-size: 1.1rem;
   font-weight: 600;
 }
 
-.list-item p {
+.annonce-card p, .candidature-card p {
   color: #7f8c8d;
   margin: 0 0 0.8rem 0;
   font-size: 0.95rem;
 }
 
-.item-meta {
+.annonce-meta {
   display: flex;
   gap: 1rem;
   font-size: 0.85rem;
@@ -130,7 +124,7 @@
   flex-wrap: wrap;
 }
 
-.item-tag {
+.annonce-type {
   background: #e8f4fc;
   color: #2980b9;
   padding: 0.3rem 0.7rem;
@@ -139,57 +133,61 @@
   font-weight: 500;
 }
 
-.status-tag {
+.candidature-status {
+  display: inline-block;
   padding: 0.3rem 0.7rem;
   border-radius: 1rem;
   font-size: 0.8rem;
   font-weight: 500;
+  margin-right: 0.8rem;
 }
 
-.status-tag.en_attente {
+.candidature-status.en_attente {
   background: #fff4e5;
   color: #f39c12;
 }
 
-.status-tag.acceptee {
+.candidature-status.acceptee {
   background: #e8f8f0;
   color: #27ae60;
 }
 
-.status-tag.refusee {
+.candidature-status.refusee {
   background: #fdecea;
   color: #e74c3c;
 }
 
-.no-items {
+.candidature-date {
+  font-size: 0.8rem;
   color: #95a5a6;
-  font-style: italic;
-  text-align: center;
-  padding: 1rem 0;
+  display: inline-block;
 }
 
-.loading {
+.loading, .error {
   text-align: center;
   padding: 3rem;
   font-size: 1.1rem;
-  color: #7f8c8d;
+}
+
+.error {
+  color: #e74c3c;
 }
 
 /* Responsive */
 @media (max-width: 1024px) {
-  .content-grid {
+  .dashboard-sections {
     grid-template-columns: 1fr;
     gap: 1.5rem;
-  }
-  
-  .stats-grid {
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   }
 }
 
 @media (max-width: 600px) {
   .dashboard {
     padding: 1.5rem;
+  }
+  
+  .stats-grid {
+    grid-template-columns: 1fr;
   }
   
   .stat-card {
@@ -200,7 +198,7 @@
     font-size: 2rem;
   }
   
-  .recent-list {
+  .dashboard-section {
     padding: 1.2rem;
   }
 }
