@@ -1,5 +1,4 @@
-/* ListAnnonces.css */
-
+/* Base Styles */
 .social-feed {
   max-width: 800px;
   margin: 0 auto;
@@ -12,35 +11,176 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: 30px;
+  flex-wrap: wrap;
 }
 
 .feed-header h1 {
   font-size: 28px;
-  color: #333;
+  color: #2c3e50;
   margin: 0;
 }
 
-.create-post-btn {
-  background-color: #4CAF50;
+.header-actions {
+  display: flex;
+  gap: 15px;
+}
+
+/* Buttons */
+.create-post-btn, .add-association-btn {
+  background-color: #3498db;
   color: white;
   border: none;
   padding: 10px 15px;
   border-radius: 5px;
   cursor: pointer;
   font-size: 14px;
-  font-weight: 600;
-  transition: background-color 0.3s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.3s ease;
 }
 
-.create-post-btn:hover {
-  background-color: #45a049;
+.create-post-btn:hover, .add-association-btn:hover {
+  background-color: #2980b9;
+  transform: translateY(-2px);
 }
 
-.create-post-btn i {
-  margin-right: 5px;
+.add-association-btn {
+  background-color: #2ecc71;
 }
 
-/* Modal styles */
+.add-association-btn:hover {
+  background-color: #27ae60;
+}
+
+/* Post Cards */
+.posts-container {
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
+}
+
+.post-card {
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.post-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+}
+
+.post-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 20px;
+  background: #f8f9fa;
+  border-bottom: 1px solid #eee;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.association-logo {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #eee;
+}
+
+.user-info h3 {
+  margin: 0;
+  font-size: 16px;
+  color: #2c3e50;
+}
+
+.post-time {
+  font-size: 12px;
+  color: #7f8c8d;
+}
+
+.post-type-badge span {
+  padding: 5px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: bold;
+  text-transform: uppercase;
+}
+
+.event-badge {
+  background-color: #f39c12;
+  color: white;
+}
+
+.need-badge {
+  background-color: #e74c3c;
+  color: white;
+}
+
+.offer-badge {
+  background-color: #2ecc71;
+  color: white;
+}
+
+.post-content {
+  padding: 20px;
+}
+
+.post-title {
+  margin: 0 0 10px 0;
+  font-size: 20px;
+  color: #2c3e50;
+}
+
+.post-text {
+  margin: 0 0 15px 0;
+  color: #34495e;
+  line-height: 1.5;
+}
+
+.post-image-container {
+  margin: 15px 0;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.post-image {
+  width: 100%;
+  max-height: 400px;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+.post-details {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  margin-top: 15px;
+  padding-top: 15px;
+  border-top: 1px solid #eee;
+}
+
+.detail-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 14px;
+  color: #7f8c8d;
+}
+
+.detail-item i {
+  color: #3498db;
+}
+
+/* Modal Styles */
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -55,26 +195,27 @@
 }
 
 .post-modal {
-  background-color: white;
-  border-radius: 8px;
+  background: white;
+  border-radius: 10px;
   width: 90%;
   max-width: 600px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-  overflow: hidden;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 5px 25px rgba(0, 0, 0, 0.2);
 }
 
 .modal-header {
-  padding: 15px 20px;
-  border-bottom: 1px solid #eee;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  padding: 20px;
+  border-bottom: 1px solid #eee;
 }
 
 .modal-header h2 {
   margin: 0;
-  font-size: 20px;
-  color: #333;
+  font-size: 22px;
+  color: #2c3e50;
 }
 
 .close-btn {
@@ -82,42 +223,58 @@
   border: none;
   font-size: 24px;
   cursor: pointer;
-  color: #777;
-  padding: 0;
+  color: #7f8c8d;
+  transition: color 0.3s ease;
 }
 
 .close-btn:hover {
-  color: #333;
+  color: #e74c3c;
 }
 
-/* Form styles */
 form {
   padding: 20px;
 }
 
 .form-group {
-  margin-bottom: 15px;
+  margin-bottom: 20px;
 }
 
-.form-group input,
-.form-group textarea,
-.form-group select {
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+  color: #2c3e50;
+}
+
+.form-group input[type="text"],
+.form-group input[type="datetime-local"],
+.form-group input[type="file"],
+.form-group select,
+.form-group textarea {
   width: 100%;
-  padding: 10px;
+  padding: 10px 15px;
   border: 1px solid #ddd;
-  border-radius: 4px;
+  border-radius: 5px;
   font-size: 14px;
+  transition: border-color 0.3s ease;
+}
+
+.form-group input[type="text"]:focus,
+.form-group input[type="datetime-local"]:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  border-color: #3498db;
+  outline: none;
 }
 
 .form-group textarea {
-  min-height: 100px;
+  min-height: 120px;
   resize: vertical;
 }
 
 .form-row {
   display: flex;
-  gap: 15px;
-  margin-bottom: 15px;
+  gap: 20px;
 }
 
 .form-row .form-group {
@@ -127,296 +284,138 @@ form {
 .form-actions {
   display: flex;
   justify-content: flex-end;
+  margin-top: 20px;
 }
 
 .post-submit-btn {
-  background-color: #4CAF50;
+  background-color: #3498db;
   color: white;
   border: none;
   padding: 10px 20px;
   border-radius: 5px;
   cursor: pointer;
-  font-size: 14px;
-  font-weight: 600;
-  transition: background-color 0.3s;
+  font-size: 16px;
+  transition: all 0.3s ease;
 }
 
 .post-submit-btn:hover {
-  background-color: #45a049;
+  background-color: #2980b9;
+  transform: translateY(-2px);
 }
 
-/* Posts container */
-.posts-container {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
+/* Empty State */
 .empty-feed {
   text-align: center;
   padding: 40px 20px;
-  background-color: #f9f9f9;
-  border-radius: 8px;
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
 }
 
 .empty-feed p {
-  color: #666;
-  margin-bottom: 15px;
+  color: #7f8c8d;
+  margin-bottom: 20px;
 }
 
 .empty-feed button {
-  background-color: #4CAF50;
+  background-color: #3498db;
   color: white;
   border: none;
-  padding: 8px 15px;
+  padding: 10px 20px;
   border-radius: 5px;
   cursor: pointer;
+  transition: all 0.3s ease;
 }
 
-/* Post card styles */
-.post-card {
-  background-color: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
-  overflow: hidden;
+.empty-feed button:hover {
+  background-color: #2980b9;
 }
 
-.post-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  padding: 15px 20px;
-  border-bottom: 1px solid #f0f0f0;
-}
-
-.user-info {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.user-avatar {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  object-fit: cover;
-}
-
-.user-info h3 {
-  margin: 0;
-  font-size: 16px;
-  color: #333;
-}
-
-.post-time {
-  font-size: 12px;
-  color: #777;
-}
-
-.post-type-badge span {
-  font-size: 12px;
-  padding: 4px 8px;
-  border-radius: 12px;
-  font-weight: 600;
-}
-
-.event-badge {
-  background-color: #e3f2fd;
-  color: #1976d2;
-}
-
-.need-badge {
-  background-color: #ffebee;
-  color: #d32f2f;
-}
-
-.offer-badge {
-  background-color: #e8f5e9;
-  color: #388e3c;
-}
-
-.post-content {
-  padding: 15px 20px;
-}
-
-.post-title {
-  margin: 0 0 10px 0;
-  font-size: 18px;
-  color: #333;
-}
-
-.post-text {
-  margin: 0 0 15px 0;
-  color: #555;
-  line-height: 1.5;
-}
-
-.post-details {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 15px;
-  margin-top: 15px;
-}
-
-.detail-item {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  font-size: 14px;
-  color: #666;
-}
-
-.detail-item i {
-  color: #888;
-}
-
-.post-actions {
-  display: flex;
-  border-top: 1px solid #f0f0f0;
-  padding: 10px 20px;
-}
-
-.action-btn {
-  flex: 1;
-  background: none;
-  border: none;
-  padding: 8px;
-  cursor: pointer;
-  color: #666;
-  font-size: 14px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 5px;
-  transition: color 0.2s;
-}
-
-.action-btn:hover {
-  color: #333;
-}
-
-.action-btn i {
-  font-size: 16px;
-}
-
-/* Loading and error states */
-.dashboard.loading,
-.dashboard.error {
-  text-align: center;
-  padding: 40px;
-  font-size: 18px;
-}
-
-.dashboard.loading {
-  color: #666;
-}
-
-.dashboard.error {
-  color: #d32f2f;
-}
-
-/* Responsive adjustments */
+/* Responsive */
 @media (max-width: 768px) {
   .feed-header {
     flex-direction: column;
     align-items: flex-start;
     gap: 15px;
   }
-
+  
+  .header-actions {
+    width: 100%;
+    flex-direction: column;
+  }
+  
   .form-row {
     flex-direction: column;
-    gap: 10px;
-  }
-
-  .post-details {
-    flex-direction: column;
-    gap: 10px;
-  }
-
-  .post-actions {
-    flex-direction: column;
-    gap: 5px;
-  }
-
-  .action-btn {
-    justify-content: flex-start;
+    gap: 0;
   }
 }
 
-/* my annonce  */
-.annonces-container {
-  max-width: 1000px;
-  margin: auto;
-  padding: 20px;
-  font-family: 'Segoe UI', sans-serif;
-}
-
-.header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.annonce-card {
-  background-color: #fff;
-  padding: 20px;
-  margin: 15px 0;
-  border-radius: 10px;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-}
-
-.annonce-header {
-  display: flex;
-  align-items: center;
-  gap: 15px;
-  margin-bottom: 10px;
-}
-
-.annonce-header img {
-  width: 50px;
-  height: 50px;
-  border-radius: 50%;
-}
-
-.badge {
-  margin-left: auto;
+/* Styles pour les badges de catégorie */
+.post-type-badge .badge {
   padding: 5px 10px;
-  border-radius: 15px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: bold;
+  text-transform: uppercase;
   color: white;
-  font-size: 0.8em;
+  background-color: #3498db; /* Couleur par défaut */
 }
 
-.badge-evenement {
-  background-color: #007bff;
-}
-.badge-besoin {
-  background-color: #ffc107;
-}
-.badge-offre {
-  background-color: #28a745;
+/* Vous pouvez ajouter des styles spécifiques pour certaines catégories */
+.post-type-badge .evenement {
+  background-color: #f39c12;
 }
 
-.btn-candidatures {
-  margin-top: 10px;
-  background-color: #17a2b8;
-  border: none;
-  padding: 10px 15px;
+.post-type-badge .don {
+  background-color: #2ecc71;
+}
+
+.post-type-badge .benevolat {
+  background-color: #9b59b6;
+}
+
+/* Style pour l'image de l'annonce */
+.post-image-container {
+  margin: 15px 0;
+  border-radius: 8px;
+  overflow: hidden;
+  max-height: 400px;
+}
+
+.post-image {
+  width: 100%;
+  height: auto;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+/* Style pour le champ fichier */
+.form-group input[type="file"] {
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background: #f9f9f9;
+}
+
+.post-type-badge .badge {
+  padding: 5px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: bold;
+  text-transform: uppercase;
   color: white;
-  border-radius: 5px;
+  background-color: #3498db; /* Couleur par défaut */
+}
+
+.post-type-badge .default {
+  background-color: #95a5a6; /* Couleur pour les annonces non catégorisées */
+}
+
+.form-group input[type="file"] {
+  padding: 8px;
+  border: 1px dashed #3498db;
+  border-radius: 4px;
+  background: #f8f9fa;
+  width: 100%;
   cursor: pointer;
-}
-
-.candidatures-section {
-  margin-top: 15px;
-  background: #f7f7f7;
-  border-left: 3px solid #17a2b8;
-  padding: 10px;
-  border-radius: 5px;
-}
-
-.candidature-card {
-  background: white;
-  padding: 10px;
-  margin-bottom: 10px;
-  border-left: 5px solid #007bff;
 }

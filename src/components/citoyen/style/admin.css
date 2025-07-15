@@ -1,0 +1,102 @@
+/* Ajoutez ces styles à votre fichier admin.css */
+
+/* Styles des icônes */
+.nav-icon svg,
+.nav-icon-svg {
+  color: #64748b; /* Couleur des icônes */
+  transition: all 0.2s ease;
+  min-width: 20px;
+}
+
+.nav-link.active .nav-icon svg,
+.nav-link.active .nav-icon-svg {
+  color: #3b82f6; /* Couleur des icônes actives */
+  stroke-width: 2.5px; /* Épaissit l'icône active */
+}
+
+.nav-link:hover .nav-icon svg,
+.nav-link:hover .nav-icon-svg {
+  color: #3b82f6; /* Couleur au survol */
+  transform: scale(1.1);
+}
+
+/* Styles des actions */
+.action-icon {
+  color: #00ff88;
+  transition: all 0.2s ease;
+}
+
+.action-btn:hover .action-icon {
+  color: #3b82f6;
+  transform: scale(1.1);
+}
+
+.action-btn.logout .action-icon {
+  color: #ef4444;
+}
+
+.action-btn.logout:hover .action-icon {
+  color: #dc2626;
+}
+
+/* Styles des labels */
+.nav-label,
+.nav-label1 {
+  color: #f8fafc; /* Couleur texte clair */
+  margin-left: 12px;
+  font-size: 14px;
+  transition: all 0.2s ease;
+}
+
+.nav-link.active .nav-label,
+.nav-link.active .nav-label1 {
+  font-weight: 500;
+  color: #c2d0ff; /* Bleu clair pour le texte actif */
+}
+
+/* Adaptation pour le thème sombre */
+.admin-sidebar {
+  background-color: #1e293b; /* Fond sombre */
+}
+
+.nav-link {
+  color: #94a3b8; /* Texte gris clair */
+}
+
+.nav-link:hover {
+  background-color: #334155; /* Fond au survol */
+}
+
+.nav-link.active {
+  background-color: #1e40af; /* Fond bleu foncé pour l'élément actif */
+}
+
+.logo-text {
+  color: #f8fafc; /* Texte blanc */
+}
+
+.user-name,
+.user-role {
+  color: #f8fafc; /* Texte blanc */
+}
+
+.user-extra {
+  color: #94a3b8; /* Texte gris clair */
+}
+
+.sidebar-toggle {
+  color: #94a3b8; /* Icône grise */
+}
+
+.sidebar-toggle:hover {
+  color: #3b82f6; /* Bleu au survol */
+}
+
+/* Bordure subtile */
+.sidebar-header {
+  border-bottom: 1px solid #334155;
+}
+
+.sidebar-footer {
+  border-top: 1px solid #334155;
+}

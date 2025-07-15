@@ -1,21 +1,20 @@
-/* Base Styles */
+/* Style général */
 .annonces-container {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 2rem;
+  padding: 20px;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  color: #333;
 }
 
 .page-header {
   text-align: center;
-  margin-bottom: 3rem;
+  margin-bottom: 40px;
 }
 
 .page-header h1 {
   font-size: 2.5rem;
   color: #2c3e50;
-  margin-bottom: 0.5rem;
+  margin-bottom: 10px;
 }
 
 .page-header p {
@@ -23,21 +22,20 @@
   color: #7f8c8d;
 }
 
-/* Annonces Grid */
+/* Grille des annonces */
 .annonces-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-  gap: 2rem;
+  gap: 30px;
+  margin-top: 30px;
 }
 
 .annonce-card {
   background: white;
-  border-radius: 12px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  border-radius: 10px;
   overflow: hidden;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
-  display: flex;
-  flex-direction: column;
 }
 
 .annonce-card:hover {
@@ -45,123 +43,160 @@
   box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
 }
 
-/* Card Header */
-.annonce-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  padding: 1.5rem;
-  border-bottom: 1px solid #f0f0f0;
+/* Image de l'annonce */
+.annonce-image-container {
+  width: 100%;
+  height: 200px;
+  overflow: hidden;
 }
 
-.association-info {
+.annonce-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.5s ease;
+}
+
+.annonce-card:hover .annonce-image {
+  transform: scale(1.05);
+}
+
+/* Contenu de la carte */
+.annonce-content {
+  padding: 20px;
+}
+
+.annonce-header-card {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  margin-bottom: 15px;
 }
 
-.association-logo {
+.modal-img, .default-logo {
   width: 50px;
   height: 50px;
   border-radius: 50%;
+  margin-right: 15px;
   object-fit: cover;
-  border: 1px solid #eee;
+  background-color: #f5f5f5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  color: #7f8c8d;
 }
 
-.association-info h3 {
-  margin: 0;
-  font-size: 1.1rem;
+.association-name {
+  font-size: 1rem;
   color: #2c3e50;
+  margin: 0 0 5px 0;
 }
 
-.annonce-date {
-  font-size: 0.85rem;
-  color: #95a5a6;
+.association-contact {
+  font-size: 0.8rem;
+  color: #7f8c8d;
+  margin: 0;
+}
+
+/* Corps de l'annonce */
+.annonce-meta {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
 }
 
 .annonce-type {
-  font-size: 0.8rem;
-  padding: 0.3rem 0.8rem;
+  padding: 5px 10px;
   border-radius: 20px;
+  font-size: 0.75rem;
   font-weight: 600;
+  text-transform: uppercase;
 }
 
-.annonce-type.evenement {
+.annonce-type.benevolat {
   background-color: #e3f2fd;
   color: #1976d2;
 }
 
-.annonce-type.besoin {
-  background-color: #fff8e1;
-  color: #ff8f00;
-}
-
-.annonce-type.offre {
+.annonce-type.don {
   background-color: #e8f5e9;
   color: #388e3c;
 }
 
-/* Card Content */
-.annonce-content {
-  padding: 1.5rem;
-  flex-grow: 1;
+.annonce-type.evenement {
+  background-color: #f3e5f5;
+  color: #8e24aa;
 }
 
-.annonce-content h2 {
-  margin: 0 0 1rem 0;
-  font-size: 1.4rem;
+.annonce-category {
+  padding: 5px 10px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  background-color: #fff3e0;
+  color: #e65100;
+}
+
+.annonce-title-card {
+  font-size: 1.3rem;
   color: #2c3e50;
+  margin: 0 0 10px 0;
 }
 
 .annonce-description {
-  color: #7f8c8d;
-  line-height: 1.6;
-  margin-bottom: 1.5rem;
+  font-size: 0.9rem;
+  color: #34495e;
+  line-height: 1.5;
+  margin-bottom: 15px;
 }
 
-.annonce-details {
+.annonce-dates {
   display: flex;
   flex-direction: column;
-  gap: 0.8rem;
-  margin-top: 1rem;
+  gap: 8px;
+  margin-bottom: 15px;
 }
 
-.detail {
+.date-item {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  font-size: 0.95rem;
-  color: #34495e;
+  font-size: 0.85rem;
+  color: #7f8c8d;
 }
 
-.detail .icon {
-  font-size: 1.1rem;
+.date-icon {
+  margin-right: 8px;
 }
 
-/* Card Actions */
+.annonce-location {
+  display: flex;
+  align-items: center;
+  font-size: 0.85rem;
+  color: #7f8c8d;
+  margin-bottom: 15px;
+}
+
+/* Actions */
 .annonce-actions {
-  padding: 1rem 1.5rem;
-  border-top: 1px solid #f0f0f0;
   display: flex;
   justify-content: flex-end;
 }
 
 .postuler-btn {
-  background-color: #4CAF50;
+  background-color: #3498db;
   color: white;
   border: none;
-  padding: 0.7rem 1.5rem;
-  border-radius: 6px;
-  font-weight: 600;
+  padding: 8px 20px;
+  border-radius: 5px;
   cursor: pointer;
-  transition: background-color 0.3s;
+  font-weight: 600;
+  transition: background-color 0.3s ease;
 }
 
 .postuler-btn:hover {
-  background-color: #3e8e41;
+  background-color: #2980b9;
 }
 
-/* Modal Styles */
+/* Modal */
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -173,29 +208,27 @@
   justify-content: center;
   align-items: center;
   z-index: 1000;
-  backdrop-filter: blur(5px);
 }
 
 .modal {
   background: white;
-  border-radius: 12px;
+  border-radius: 10px;
   width: 100%;
   max-width: 500px;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
   overflow: hidden;
 }
 
 .modal-header {
+  padding: 20px;
+  border-bottom: 1px solid #eee;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1.5rem;
-  border-bottom: 1px solid #f0f0f0;
 }
 
 .modal-header h3 {
   margin: 0;
-  font-size: 1.3rem;
   color: #2c3e50;
 }
 
@@ -204,116 +237,97 @@
   border: none;
   font-size: 1.5rem;
   cursor: pointer;
-  color: #95a5a6;
-  padding: 0.5rem;
-}
-
-.close-btn:hover {
   color: #7f8c8d;
 }
 
 .modal-body {
-  padding: 1.5rem;
+  padding: 20px;
 }
 
 .annonce-title {
-  font-weight: 600;
-  margin-bottom: 1.5rem;
+  font-size: 1.2rem;
   color: #2c3e50;
-  font-size: 1.1rem;
+  margin-bottom: 20px;
+  font-weight: 600;
 }
 
 .form-group {
-  margin-bottom: 1.5rem;
+  margin-bottom: 20px;
 }
 
 .form-group label {
   display: block;
-  margin-bottom: 0.5rem;
-  font-weight: 500;
-  color: #34495e;
+  margin-bottom: 8px;
+  font-weight: 600;
+  color: #2c3e50;
 }
 
 .form-group textarea {
   width: 100%;
-  padding: 1rem;
+  padding: 10px;
   border: 1px solid #ddd;
-  border-radius: 8px;
-  font-family: inherit;
+  border-radius: 5px;
   resize: vertical;
-  min-height: 120px;
-  transition: border-color 0.3s;
-}
-
-.form-group textarea:focus {
-  outline: none;
-  border-color: #4CAF50;
+  min-height: 100px;
+  font-family: inherit;
 }
 
 .modal-footer {
+  padding: 15px 20px;
+  border-top: 1px solid #eee;
   display: flex;
   justify-content: flex-end;
-  gap: 1rem;
-  padding: 1.5rem;
-  border-top: 1px solid #f0f0f0;
+  gap: 10px;
 }
 
 .btn {
-  padding: 0.7rem 1.5rem;
-  border-radius: 6px;
-  font-weight: 600;
+  padding: 8px 20px;
+  border-radius: 5px;
   cursor: pointer;
-  transition: all 0.3s;
-  border: none;
-}
-
-.btn.primary {
-  background-color: #4CAF50;
-  color: white;
-}
-
-.btn.primary:hover {
-  background-color: #3e8e41;
+  font-weight: 600;
+  transition: all 0.3s ease;
 }
 
 .btn.secondary {
-  background-color: #f0f0f0;
-  color: #333;
+  background-color: #f5f5f5;
+  color: #7f8c8d;
+  border: 1px solid #ddd;
 }
 
 .btn.secondary:hover {
   background-color: #e0e0e0;
 }
 
-/* Empty State */
-.empty-state {
-  grid-column: 1 / -1;
-  text-align: center;
-  padding: 3rem;
-  color: #95a5a6;
+.btn.primary {
+  background-color: #3498db;
+  color: white;
+  border: none;
 }
 
-/* Loading and Error States */
-.loading-screen,
-.error-screen {
-  height: 50vh;
+.btn.primary:hover {
+  background-color: #2980b9;
+}
+
+/* États de chargement et erreur */
+.loading-screen, .error-screen {
   display: flex;
   justify-content: center;
   align-items: center;
+  height: 100vh;
   font-size: 1.2rem;
+}
+
+.loading-screen {
+  color: #3498db;
 }
 
 .error-screen {
   color: #e74c3c;
 }
 
-/* Responsive */
-@media (max-width: 768px) {
-  .annonces-container {
-    padding: 1rem;
-  }
-  
-  .annonces-grid {
-    grid-template-columns: 1fr;
-  }
+.empty-state {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 40px;
+  color: #7f8c8d;
 }

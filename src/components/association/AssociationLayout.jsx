@@ -6,6 +6,8 @@ import MyCandidature from "./MyCandidature";
 import ListBenevoles from "./ListBenevolas";
 import MyAnnonces from "./MyAnnonces";
 import ListAnnonce from "./ListAnnonces";
+import AssociationProfile from "./Prifile";
+import Chat from "./chat";
 
 export default function AssociationLayout() {
   // Gérer l'état du sidebar ici
@@ -24,13 +26,11 @@ export default function AssociationLayout() {
             path="/listannonce"
             element={<ListAnnonce />}
           />
-          <Route
-            path="/mesannonces"
-            element={<MyAnnonces />}
-          />
+          <Route path="/mesannonces"element={<MyAnnonces />}/>
           <Route path="/candidature" element={<MyCandidature />} />
           <Route path="/benevoles" element={<ListBenevoles />} />
-          
+          <Route path="/profile" element={<AssociationProfile />} />
+          <Route path="/chat" element={<Chat />} />
           <Route path="*" element={<Dashboard />} />
         </Routes>
         <Outlet />

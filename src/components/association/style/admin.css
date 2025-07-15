@@ -1,0 +1,377 @@
+/* admin.css - Version corrigée */
+
+/* Reset et styles de base */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+}
+
+/* Conteneur principal */
+.admin-container {
+  display: flex;
+  height: 100vh;
+  background-color: #f8f9fa;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  overflow: hidden;
+}
+
+/* ==================== */
+/* STYLE DE LA SIDEBAR */
+/* ==================== */
+.admin-sidebar {
+  width: 250px;
+  height: 100vh;
+  background-color:var(--dark);
+  color: white;
+  position: fixed;
+  top: 0;
+  left: 0;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 2px 0 10px rgba(234, 220, 220, 0.1);
+  z-index: 100;
+  overflow-y: auto;
+}
+
+/* Sidebar réduite */
+.admin-sidebar.collapsed {
+  width: 70px;
+}
+
+.sidebar-inner {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 1rem 0;
+}
+
+/* En-tête */
+.sidebar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 1rem 1.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  margin-bottom: 1rem;
+}
+
+.logo-icon {
+  font-size: 1.8rem;
+  display: flex;
+  align-items: center;
+}
+
+.logo-text {
+  color: white;
+  font-size: 1.2rem;
+  font-weight: bold;
+  margin-left: 0.5rem;
+  text-decoration: none;
+}
+
+/* Bouton de réduction */
+.sidebar-toggle {
+  background: transparent;
+  border: none;
+  color: white;
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+  display: flex;
+  align-items: center;
+}
+
+.sidebar-toggle:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Navigation */
+.sidebar-nav {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0 0.5rem;
+}
+
+.sidebar-nav ul {
+  list-style: none;
+}
+
+.nav-link {
+  display: flex;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  color: white; /* Changé de rgba(255, 255, 255, 0.7) à white */
+  text-decoration: none;
+  transition: all 0.2s;
+  margin: 0.25rem 0;
+  border-radius: 6px;
+}
+
+.nav-link:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: white;
+}
+
+.nav-link.active {
+  background-color: #3498db;
+  color: white;
+  font-weight: 500;
+}
+
+.nav-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  color: white; /* Ajouté pour que les icônes soient aussi blanches */
+}
+
+.nav-label1 {
+  margin-left: 0.75rem;
+  font-size: 0.9rem;
+  white-space: nowrap;
+  color: white; 
+  /* Assure que le texte reste blanc */
+}
+
+/* ==================== */
+/* PIED DE PAGE - SECTION UTILISATEUR */
+/* ==================== */
+.sidebar-footer {
+  padding: 1rem 0.5rem 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  margin-top: auto;
+}
+
+.user-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 1rem;
+  gap: 0.3rem;
+}
+
+.user-initials {
+  width: 40px;
+  height: 40px;
+  background-color: #3498db;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  color: white;
+  font-size: 1.1rem;
+  margin-bottom: 0.5rem;
+}
+
+.user-name {
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: white;
+  text-align: center;
+}
+
+.user-role {
+  font-size: 0.7rem;
+  color: white; /* Changé de rgba(255, 255, 255, 0.9) à white */
+  background-color: rgba(0, 0, 0, 0.2);
+  padding: 0.2rem 0.6rem;
+  border-radius: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 500;
+}
+
+.user-extra {
+  font-size: 0.65rem;
+  color: white; /* Changé de rgba(255, 255, 255, 0.5) à white */
+  margin-top: 0.1rem;
+  font-style: italic;
+  opacity: 0.7; /* Ajouté pour garder un effet de transparence mais avec du blanc */
+}
+
+/* Style lorsque la sidebar est réduite */
+.admin-sidebar.collapsed .user-name,
+.admin-sidebar.collapsed .user-role,
+.admin-sidebar.collapsed .user-extra {
+  display: none;
+}
+
+.admin-sidebar.collapsed .user-initials {
+  margin-bottom: 0;
+  width: 36px;
+  height: 36px;
+  font-size: 1rem;
+}
+
+/* Actions */
+.sidebar-actions {
+  display: flex;
+  justify-content: center;
+  padding-top: 0.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.action-btn {
+  background: transparent;
+  border: none;
+  color: white; /* Changé de rgba(255, 255, 255, 0.6) à white */
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 4px;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+}
+
+.action-btn:hover {
+  color: white;
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.action-btn.logout:hover {
+  color: #e74c3c;
+}
+
+/* ==================== */
+/* CONTENU PRINCIPAL */
+/* ==================== */
+.admin-content {
+  flex: 1;
+  padding: 2rem;
+  margin-left: 250px;
+  transition: margin-left 0.3s ease;
+  min-height: 100vh;
+  overflow-y: auto;
+}
+
+.admin-content.expanded {
+  margin-left: 70px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .admin-sidebar {
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+  }
+  
+  .admin-sidebar:not(.collapsed) {
+    transform: translateX(0);
+    width: 250px;
+  }
+  
+  .admin-sidebar.collapsed {
+    width: 70px;
+    transform: translateX(0);
+  }
+  
+  .admin-content {
+    margin-left: 0;
+  }
+  
+  .admin-sidebar:not(.collapsed) + .admin-content {
+    margin-left: 250px;
+  }
+  
+  .admin-sidebar.collapsed + .admin-content {
+    margin-left: 70px;
+  }
+}
+
+
+/* Style pour centrer le contenu de cnt-nav */
+.cnt-nav {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  width: 100%;
+  position: relative;
+}
+
+.admin-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  max-width: 1200px; /* Largeur maximale pour éviter l'étirement sur grands écrans */
+  margin: 0 auto;
+  padding: 2rem;
+  box-sizing: border-box;
+  transition: all 0.3s ease;
+}
+
+.admin-content.expanded {
+  max-width: 100%;
+  padding: 1rem;
+}
+
+/* Alternative avec Grid (plus moderne) */
+.cnt-nav-grid {
+  display: grid;
+  place-items: center;
+  min-height: 100vh;
+  width: 100%;
+  padding: 2rem;
+  box-sizing: border-box;
+}
+
+.admin-content-grid {
+  width: 100%;
+  max-width: 1200px;
+  display: grid;
+  place-items: center;
+  gap: 2rem;
+  transition: all 0.3s ease;
+}
+
+/* Responsive pour petits écrans */
+@media (max-width: 768px) {
+  .cnt-nav {
+    padding: 1rem;
+  }
+  
+  .admin-content {
+    padding: 1rem;
+    max-width: 100%;
+  }
+}
+
+/* Si vous voulez centrer verticalement et horizontalement parfaitement */
+.cnt-nav-perfect-center {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 100%;
+  max-width: 1200px;
+  height: auto;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Pour centrer uniquement le contenu sans affecter la structure */
+.cnt-nav-content-only {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+}
+
+.cnt-nav-content-only .admin-content {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}

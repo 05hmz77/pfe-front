@@ -12,8 +12,15 @@ import {
 } from "lucide-react";
 import { NavLink, Outlet } from "react-router-dom";
 import "./style/admin.css";
+import { useNavigate } from "react-router-dom";
+
 
 export default function Sidebar({ isOpen, toggleSidebar }) {
+  const navigate=useNavigate()
+  const Logout = () => {
+  localStorage.clear();
+  navigate('/login'); 
+};
   return (
     <div className="admin-container">
       <aside className={`admin-sidebar ${isOpen ? "" : "collapsed"}`}>
@@ -22,13 +29,13 @@ export default function Sidebar({ isOpen, toggleSidebar }) {
           <div className="sidebar-header">
             {isOpen ? (
               <>
-                <span className="logo-icon">❤️</span>
+                <span className="logo-icon"></span>
                 <NavLink to="/welcome/admin" className="logo-text">
                   SolidarLink
                 </NavLink>
               </>
             ) : (
-              <span className="logo-icon">❤️</span>
+              <span className="logo-icon"></span>
             )}
             <button className="sidebar-toggle" onClick={toggleSidebar}>
               {isOpen ? <ChevronLeft size={18} /> : <ChevronRight size={18} />}
@@ -68,6 +75,18 @@ export default function Sidebar({ isOpen, toggleSidebar }) {
                 label="Liste bénévoles"
                 isOpen={isOpen}
               />
+              <NavItem
+                icon={<UsersIcon size={20} />}
+                path="/welcome/association/profile"
+                label="Profile"
+                isOpen={isOpen}
+              />
+              <NavItem
+                icon={<UsersIcon size={20} />}
+                path="/welcome/association/chat"
+                label="mesagerie"
+                isOpen={isOpen}
+              />
             </ul>
           </nav>
 
@@ -84,10 +103,8 @@ export default function Sidebar({ isOpen, toggleSidebar }) {
               )}
             </div>
             <div className="sidebar-actions">
-              <button className="action-btn">
-                <Sun size={16} />
-              </button>
-              <button className="action-btn logout">
+              
+              <button className="action-btn logout" onClick={()=>{Logout()}}>
                 <LogOut size={16} />
               </button>
             </div>
@@ -114,7 +131,7 @@ function NavItem({ icon, path, label, isOpen }) {
         end
       >
         <span className="nav-icon">{icon}</span>
-        {isOpen && <span className="nav-label">{label}</span>}
+        {isOpen && <span className="nav-label1">{label}</span>}
       </NavLink>
     </li>
   );

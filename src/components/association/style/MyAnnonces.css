@@ -1,0 +1,178 @@
+/* ===============================
+   GENERAL CONTAINER & HEADER
+================================ */
+.annonces-container {
+  max-width: 900px;
+  margin: 40px auto;
+  padding: 20px;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #f9f9f9;
+  border-radius: 10px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+}
+
+.header h1 {
+  font-size: 28px;
+  color: #333;
+}
+
+.header button {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  font-size: 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.header button:hover {
+  background-color: #0056b3;
+}
+
+/* ===============================
+   ANNONCE CARD
+================================ */
+.annonce-card {
+  background-color: white;
+  border-radius: 10px;
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.1);
+  margin-bottom: 25px;
+  padding: 20px;
+}
+
+.annonce-header {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 15px;
+}
+
+.modal-img {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #ddd;
+}
+
+.annonce-header h3 {
+  margin: 0;
+  font-size: 20px;
+  color: #222;
+}
+
+.annonce-header p {
+  margin: 4px 0 0;
+  font-size: 13px;
+  color: #777;
+}
+
+.badge {
+  margin-left: auto;
+  padding: 6px 10px;
+  font-size: 12px;
+  border-radius: 20px;
+  font-weight: bold;
+  text-transform: uppercase;
+}
+
+.badge-evenement {
+  background-color: #007bff;
+  color: white;
+}
+
+.badge-formation {
+  background-color: #28a745;
+  color: white;
+}
+
+.annonce-body p {
+  margin: 8px 0;
+  font-size: 15px;
+  color: #444;
+}
+
+/* ===============================
+   CANDIDATURES SECTION
+================================ */
+.candidatures-section {
+  margin-top: 15px;
+  background-color: #f1f1f1;
+  padding: 15px;
+  border-radius: 8px;
+}
+
+.candidature-card {
+  background-color: white;
+  border: 1px solid #ddd;
+  padding: 10px 15px;
+  border-radius: 6px;
+  margin-bottom: 10px;
+}
+
+.candidature-card p {
+  margin: 5px 0;
+  font-size: 14px;
+}
+
+/* ===============================
+   BUTTONS
+================================ */
+.btn-candidatures {
+  margin-top: 10px;
+  background-color: #17a2b8;
+  color: white;
+  border: none;
+  padding: 8px 14px;
+  font-size: 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.btn-candidatures:hover {
+  background-color: #138496;
+}
+
+/* ===============================
+   LOADING
+================================ */
+.loading {
+  text-align: center;
+  font-size: 18px;
+  margin-top: 100px;
+  color: #555;
+}
+
+/* ===============================
+   TOASTIFY CUSTOM STYLES
+================================ */
+.Toastify__toast {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-size: 14px;
+  border-radius: 8px;
+  padding: 12px 16px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.Toastify__toast--success {
+  background-color: #4caf50;
+  color: white;
+}
+
+.Toastify__toast--error {
+  background-color: #f44336;
+  color: white;
+}
+
+.Toastify__progress-bar {
+  background-color: rgba(255, 255, 255, 0.8);
+}

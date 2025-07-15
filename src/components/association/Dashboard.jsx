@@ -72,27 +72,27 @@ const Dashboard = () => {
       </header>
       
       <div className="stats-grid">
-        <StatCard 
-          title="Annonces publiées" 
-          value={stats.annonces} 
-          delta={stats.deltaAnnonces} 
-        />
-        <StatCard 
-          title="Bénévoles recrutés" 
-          value={stats.benevoles} 
-          delta={stats.deltaBenevoles} 
-        />
-        <StatCard 
-          title="Candidatures reçues" 
-          value={stats.candidatures} 
-          delta={stats.deltaCandidatures} 
-        />
-        <StatCard 
-          title="Événements organisés" 
-          value={stats.evenements} 
-          delta={stats.deltaEvenements} 
-        />
-      </div>
+  <div className="stat-card">
+    <h3>Annonces publiées</h3>
+    <div className="stat-value">10</div>
+    <div className="stat-delta">+3 ce mois-ci</div>
+  </div>
+  <div className="stat-card">
+    <h3>Bénévoles recrutés</h3>
+    <div className="stat-value">2</div>
+    <div className="stat-delta">+10 ce mois-ci</div>
+  </div>
+  <div className="stat-card">
+    <h3>Candidatures reçues</h3>
+    <div className="stat-value">32</div>
+    <div className="stat-delta">+15 ce mois-ci</div>
+  </div>
+  <div className="stat-card">
+    <h3>Événements organisés</h3>
+    <div className="stat-value">5</div>
+    <div className="stat-delta">+2 ce mois-ci</div>
+  </div>
+</div>
       
       <div className="dashboard-sections">
         <RecentAnnonces annonces={annonces} />

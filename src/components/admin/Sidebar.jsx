@@ -1,17 +1,27 @@
 import React from "react";
 import { 
   Home, 
-  Users as UsersIcon, 
+  Users,
+  Shield,
   BarChart2, 
   Sun, 
   LogOut, 
   ChevronLeft, 
-  ChevronRight 
+  ChevronRight,
+  Megaphone,
+  Tag
 } from "lucide-react";
 import { NavLink, Outlet } from 'react-router-dom';
 import "./style/admin.css";
+import { useNavigate } from "react-router-dom";
 
 export default function Sidebar({ isOpen, toggleSidebar }) {
+  const navigate = useNavigate();
+
+const Logout = () => {
+  localStorage.clear();
+  navigate('/login'); 
+};
   return (
     <div className="admin-container">
       <aside className={`admin-sidebar ${isOpen ? "" : "collapsed"}`}>
@@ -19,11 +29,11 @@ export default function Sidebar({ isOpen, toggleSidebar }) {
           <div className="sidebar-header">
             {isOpen ? (
               <>
-                <span className="logo-icon">❤️</span>
+                <span className="logo-icon"></span>
                 <NavLink to="/welcome/admin" className="logo-text">SolidarLink</NavLink>
               </>
             ) : (
-              <span className="logo-icon">❤️</span>
+              <span className="logo-icon"></span>
             )}
             <button className="sidebar-toggle" onClick={toggleSidebar}>
               {isOpen ? <ChevronLeft size={18} /> : <ChevronRight size={18} />}
@@ -33,27 +43,33 @@ export default function Sidebar({ isOpen, toggleSidebar }) {
           <nav className="sidebar-nav">
             <ul>
               <NavItem 
-                icon={<Home size={20} />} 
+                icon={<Home size={20} className="nav-icon-svg" />} 
                 path="/welcome/admin/dashboard" 
                 label="Dashboard" 
                 isOpen={isOpen} 
               />
               <NavItem 
-                icon={<UsersIcon size={20} />} 
+                icon={<Users size={20} className="nav-icon-svg" />} 
                 path="/welcome/admin/users/citoyen" 
-                label="gerer citoyen users" 
+                label="Gérer citoyens" 
                 isOpen={isOpen} 
               />
               <NavItem 
-                icon={<BarChart2 size={20} />} 
+                icon={<Shield size={20} className="nav-icon-svg" />} 
                 path="/welcome/admin/users/association" 
-                label="association" 
+                label="Associations" 
                 isOpen={isOpen} 
               />
               <NavItem 
-                icon={<BarChart2 size={20} />} 
-                path="/welcome/admin/stats" 
-                label="Statistics" 
+                icon={<Tag size={20} className="nav-icon-svg" />} 
+                path="/welcome/admin/categories" 
+                label="Catégories" 
+                isOpen={isOpen} 
+              />
+              <NavItem 
+                icon={<Megaphone size={20} className="nav-icon-svg" />} 
+                path="/welcome/admin/annonces" 
+                label="Annonces" 
                 isOpen={isOpen} 
               />
             </ul>
@@ -64,18 +80,16 @@ export default function Sidebar({ isOpen, toggleSidebar }) {
               {isOpen ? (
                 <>
                   <div className="user-name">Admin</div>
-                  <div className="user-role">Administrator</div>
+                  <div className="user-role">Administrateur</div>
                 </>
               ) : (
                 <div className="user-initials">A</div>
               )}
             </div>
             <div className="sidebar-actions">
-              <button className="action-btn">
-                <Sun size={16} />
-              </button>
-              <button className="action-btn logout">
-                <LogOut size={16} />
+        
+              <button className="action-btn logout" onClick={()=>{Logout()}}>
+                <LogOut size={16} className="action-icon" />
               </button>
             </div>
           </div>

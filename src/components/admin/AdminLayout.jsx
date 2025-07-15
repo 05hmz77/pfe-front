@@ -6,7 +6,8 @@ import Dashboard from "./Dashboard";
 import Statistics from "./Statistics";
 import Citoyen from "./Citoyen";
 import Association from "./Association";
-
+import CategorieManager from "./CategorieManager";
+import AnnonceManager from "./AnnonceManager";
 export default function AdminLayout() {
   // Gérer l'état du sidebar ici
   const [isOpen, setIsOpen] = useState(true);
@@ -23,6 +24,8 @@ export default function AdminLayout() {
           <Route path="users/citoyen" element={<Citoyen />} />
           <Route path="users/association" element={<Association />} />
           <Route path="stats" element={<Statistics />} />
+          <Route path="categories" element={<CategorieManager />} />
+          <Route path="annonces" element={<AnnonceManager />} />
           {/* Optionnel: route fallback */}
           <Route path="*" element={<Dashboard />} />
         </Routes>

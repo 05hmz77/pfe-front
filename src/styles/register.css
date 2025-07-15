@@ -1,67 +1,127 @@
 .inscription-container {
-  max-width: 500px;
-  margin: 60px auto;
-  padding: 30px;
-  background-color: #f4f4f4;
-  border-radius: 12px;
-  box-shadow: 0 0 12px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  padding: 20px;
 }
 
-.inscription-container h2 {
+.nav-buttons {
+  margin-bottom: 30px;
+  display: flex;
+  gap: 15px;
+}
+
+.nav-button {
+  padding: 10px 20px;
+  background-color: #4a6fa5;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  font-size: 14px;
+}
+
+.nav-button:hover {
+  background-color: #3a5a8a;
+}
+
+.inscription-card {
+  background: white;
+  padding: 30px;
+  border-radius: 10px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 500px;
+}
+
+h2 {
   text-align: center;
-  margin-bottom: 20px;
+  margin-bottom: 25px;
   color: #333;
+  font-size: 24px;
 }
 
 .form-group {
-  margin-bottom: 15px;
+  margin-bottom: 20px;
 }
 
 .form-group label {
   display: block;
-  font-weight: bold;
-  margin-bottom: 6px;
+  margin-bottom: 8px;
+  font-weight: 500;
+  color: #555;
 }
 
-.form-group input,
-.form-group select {
-  width: 100%;
-  padding: 10px;
-  border-radius: 6px;
-  border: 1px solid #ccc;
-  font-size: 16px;
-}
-
-button[type="submit"] {
+.form-input, .form-select {
   width: 100%;
   padding: 12px;
-  background-color: #28a745;
-  border: none;
-  color: white;
+  border: 1px solid #ddd;
+  border-radius: 5px;
   font-size: 16px;
-  border-radius: 6px;
-  cursor: pointer;
+  transition: border-color 0.3s;
 }
 
-button[disabled] {
-  background-color: #ccc;
+.form-input:focus, .form-select:focus {
+  border-color: #4a6fa5;
+  outline: none;
+}
+
+.form-select {
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 1em;
+}
+
+.submit-button {
+  width: 100%;
+  padding: 12px;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 45px;
+  margin-top: 10px;
+}
+
+.submit-button:hover {
+  background-color: #3e8e41;
+}
+
+.submit-button:disabled {
+  background-color: #cccccc;
   cursor: not-allowed;
 }
 
-.error-message {
-  background-color: #ffdddd;
-  color: #d8000c;
-  padding: 10px;
-  border: 1px solid #d8000c;
-  border-radius: 6px;
-  margin-bottom: 15px;
+/* Animation pour l'apparition des champs conditionnels */
+.form-group {
+  transition: all 0.3s ease;
 }
 
-.success-message {
-  background-color: #ddffdd;
-  color: #270;
-  padding: 10px;
-  border: 1px solid #270;
-  border-radius: 6px;
-  margin-bottom: 15px;
+/* Responsive design */
+@media (max-width: 600px) {
+  .inscription-card {
+    padding: 20px;
+  }
+  
+  .nav-buttons {
+    flex-direction: column;
+    width: 100%;
+    max-width: 300px;
+  }
+  
+  .nav-button {
+    width: 100%;
+  }
 }

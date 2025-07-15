@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-
-import "./style/candidatures.css"
+import "./style/candidatures.css";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
@@ -23,7 +22,13 @@ export default function MyCandidature() {
       const token = localStorage.getItem("accessToken");
       const headers = { Authorization: `Bearer ${token}` };
       const response = await axios.get("http://127.0.0.1:8000/api/candidatures/mes/", { headers });
-      setCandidatures(response.data);
+      
+      // Trier les candidatures par date (du plus récent au plus ancien)
+      const sortedCandidatures = response.data.sort((a, b) => 
+        new Date(b.date_candidature) - new Date(a.date_candidature)
+      );
+      
+      setCandidatures(sortedCandidatures);
       setLoading(false);
     } catch (err) {
       setError(err.message);
@@ -78,12 +83,57 @@ export default function MyCandidature() {
     }
   };
 
-  if (loading) return <div className="dashboard loading">Chargement en cours...</div>;
+  // Fonction pour gérer la suppression d'une candidature
+  const handleDeleteCandidature = async (candidatureId) => {
+    try {
+      const token = localStorage.getItem("accessToken");
+      const headers = { Authorization: `Bearer ${token}` };
+
+      await axios.delete(
+        `http://127.0.0.1:8000/api/candidatures/mes/${candidatureId}/`,
+        { headers }
+      );
+
+      toast.success("Candidature supprimée avec succès!");
+      setCandidatures(candidatures.filter(cand => cand.id !== candidatureId));
+    } catch (err) {
+      toast.error("Erreur lors de la suppression de la candidature");
+      console.error(err);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="loader-overlay">
+        <div className="simple-loader"></div>
+      </div>
+    );
+  }
   if (error) return <div className="dashboard error">Erreur: {error}</div>;
+
+  // Filtrer et trier les candidatures
+  const filteredCandidatures = candidatures
+    .filter((c) => {
+      const now = new Date();
+      const validStatus = statusFilter ? c.statut === statusFilter : true;
+      const validStart = startAfterNow ? new Date(c.date_candidature) > now : true;
+      const validEnd = endBeforeNow ? new Date(c.date_candidature) < now : true;
+      return validStatus && validStart && validEnd;
+    });
 
   return (
     <div className="dashboard">
-      <ToastContainer position="top-right" autoClose={3000} />
+      <ToastContainer 
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop={true}  // Les nouvelles notifications apparaissent en haut
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+      />
 
       <h1>Mes Candidatures</h1>
 
@@ -117,35 +167,29 @@ export default function MyCandidature() {
         </label>
       </div>
 
-      {candidatures.length > 0 ? (
+      {filteredCandidatures.length > 0 ? (
         <div className="candidatures-list">
-          {candidatures
-            .filter((c) => {
-              const now = new Date();
-              const validStatus = statusFilter ? c.statut === statusFilter : true;
-              const validStart = startAfterNow ? new Date(c.date_candidature) > now : true;
-              const validEnd = endBeforeNow ? new Date(c.date_candidature) < now : true;
-              return validStatus && validStart && validEnd;
-            })
-            .map((candidature) => (
-              <div key={candidature.id} className="candidature-card">
-                <div className="candidature-header">
-                  <h3>Candidature #{candidature.id}</h3>
-                  <span className={getStatusBadgeClass(candidature.statut)}>
-                    {candidature.statut.replace("_", " ")}
-                  </span>
+          {filteredCandidatures.map((candidature) => (
+            <div key={candidature.id} className="candidature-card">
+              <div className="candidature-header">
+                <div>
+                  <h3>{candidature.annonce_titre || `Candidature #${candidature.id}`}</h3>
+                  <p className="candidature-date">{formatDate(candidature.date_candidature)}</p>
                 </div>
-
-                <div className="candidature-details">
-                  <p><strong>Annonce ID:</strong> {candidature.annonce}</p>
-                  <p><strong>Message:</strong> {candidature.message}</p>
-                  <p><strong>Date:</strong> {formatDate(candidature.date_candidature)}</p>
-                  {candidature.note_engagement && (
-                    <p><strong>Note d'engagement:</strong> {candidature.note_engagement}</p>
-                  )}
-                </div>
+                <span className={getStatusBadgeClass(candidature.statut)}>
+                  {candidature.statut.replace("_", " ")}
+                </span>
               </div>
-            ))}
+
+              <div className="candidature-details">
+                <p><strong>Association:</strong> {candidature.annonce_association || "Non spécifié"}</p>
+                <p><strong>Message:</strong> {candidature.message}</p>
+                {candidature.note_engagement && (
+                  <p><strong>Note d'engagement:</strong> {candidature.note_engagement}</p>
+                )}
+              </div>
+            </div>
+          ))}
         </div>
       ) : (
         <div className="no-candidatures">

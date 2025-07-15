@@ -1,182 +1,329 @@
-import React, { useState, useEffect } from "react";
-import "./style/Dashboard.css";
+import React, { useEffect, useState } from "react";
 import axios from "axios";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  PieChart,
+  Pie,
+  Cell,
+} from "recharts";
+import { Toaster } from 'react-hot-toast'; 
+import { toast } from "react-hot-toast";
+import "./style/Dashboard.css";
+import RecommendationCard from "./RecommendationCard ";
 
 const Dashboard = () => {
-  const [listAnnonces, setListAnnonces] = useState([]);
-  const [listCandidature, setCandidatures] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [stats, setStats] = useState(null);
+  const [recommendations, setRecommendations] = useState([]);
+  const [loading, setLoading] = useState({
+    stats: true,
+    recommendations: true,
+  });
+  const [error, setError] = useState({
+    stats: null,
+    recommendations: null,
+  });
+  const [selectedAnnonce, setSelectedAnnonce] = useState(null);
+  const [showModal, setShowModal] = useState(false);
+  const [message, setMessage] = useState("");
+
   const currentUser = JSON.parse(localStorage.getItem("user"));
   const token = localStorage.getItem("accessToken");
-
-  // Calcul des métriques
-  const missionsAccomplies = listCandidature.filter(c => 
-    c.statut === "ACCEPTEE" && 
-    new Date(listAnnonces.find(a => a.id === c.annonce)?.date_fin) < new Date()
-  ).length;
-
-  const associationsSoutenues = new Set(
-    listCandidature
-      .filter(c => c.statut === "ACCEPTEE")
-      .map(c => listAnnonces.find(a => a.id === c.annonce)?.association?.nom)
-      .filter(Boolean)
-  ).size;
-
-  const heuresBenevolat = listCandidature.filter(c => 
-    c.statut === "EN_ATTENTE"
-  ).length;
-
-  // Suggestions (annonces non postulées)
-  const suggestions = listAnnonces
-    .filter(a => !listCandidature.some(c => c.annonce === a.id))
-    .slice(0, 6);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const headers = { Authorization: `Bearer ${token}` };
-        
-        // Récupérer les annonces
-        const annoncesRes = await axios.get(
-          "http://localhost:8000/api/annonces/", 
-          { headers }
+        // Fetch stats
+        const statsResponse = await axios.get(
+          "http://localhost:8000/api/citoyen/dashboard/stats/",
+          { headers: { Authorization: `Bearer ${token}` } }
         );
-        setListAnnonces(annoncesRes.data || []);
+        setStats(statsResponse.data);
+        setLoading((prev) => ({ ...prev, stats: false }));
 
-        // Récupérer les candidatures
-        const candidaturesRes = await axios.get(
-          "http://127.0.0.1:8000/api/candidatures/mes/",
-          { headers }
+        // Fetch recommendations
+        const recResponse = await axios.get(
+          `http://localhost:8000/api/citoyen/${currentUser.id}/recommendations/`,
+          { headers: { Authorization: `Bearer ${token}` } }
         );
-        setCandidatures(candidaturesRes.data || []);
-
+        setRecommendations(
+          Array.isArray(recResponse.data.recommendations)
+            ? recResponse.data.recommendations
+            : []
+        );
+        setLoading((prev) => ({ ...prev, recommendations: false }));
       } catch (err) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
+        setError({
+          stats: err.response?.data?.detail || err.message,
+          recommendations: err.response?.data?.detail || err.message,
+        });
+        setLoading({ stats: false, recommendations: false });
+        toast.error("Erreur lors du chargement des données");
       }
     };
+
     fetchData();
-  }, [token]);
+  }, [currentUser.id, token]);
 
-  if (loading) {
-    return <div className="loading">Chargement en cours...</div>;
-  }
-
-  if (error) {
-    return <div className="error">Erreur: {error}</div>;
-  }
-
-  const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('fr-FR');
+  const handlePostulerClick = (annonce) => {
+    setSelectedAnnonce(annonce);
+    setShowModal(true);
   };
 
+  const handleSubmitCandidature = async () => {
+    try {
+      const formData = {
+        annonce: selectedAnnonce.id,
+        statut: "EN_ATTENTE",
+        message: message || "Je souhaite participer à cette annonce",
+        date_candidature: new Date().toISOString(),
+        citoyen: currentUser.id,
+      };
+
+      const res=await axios.post("http://127.0.0.1:8000/api/candidatures/", formData, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      toast.success("Votre candidature a bien été envoyée !");
+      ;
+      if (res.status === 201) {
+      toast.success('Candidature envoyée avec succès!', {
+        icon: '👏',
+        style: {
+          borderRadius: '10px',
+          background: '#333',
+          color: '#fff',
+        },
+      });
+      setShowModal(false);
+      setMessage("");
+      setRecommendations((prev) =>
+        prev.filter((a) => a.id !== selectedAnnonce.id)
+      )
+    }
+    } catch (err) {
+      toast.error("Erreur lors de l'envoi de la candidature");
+      console.error(err);
+    }
+  };
+
+  if (loading.stats || loading.recommendations) {
+    return (
+      <div className="loader-overlay">
+        <div className="spinner"></div>
+      </div>
+    );
+  }
+
+  if (error.stats) {
+    return <div className="error-message">Erreur: {error.stats}</div>;
+  }
+
+  if (!stats) {
+    return <div className="no-data">Aucune donnée disponible</div>;
+  }
+
+  // Prepare chart data
+  const typeData = stats.candidatures_by_type.map((item) => ({
+    name: item.type,
+    value: item.count,
+  }));
+
+  const categoryData = stats.candidatures_by_category.map((item) => ({
+    name: item.nom,
+    value: item.count,
+  }));
+
+  const COLORS = ["#4361ee", "#3f37c9", "#4895ef", "#4cc9f0", "#7209b7"];
+
   return (
-    <div className="dashboard">
-      <header>
-        <h1>Bonjour {currentUser?.username} !</h1>
-        <p>Voici un aperçu de votre engagement solidaire</p>
-      </header>
+    <div className="dashboard-container">
+      <Toaster 
+      position="top-center"
+      toastOptions={{
+        duration: 4000,
+        style: {
+          background: '#363636',
+          color: '#fff',
+        },
+        success: {
+          duration: 3000,
+          theme: {
+            primary: 'green',
+            secondary: 'black',
+          },
+        },
+        error: {
+          duration: 5000,
+        },
+      }}
+    />
+      <h1 className="dashboard-title">Tableau de bord Citoyen</h1>
 
-      <section className="metrics">
-        <div className="metric-card">
-          <div className="metric-header">
-            <span className="icon">✅</span>
-            <h3>Missions accomplies</h3>
+      <div className="stats-grid">
+        <div className="stat-card">
+          <h3>Total Candidatures</h3>
+          <p className="stat-value">{stats.total_candidatures}</p>
+        </div>
+        <div className="stat-card">
+          <h3>Candidatures Acceptées</h3>
+          <p className="stat-value">{stats.accepted_candidatures}</p>
+        </div>
+        <div className="stat-card">
+          <h3>Candidatures en Attente</h3>
+          <p className="stat-value">{stats.pending_candidatures}</p>
+        </div>
+      </div>
+
+      <div className="charts-section">
+        <div className="chart-card">
+          <h3>Candidatures par Type</h3>
+          <div className="chart-wrapper">
+            <PieChart width={350} height={250}>
+              <Pie
+                data={typeData}
+                cx="50%"
+                cy="50%"
+                labelLine={false}
+                outerRadius={80}
+                dataKey="value"
+                label={({ name, percent }) =>
+                  `${name}: ${(percent * 100).toFixed(0)}%`
+                }
+              >
+                {typeData.map((entry, index) => (
+                  <Cell
+                    key={`cell-${index}`}
+                    fill={COLORS[index % COLORS.length]}
+                  />
+                ))}
+              </Pie>
+              <Tooltip />
+            </PieChart>
           </div>
-          <div className="metric-value">{missionsAccomplies}</div>
-          <div className="metric-change">+{Math.floor(missionsAccomplies * 0.3)} ce mois-ci</div>
         </div>
 
-        <div className="metric-card">
-          <div className="metric-header">
-            <span className="icon">✅</span>
-            <h3>Heures de bénévolat</h3>
+        <div className="chart-card">
+          <h3>Candidatures par Catégorie</h3>
+          <div className="chart-wrapper">
+            <BarChart
+              width={350}
+              height={250}
+              data={categoryData}
+              margin={{ top: 5, right: 20, left: 0, bottom: 5 }}
+            >
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="name" />
+              <YAxis />
+              <Tooltip />
+              <Bar dataKey="value">
+                {categoryData.map((entry, index) => (
+                  <Cell
+                    key={`cell-${index}`}
+                    fill={index % 2 === 0 ? "#89CFF0" : "#D3D3D3"}
+                  />
+                ))}
+              </Bar>
+            </BarChart>
           </div>
-          <div className="metric-value">{heuresBenevolat}</div>
-          <div className="metric-change">+{Math.floor(heuresBenevolat * 0.4)} ce mois-ci</div>
         </div>
+      </div>
 
-        <div className="metric-card">
-          <div className="metric-header">
-            <span className="icon">✅</span>
-            <h3>Évaluation moyenne</h3>
-          </div>
-          <div className="metric-value">4.5</div>
-          <div className="metric-change">+0.3 ce mois-ci</div>
-        </div>
-
-        <div className="metric-card">
-          <div className="metric-header">
-            <span className="icon">✅</span>
-            <h3>Associations soutenues</h3>
-          </div>
-          <div className="metric-value">{associationsSoutenues}</div>
-          <div className="metric-change">+{Math.floor(associationsSoutenues * 0.5)} ce mois-ci</div>
-        </div>
-      </section>
-
-      <section className="suggestions">
-        <h2>Suggestions pour vous</h2>
-        <p>Recommandations basées sur vos intérêts</p>
-        
-        <div className="suggestions-grid">
-          {suggestions.map(annonce => (
-            <div key={annonce.id} className="suggestion-card">
-              <h3>{annonce.titre}</h3>
-              <div className="association">{annonce.association?.nom}</div>
-              <div className="match">{Math.floor(Math.random() * 20) + 80}% match</div>
-              <div className="details">
-                <p>{annonce.lieu}</p>
-                <p>{formatDate(annonce.date_fin)}</p>
+      <div className="section">
+        <h2 className="section-title">Dernières Candidatures</h2>
+        <div className="candidatures-grid">
+          {stats.recent_candidatures.map((cand) => (
+            <div key={cand.id} className="card">
+              <div className="card-header">
+                <h4>{cand.annonce.titre}</h4>
+                <span className={`status-badge ${cand.statut.toLowerCase()}`}>
+                  {cand.statut}
+                </span>
               </div>
-              <p className="description">{annonce.description}</p>
+              <p className="card-date">
+                {new Date(cand.date_candidature).toLocaleDateString()}
+              </p>
+              <p className="card-content">
+                {cand.message.substring(0, 100)}...
+              </p>
             </div>
           ))}
         </div>
-        
-        <button className="see-all">Voir toutes les suggestions</button>
-      </section>
+      </div>
 
-      <section className="applications">
-        <h2>Mes candidatures récentes</h2>
-        <p>Suivi de vos demandes de participation</p>
-        
-        <div className="applications-list">
-          {listCandidature.slice(0, 6).map(candidature => {
-            const annonce = listAnnonces.find(a => a.id === candidature.annonce);
-            return (
-              <div key={candidature.id} className="application-card">
-                <div className="application-header">
-                  <h3>{annonce?.titre || 'Annonce inconnue'}</h3>
-                  <div className={`status ${candidature.statut.toLowerCase()}`}>
-                    {candidature.statut === "ACCEPTEE" && "Acceptée"}
-                    {candidature.statut === "EN_ATTENTE" && "En attente"}
-                    {candidature.statut === "TERMINEE" && "Terminée"}
-                  </div>
-                </div>
-                <div className="association">{annonce?.association?.nom || 'Association inconnue'}</div>
-                <div className="date">Postulé le {formatDate(candidature.date_candidature)}</div>
+      <div className="section">
+        <h2 className="section-title">Annonces suggérées pour vous</h2>
+        {error.recommendations && (
+          <div className="error-message">{error.recommendations}</div>
+        )}
+        {recommendations.length === 0 ? (
+          <div className="no-recommendations">
+            <p>Aucune recommandation disponible pour le moment.</p>
+          </div>
+        ) : (
+          <div className="recommendations-grid">
+            {recommendations.map((annonce) => (
+              <RecommendationCard
+                key={annonce.id}
+                annonce={annonce}
+                onPostulerClick={handlePostulerClick}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Modal de candidature */}
+      {showModal && (
+        <div className="modal-overlay">
+          <div className="modal">
+            <div className="modal-header">
+              <h3>Postuler à {selectedAnnonce?.titre}</h3>
+              <button
+                className="close-btn"
+                onClick={() => {
+                  setShowModal(false);
+                  setMessage("");
+                }}
+              >
+                &times;
+              </button>
+            </div>
+
+            <div className="modal-body">
+              <div className="form-group">
+                <label>Votre message</label>
+                <textarea
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
+                  placeholder="Expliquez pourquoi vous souhaitez participer..."
+                  rows={4}
+                />
               </div>
-            );
-          })}
-        </div>
-        
-        <button className="see-all">Voir toutes mes candidatures</button>
-      </section>
+            </div>
 
-      <section className="quick-actions">
-        <h2>Actions rapides</h2>
-        <p>Accédez rapidement aux fonctionnalités principales</p>
-        
-        <div className="actions-grid">
-          <button className="action-button">Rechercher des annonces</button>
-          <button className="action-button">Voir les événements</button>
-          <button className="action-button">Assistance chatbot</button>
+            <div className="modal-footer">
+              <button
+                className="btn secondary"
+                onClick={() => {
+                  setShowModal(false);
+                  setMessage("");
+                }}
+              >
+                Annuler
+              </button>
+              <button className="btn primary" onClick={handleSubmitCandidature}>
+                Envoyer la candidature
+              </button>
+            </div>
+          </div>
         </div>
-      </section>
+      )}
     </div>
   );
 };

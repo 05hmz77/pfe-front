@@ -1,7 +1,10 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import '../styles/login.css';
+import Loader from './Loader';
 
 const Login = ({ onLogin }) => {
   const [credentials, setCredentials] = useState({
@@ -38,21 +41,29 @@ const Login = ({ onLogin }) => {
         localStorage.setItem('refreshToken', refresh);
         localStorage.setItem('user', JSON.stringify(user));
         
+        // Notification de succès
+        toast.success('Connexion réussie !');
+        
         // Appeler la fonction de callback si fournie
         if (onLogin) {
           onLogin(user, access);
         }
-        if(user.type == "ADMIN"){
-          navigate('/welcome/admin');
-        }else if(user.type == "CITOYEN"){
-          navigate("/welcome/citoyen")
-        }else{
-          navigate("/welcome/association")
-        }
-        // Rediriger vers la page d'accueil
+        
+        // Redirection basée sur le type d'utilisateur
+        setTimeout(() => {
+          if(user.type === "ADMIN"){
+            navigate('/welcome/admin');
+          } else if(user.type === "CITOYEN"){
+            navigate("/welcome/citoyen");
+          } else {
+            navigate("/welcome/association");
+          }
+        }, 1500);
       }
     } catch (err) {
-      setError(err.response?.data?.detail || 'Identifiants incorrects');
+      const errorMessage = err.response?.data?.detail || 'Identifiants incorrects';
+      setError(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -60,36 +71,47 @@ const Login = ({ onLogin }) => {
 
   return (
     <div className="login-container">
-      <h2>Connexion</h2>
-      {error && <div className="error-message">{error}</div>}
+      <ToastContainer position="top-right" autoClose={3000} />
+      
+      <div className="nav-buttons">
+        <button className="nav-button" onClick={() => navigate("/register")}>Inscription</button>
+        <button className="nav-button" onClick={() => navigate("/")}>Accueil</button>
+      </div>
+      
+      <div className="login-card">
+        <h2>Connexion</h2>
+        {error && <div className="error-message">{error}</div>}
 
-      <form onSubmit={handleSubmit}>
-        <div className="form-group">
-          <label>Nom d'utilisateur</label>
-          <input
-            type="text"
-            name="username"
-            value={credentials.username}
-            onChange={handleChange}
-            required
-          />
-        </div>
+        <form onSubmit={handleSubmit}>
+          <div className="form-group">
+            <label>Nom d'utilisateur</label>
+            <input
+              type="text"
+              name="username"
+              value={credentials.username}
+              onChange={handleChange}
+              required
+              className="form-input"
+            />
+          </div>
 
-        <div className="form-group">
-          <label>Mot de passe</label>
-          <input
-            type="password"
-            name="password"
-            value={credentials.password}
-            onChange={handleChange}
-            required
-          />
-        </div>
+          <div className="form-group">
+            <label>Mot de passe</label>
+            <input
+              type="password"
+              name="password"
+              value={credentials.password}
+              onChange={handleChange}
+              required
+              className="form-input"
+            />
+          </div>
 
-        <button type="submit" disabled={loading}>
-          {loading ? 'Connexion en cours...' : 'Se connecter'}
-        </button>
-      </form>
+          <button type="submit" className="submit-button" disabled={loading}>
+            {loading ? <Loader size="small" /> : 'Se connecter'}
+          </button>
+        </form>
+      </div>
     </div>
   );
 };

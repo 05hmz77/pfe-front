@@ -5,6 +5,8 @@ import Dashboard from "./Dashboard";
 import MyCandidature from "./MyCandidature";
 import ListAnnonce from "./ListAnnonces";
 import Chat from "./chat";
+import CitoyenProfile from "./Profile";
+import AssociationSoutenue from "./AssociationSetenu";
 
 export default function CitoyenLayout() {
   // Gérer l'état du sidebar ici
@@ -22,6 +24,8 @@ export default function CitoyenLayout() {
           <Route path="/listannonce" element={<ListAnnonce />} />
           <Route path="/mescandidature" element={<MyCandidature />} />
           <Route path="/chat" element={<Chat />} />
+          <Route path="/profile" element={<CitoyenProfile />} />
+          <Route path="/listAssociation" element={<AssociationSoutenue />} />
         </Routes>
         <Outlet />
       </main>

@@ -1,7 +1,7 @@
 // MyAnnonces.jsx
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import "./style/ListAnnonces.css";
+import "./style/MyAnnonces.css";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
@@ -50,6 +50,7 @@ export default function MyAnnonces() {
       const filtered = response.data.filter((c) => c.annonce === annonceId);
       setCandidatures((prev) => ({ ...prev, [annonceId]: filtered }));
       setSelectedAnnonceId(annonceId);
+      toast.success("Candidatures chargées avec succès");
     } catch (err) {
       toast.error("Erreur lors du chargement des candidatures");
     }
@@ -80,7 +81,12 @@ export default function MyAnnonces() {
         annonces.map((annonce) => (
           <div className="annonce-card" key={annonce.id}>
             <div className="annonce-header">
-              <img src={annonce.association.logo || "/default-avatar.png"} alt="logo" />
+              <img
+                src={`http://localhost:8000/media/${annonce.association.logo}`}
+                onError={(e) => (e.target.src = "/profile.jpg")}
+                alt="Logo association"
+                className="modal-img"
+              />
               <div>
                 <h3>{annonce.titre}</h3>
                 <p>{formatDate(annonce.date_creation)}</p>
