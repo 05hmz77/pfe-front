@@ -1,127 +1,143 @@
-.inscription-container {
+.inscription-page-split {
+  display: flex;
+  height: 100vh;
+  font-family: 'Arial', sans-serif;
+}
+
+/* Left - Présentation */
+.inscription-left {
+  width: 50%;
+  background: #4361ee;
+  color: white;
   display: flex;
   flex-direction: column;
-  align-items: center;
   justify-content: center;
-  min-height: 100vh;
-  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-  padding: 20px;
-}
-
-.nav-buttons {
-  margin-bottom: 30px;
-  display: flex;
-  gap: 15px;
-}
-
-.nav-button {
-  padding: 10px 20px;
-  background-color: #4a6fa5;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  transition: background-color 0.3s;
-  font-size: 14px;
-}
-
-.nav-button:hover {
-  background-color: #3a5a8a;
-}
-
-.inscription-card {
-  background: white;
-  padding: 30px;
-  border-radius: 10px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-  width: 100%;
-  max-width: 500px;
-}
-
-h2 {
+  align-items: center;
+  padding: 40px;
   text-align: center;
-  margin-bottom: 25px;
-  color: #333;
-  font-size: 24px;
+}
+
+.presentation-image {
+  width: 200px; /* ajuste selon ton image */
+  height: auto;
+  margin-bottom: 20px;
+  border-radius: 12px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+.inscription-left h1 {
+  font-size: 48px;
+  margin-bottom: 20px;
+}
+
+.inscription-left p {
+  font-size: 18px;
+  margin-bottom: 30px;
+}
+
+.inscription-left .app-btn {
+  padding: 12px 30px;
+  font-size: 16px;
+  background-color: white;
+  color: #4361ee;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.inscription-left .app-btn:hover {
+  background-color: #e0e0ff;
+}
+
+/* Right - Formulaire */
+.inscription-right {
+  width: 50%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 40px;
+  background-color: #f8f9fa;
 }
 
 .form-group {
   margin-bottom: 20px;
 }
 
-.form-group label {
-  display: block;
-  margin-bottom: 8px;
-  font-weight: 500;
-  color: #555;
-}
-
-.form-input, .form-select {
+.form-group input, .form-group select {
   width: 100%;
   padding: 12px;
   border: 1px solid #ddd;
-  border-radius: 5px;
+  border-radius: 6px;
   font-size: 16px;
-  transition: border-color 0.3s;
 }
 
-.form-input:focus, .form-select:focus {
-  border-color: #4a6fa5;
-  outline: none;
-}
-
-.form-select {
-  appearance: none;
-  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
-  background-repeat: no-repeat;
-  background-position: right 10px center;
-  background-size: 1em;
-}
-
-.submit-button {
+button[type="submit"] {
   width: 100%;
   padding: 12px;
-  background-color: #4CAF50;
+  background-color: #4361ee;
   color: white;
   border: none;
-  border-radius: 5px;
+  border-radius: 6px;
   font-size: 16px;
   cursor: pointer;
-  transition: background-color 0.3s;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 45px;
-  margin-top: 10px;
 }
 
-.submit-button:hover {
-  background-color: #3e8e41;
-}
-
-.submit-button:disabled {
-  background-color: #cccccc;
+button[disabled] {
+  opacity: 0.6;
   cursor: not-allowed;
 }
 
-/* Animation pour l'apparition des champs conditionnels */
-.form-group {
+.error-message {
+  color: red;
+  margin-bottom: 15px;
+}
+
+.success-message {
+  color: green;
+  margin-bottom: 15px;
+}
+
+/* --- Boîte de succès après inscription --- */
+.success-box {
+  background: #e6f9f0;
+  border: 2px solid #38b000;
+  color: #22543d;
+  padding: 2rem;
+  border-radius: 12px;
+  text-align: center;
+  margin-top: 2rem;
+  box-shadow: 0 4px 10px rgba(56, 176, 0, 0.15);
+  animation: fadeIn 0.6s ease-in-out;
+}
+
+.success-box p {
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+}
+
+/* --- Bouton Aller à la connexion --- */
+.login-btn {
+  background: #38b000;
+  color: white;
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
   transition: all 0.3s ease;
 }
 
-/* Responsive design */
-@media (max-width: 600px) {
-  .inscription-card {
-    padding: 20px;
-  }
-  
-  .nav-buttons {
-    flex-direction: column;
-    width: 100%;
-    max-width: 300px;
-  }
-  
-  .nav-button {
-    width: 100%;
-  }
+.login-btn:hover {
+  background: #2d8600;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(56, 176, 0, 0.25);
+}
+
+/* Animation apparition */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(15px); }
+  to { opacity: 1; transform: translateY(0); }
 }

@@ -1,52 +1,63 @@
-/* Ajoutez ces styles à votre fichier admin.css */
-
-.nav-icon-svg {
-  color: #64748b; /* Couleur des icônes */
-  transition: all 0.2s ease;
-  min-width: 20px;
+/* Layout principal */
+.admin-layout {
+  display: flex;
+  height: 100vh;
+  background: #f9fafb;
+  overflow: hidden;
+  position: relative;
 }
 
-.nav-link.active .nav-icon-svg {
-  color: #3b82f6; /* Couleur des icônes actives */
+/* Sidebar */
+.admin-sidebar {
+  width: 250px;
+  background: #ffffff;
+  border-right: 1px solid #e5e7eb;
+  transition: transform 0.3s ease, width 0.3s ease;
+  z-index: 1000;
+}
+.admin-sidebar.collapsed {
+  width: 80px;
 }
 
-.nav-link:hover .nav-icon-svg {
-  color: #3b82f6; /* Couleur au survol */
-  transform: scale(1.1);
+/* Contenu principal */
+.admin-main-content {
+  flex: 1;
+  background: #ffffff;
+  padding: 0; /* Toujours 0 padding comme tu veux */
+  transition: all 0.3s ease;
 }
 
-.action-icon {
-  color: #00ff88;
-  transition: all 0.2s ease;
+/* Overlay pour mobile */
+.overlay {
+  display: none;
 }
 
-.action-btn:hover .action-icon {
-  color: #3b82f6;
-  transform: scale(1.1);
-}
+/* --- Responsive --- */
+@media (max-width: 768px) {
+  .admin-sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100%;
+    transform: translateX(-100%);
+  }
 
-.logout .action-icon {
-  color: #ef4444;
-}
+  .admin-sidebar.open {
+    transform: translateX(0);
+  }
 
-.logout:hover .action-icon {
-  color: #dc2626;
-}
+  /* overlay actif sur mobile */
+  .overlay {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 900;
+  }
 
-/* Amélioration des labels */
-.nav-label {
-  color: aliceblue;
-  margin-left: 12px;
-  font-size: 14px;
-  transition: all 0.2s ease;
-}
-
-.nav-link.active .nav-label {
-  font-weight: 500;
-  color: #1e40af;
-}
-
-.nav-link.active .nav-icon-svg {
-  font-weight: 500;
-  color: #c2d0ff;
+  /* Contenu toujours full width */
+  .admin-main-content {
+    margin-left: 0 !important;
+    width: 100%;
+  }
 }

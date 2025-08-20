@@ -1,29 +1,23 @@
 import React, { useState } from 'react';
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import '../styles/login.css';
 import Loader from './Loader';
 
 const Login = ({ onLogin }) => {
-  const [credentials, setCredentials] = useState({
-    username: '',
-    password: ''
-  });
+  const [credentials, setCredentials] = useState({ username: '', password: '' });
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const handleChange = (e) => {
+  const handleChange = e => {
     const { name, value } = e.target;
-    setCredentials(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    setCredentials(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async e => {
     e.preventDefault();
     setLoading(true);
     setError(null);
@@ -36,28 +30,17 @@ const Login = ({ onLogin }) => {
 
       if (response.status === 200) {
         const { access, refresh, user } = response.data;
-        // Stocker les tokens et les infos utilisateur
         localStorage.setItem('accessToken', access);
         localStorage.setItem('refreshToken', refresh);
         localStorage.setItem('user', JSON.stringify(user));
-        
-        // Notification de succès
+
         toast.success('Connexion réussie !');
-        
-        // Appeler la fonction de callback si fournie
-        if (onLogin) {
-          onLogin(user, access);
-        }
-        
-        // Redirection basée sur le type d'utilisateur
+        if (onLogin) onLogin(user, access);
+
         setTimeout(() => {
-          if(user.type === "ADMIN"){
-            navigate('/welcome/admin');
-          } else if(user.type === "CITOYEN"){
-            navigate("/welcome/citoyen");
-          } else {
-            navigate("/welcome/association");
-          }
+          if (user.type === 'ADMIN') navigate('/welcome/admin');
+          else if (user.type === 'CITOYEN') navigate('/welcome/citoyen');
+          else navigate('/welcome/association');
         }, 1500);
       }
     } catch (err) {
@@ -70,16 +53,18 @@ const Login = ({ onLogin }) => {
   };
 
   return (
-    <div className="login-container">
+    <div className="login-page-split">
       <ToastContainer position="top-right" autoClose={3000} />
-      
-      <div className="nav-buttons">
-        <button className="nav-button" onClick={() => navigate("/register")}>Inscription</button>
-        <button className="nav-button" onClick={() => navigate("/")}>Accueil</button>
+
+      {/* Left - Présentation de l'application */}
+      <div className="login-left">
+        <h1>SolidarLink</h1>
+        <p>Connectez les citoyens avec des associations pour un impact positif.</p>
+        <button className="app-btn"> <Link to="/" className="back-home-link">Découvrir l'application</Link></button>
       </div>
-      
-      <div className="login-card">
-        <h2>Connexion</h2>
+
+      {/* Right - Formulaire de login */}
+      <div className="login-right">
         {error && <div className="error-message">{error}</div>}
 
         <form onSubmit={handleSubmit}>
@@ -111,6 +96,11 @@ const Login = ({ onLogin }) => {
             {loading ? <Loader size="small" /> : 'Se connecter'}
           </button>
         </form>
+
+        <div className="login-footer">
+          <span>Pas encore de compte ? </span>
+          <button onClick={() => navigate('/register')} className="register-link">Inscription</button>
+        </div>
       </div>
     </div>
   );
