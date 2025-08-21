@@ -1,24 +1,17 @@
-import React from "react";
+
 import {
   BrowserRouter as Router,
   Routes,
   Route,
   Outlet,
 } from "react-router-dom";
-import Header from "./components/Header";
-import Footer from "./components/Footer";
-import Home from "./pages/Home";
-import FeaturesPage from "./pages/FeaturesPage";
-import HowItWorksPage from "./pages/HowItWorksPage";
-import TestimonialsPage from "./pages/TestimonialsPage";
 import "./App.css";
-import Hero from "./pages/Hero.jsx";
 import Homepage from "./pages/Homepage";
 import Inscription from "./authentification/inscription";
 import Login from "./authentification/login";
 import Dashboard from "./pages/Dashboard";
 
-import Sidebar from "./components/admin/Sidebar.jsx";
+
 import AdminLayout from "./components/admin/AdminLayout.jsx";
 import AssociationLayout from "./components/association/AssociationLayout.jsx";
 import CitoyenLayout from "./components/citoyen/CitoyenLayout.jsx";
@@ -44,10 +37,7 @@ function App() {
           </Routes>
         </main>
 
-        {/* Contenu secondaire (Outlet) */}
-        <main className="main-content flex-grow p-6 bg-white shadow-md rounded-t-2xl">
-          <Outlet />
-        </main>
+
       </div>
     </Router>
   );

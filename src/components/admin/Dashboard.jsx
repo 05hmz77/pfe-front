@@ -1,173 +1,166 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { Grid, Paper, Typography, Box, CircularProgress } from "@mui/material";
-import UsersStats from "./graphe/UsersStats";
-import AnnoncesStats from "./graphe/AnnoncesStats";
-import CandidaturesStats from "./graphe/CandidaturesStats";
-import RecentActivities from "./graphe/RecentActivities";
-import CategoriesChart from "./graphe/CategoriesChart";
-import CandidaturesParCategorie from "./graphe/CandidaturesParCategorie";
-import MoyenneCandidatures from "./graphe/MoyenneCandidatures";
-import AssociationsStats from "./graphe/AssociationsStats";
-import CitoyensStats from "./graphe/CitoyensStats";
-import AnnoncesParType from "./graphe/AnnoncesParType";
-import "./style/Dashboard.css"
+import {
+  BarChart,
+  Bar,
+  PieChart,
+  Pie,
+  Cell,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+  Legend,
+  LineChart,
+  Line,
+} from "recharts";
+import "./style/Dashboard.css";
 
-const Dashboard = () => {
+export default function Dashboard() {
   const [stats, setStats] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const currentUser = JSON.parse(localStorage.getItem("user"));
-  const token = localStorage.getItem("accessToken");
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [statsRes, dashboardRes] = await Promise.all([
-          axios.get("http://localhost:8000/api/statistics/", {
-            headers: { Authorization: `Bearer ${token}` },
-          }),
-          axios.get("http://localhost:8000/api/dashboard/", {
-            headers: { Authorization: `Bearer ${token}` },
-          }),
-        ]);
+    const token = localStorage.getItem("accessToken");
 
-        setStats({
-          ...statsRes.data,
-          recentActivities: dashboardRes.data,
-        });
-        setLoading(false);
-      } catch (err) {
-        setError(err.message);
-        setLoading(false);
-      }
-    };
+    axios
+      .get("http://localhost:8000/api/dashboard/stats/", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+      .then((res) => setStats(res.data))
+      .catch((err) => console.error(err));
+  }, []);
 
-    fetchData();
-  }, [token]);
-
-  if (loading) {
+  if (!stats) {
     return (
-      <Box
-        display="flex"
-        justifyContent="center"
-        alignItems="center"
-        minHeight="80vh"
-      >
-        <CircularProgress />
-      </Box>
+      <p className="dashboard-loading-text">
+        ⏳ Chargement des statistiques...
+      </p>
     );
   }
 
-  if (error) {
-    return (
-      <Paper sx={{ p: 3, mt: 3 }}>
-        <Typography color="error">Error: {error}</Typography>
-      </Paper>
-    );
-  }
+  return (
+    <div className="dashboard-admin-container">
+      {/* ==== KPIs ==== */}
+      <div className="dashboard-kpi-grid">
+        <div className="dashboard-card dashboard-kpi-card dashboard-users-card">
+          <h3 className="dashboard-card-title">👥 Utilisateurs</h3>
+          <p>Total : {stats.utilisateurs.total}</p>
+          <p>Associations : {stats.utilisateurs.associations}</p>
+          <p>Citoyens : {stats.utilisateurs.citoyens}</p>
+          <p>Nouveaux ce mois : {stats.utilisateurs.nouveaux_ce_mois}</p>
+        </div>
 
-  // Dans votre composant Dashboard, modifiez le retour comme ceci :
-return (
-  <Box sx={{ 
-    p: 3,
-    backgroundColor: '#f5f5f5',
-    minHeight: '100vh'
-  }}>
-    <Typography variant="h4" gutterBottom sx={{ 
-      mb: 4,
-      color: 'primary.main',
-      fontWeight: 'bold',
-      textAlign: 'center'
-    }}>
-      Tableau de bord administratif - Bonjour {currentUser.username}
-    </Typography>
+        <div className="dashboard-card dashboard-kpi-card dashboard-annonces-card">
+          <h3 className="dashboard-card-title">📢 Annonces</h3>
+          <p>Total : {stats.annonces.total}</p>
+          <p>En cours : {stats.annonces.en_cours}</p>
+          <p>Terminées : {stats.annonces.terminees}</p>
+        </div>
 
-    <Grid container spacing={3}>
-      {/* Cartes de statistiques */}
-      {[
-        <UsersStats data={stats.users} />,
-        <AssociationsStats data={stats.associations} />,
-        <CitoyensStats data={stats.citoyens} />,
-        <AnnoncesStats data={stats.annonces} />
-      ].map((component, index) => (
-        <Grid item xs={12} md={6} lg={3} key={index}>
-          <Paper sx={{
-            p: 2,
-            height: '100%',
-            display: 'flex',
-            flexDirection: 'column',
-            borderRadius: 3,
-            boxShadow: 3,
-            transition: 'transform 0.3s',
-            '&:hover': {
-              transform: 'scale(1.02)'
-            }
-          }}>
-            {component}
-          </Paper>
-        </Grid>
-      ))}
+        <div className="dashboard-card dashboard-kpi-card dashboard-candidatures-card">
+          <h3 className="dashboard-card-title">🙋‍♂️ Candidatures</h3>
+          <p>Total : {stats.candidatures.total}</p>
+          <p>
+            Engagement moyen :{" "}
+            {stats.candidatures.engagement_moyen
+              ? stats.candidatures.engagement_moyen.toFixed(1)
+              : "N/A"}
+          </p>
+        </div>
 
-      {/* Graphiques principaux */}
-      <Grid item xs={12} md={6}>
-        <Paper sx={{
-          p: 3,
-          height: '400px',
-          borderRadius: 3,
-          boxShadow: 3
-        }}>
-          <CategoriesChart data={stats.categories} />
-        </Paper>
-      </Grid>
+        <div className="dashboard-card dashboard-kpi-card dashboard-messages-card">
+          <h3 className="dashboard-card-title">💬 Messages</h3>
+          <p>Total : {stats.messages.total}</p>
+        </div>
+      </div>
 
-      <Grid item xs={12} md={6}>
-        <Paper sx={{
-          p: 3,
-          height: '400px',
-          borderRadius: 3,
-          boxShadow: 3
-        }}>
-          <CandidaturesParCategorie data={stats.candidatures.by_category} />
-        </Paper>
-      </Grid>
+      {/* ==== Graphiques ==== */}
+      <div className="dashboard-chart-grid">
+        <div className="dashboard-card">
+          <h3 className="dashboard-card-title">📊 Annonces par type</h3>
+          <ResponsiveContainer width="100%" height={250}>
+            <BarChart data={stats.annonces.par_type}>
+              <XAxis dataKey="type" />
+              <YAxis />
+              <Tooltip />
+              <Bar dataKey="count" fill="#3b82f6" radius={[6, 6, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
 
-      {/* Sections secondaires */}
-      <Grid item xs={12} md={6}>
-        <Paper sx={{
-          p: 3,
-          height: '100%',
-          borderRadius: 3,
-          boxShadow: 3
-        }}>
-          <MoyenneCandidatures moyenne={stats.annonces.moyenne_candidatures} />
-        </Paper>
-      </Grid>
+        <div className="dashboard-card">
+          <h3 className="dashboard-card-title">📌 Candidatures par statut</h3>
+          <ResponsiveContainer width="100%" height={250}>
+            <PieChart>
+              <Pie
+                data={stats.candidatures.par_statut}
+                dataKey="count"
+                nameKey="statut"
+                cx="50%"
+                cy="50%"
+                outerRadius={80}
+                label
+              >
+                {stats.candidatures.par_statut.map((entry, index) => (
+                  <Cell
+                    key={index}
+                    fill={["#10b981", "#f59e0b", "#ef4444"][index % 3]}
+                  />
+                ))}
+              </Pie>
+              <Tooltip />
+              <Legend />
+            </PieChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
 
-      <Grid item xs={12} md={6}>
-        <Paper sx={{
-          p: 3,
-          height: '100%',
-          borderRadius: 3,
-          boxShadow: 3
-        }}>
-          <AnnoncesParType data={stats.annonces.by_type} />
-        </Paper>
-      </Grid>
+      {/* ==== Evolution mensuelle ==== */}
+      <div className="dashboard-card dashboard-full-chart">
+        <h3 className="dashboard-card-title">📈 Evolution mensuelle</h3>
+        <ResponsiveContainer width="100%" height={300}>
+          <LineChart data={stats.evolution_mensuelle}>
+            <XAxis dataKey="mois" />
+            <YAxis />
+            <Tooltip />
+            <Legend />
+            <Line type="monotone" dataKey="utilisateurs" stroke="#3b82f6" strokeWidth={2} />
+            <Line type="monotone" dataKey="annonces" stroke="#10b981" strokeWidth={2} />
+            <Line type="monotone" dataKey="candidatures" stroke="#f59e0b" strokeWidth={2} />
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
 
-      {/* Activités récentes */}
-      <Grid item xs={12}>
-        <Paper sx={{
-          p: 3,
-          borderRadius: 3,
-          boxShadow: 3
-        }}>
-          <RecentActivities data={stats.recentActivities} />
-        </Paper>
-      </Grid>
-    </Grid>
-  </Box>
-);
-};
+      {/* ==== Top 5 ==== */}
+      <div className="dashboard-chart-grid">
+        <div className="dashboard-card">
+          <h3 className="dashboard-card-title">🏆 Top annonces</h3>
+          <ul className="dashboard-top-list">
+            {stats.candidatures.top_annonces.map((a, i) => (
+              <li key={i}>
+                <span>{a.annonce__titre}</span>
+                <span className="dashboard-count">{a.total}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
 
-export default Dashboard;
+        <div className="dashboard-card">
+          <h3 className="dashboard-card-title">🏅 Top citoyens</h3>
+          <ul className="dashboard-top-list">
+            {stats.candidatures.top_citoyens.map((c, i) => (
+              <li key={i}>
+                <span>
+                  {c.citoyen__prenom} {c.citoyen__nom}
+                </span>
+                <span className="dashboard-count">{c.total}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+    </div>
+  );
+}

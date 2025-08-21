@@ -255,7 +255,7 @@ export default function Citoyen() {
 
       <style jsx>{`
         .citoyen-container {
-          max-width: 1200px;
+          max-width: 90%;
           margin: 0 auto;
           padding: 32px 24px;
           background-color: #f9fafb;

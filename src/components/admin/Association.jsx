@@ -46,7 +46,7 @@ export default function Association() {
   return (
     <div style={{
       fontFamily: "'Inter', -apple-system, sans-serif",
-      maxWidth: '1200px',
+      maxWidth: '90%',
       margin: '0 auto',
       padding: '32px 24px',
       backgroundColor: '#f9fafb'

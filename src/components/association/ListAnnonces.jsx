@@ -192,7 +192,7 @@ const getCategoryDisplayName = (idCategorie) => {
                     name="categorie"
                     value={newAnnonce.categorie}
                     onChange={handleInputChange}
-                    required
+                    
                   >
                     <option value="">Sélectionnez une catégorie</option>
                     {categories.map((cat) => (

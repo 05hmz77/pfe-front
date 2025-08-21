@@ -3,7 +3,7 @@ import axios from "axios";
 import { confirmAlert } from "react-confirm-alert";
 import "react-confirm-alert/src/react-confirm-alert.css";
 import toast, { Toaster } from "react-hot-toast";
-import "./style/AnnonceManager.css";
+
 
 const AnnonceManager = () => {
   const [annonces, setAnnonces] = useState([]);
