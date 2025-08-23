@@ -26,7 +26,7 @@ export default function Sidebar({ isOpen, toggleSidebar }) {
               <NavLink to="/welcome/admin" className="sidebar-logo-text">SolidarLink</NavLink>
             </>
           ) : (
-            <p>SLK</p>
+            <p></p>
             
           )}
           <button className="sidebar-toggle-btn" onClick={toggleSidebar}>

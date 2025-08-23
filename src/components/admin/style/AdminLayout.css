@@ -2,7 +2,8 @@
 .layout-container {
   display: flex;
   min-height: 100vh;
-  background-color: #f8fafc;
+   background: #ffffff;
+
 }
 
 .layout-sidebar {
@@ -11,6 +12,7 @@
   top: 0;
   bottom: 0;
   z-index: 1000;
+  padding: 1rem;
 }
 
 .layout-main {
@@ -28,28 +30,27 @@
 }
 
 .layout-header {
-  background: white;
-  border-bottom: 1px solid #e2e8f0;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
   position: sticky;
   top: 0;
   z-index: 100;
+  padding: 1rem;
+  
 }
 
 .layout-content {
   flex: 2;
   padding: 2rem;
-  background: #b3d9ff;
+
   width: 100%;
   
 }
 
 .layout-footer {
-  background: white;
-  border-top: 1px solid #e2e8f0;
+   background: #ffffff;
   padding: 1rem 2rem;
   text-align: center;
   color: #64748b;
+  border-radius: 23px;
 }
 
 /* Responsive */

@@ -260,6 +260,8 @@ export default function Citoyen() {
           padding: 32px 24px;
           background-color: #f9fafb;
           font-family: 'Inter', -apple-system, sans-serif;
+          border-radius: 23px;
+          height: 100%;
         }
 
         .header-section {

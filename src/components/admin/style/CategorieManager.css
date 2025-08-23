@@ -1,0 +1,163 @@
+/* Container principal */
+.categorie-manager-container {
+  max-width: 700px;
+  margin: 40px auto;
+  padding: 24px;
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Titre */
+.categorie-manager-title {
+  font-size: 1.6rem;
+  font-weight: 700;
+  margin-bottom: 20px;
+  color: #1e293b;
+  text-align: center;
+}
+
+/* Formulaire */
+.categorie-form {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.categorie-input {
+  flex: 1;
+  padding: 10px 14px;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+.categorie-input:focus {
+  border-color: #4361ee;
+  box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
+}
+
+/* Boutons formulaire */
+.form-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.submit-button,
+.cancel-button {
+  padding: 10px 14px;
+  border: none;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background 0.2s, transform 0.1s;
+}
+
+.submit-button {
+  background: #4361ee;
+  color: #fff;
+}
+
+.submit-button:hover {
+  background: #3346cc;
+  transform: scale(1.05);
+}
+
+.cancel-button {
+  background: #e2e8f0;
+  color: #1e293b;
+}
+
+.cancel-button:hover {
+  background: #cbd5e1;
+  transform: scale(1.05);
+}
+
+/* Liste catégories */
+.categories-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.categorie-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #f8fafc;
+  padding: 12px 16px;
+  border-radius: 12px;
+  margin-bottom: 10px;
+  transition: transform 0.1s, background 0.2s;
+}
+
+.categorie-item:hover {
+  background: #edf2f7;
+  transform: translateX(3px);
+}
+
+/* Texte catégorie */
+.categorie-name {
+  font-size: 1rem;
+  font-weight: 500;
+  color: #1e293b;
+}
+
+/* Actions */
+.action-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.edit-button,
+.delete-button {
+  padding: 6px 12px;
+  font-size: 0.85rem;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background 0.2s, transform 0.1s;
+}
+
+.edit-button {
+  background: #3b82f6;
+  color: white;
+}
+
+.edit-button:hover {
+  background: #2563eb;
+  transform: scale(1.05);
+}
+
+.delete-button {
+  background: #ef4444;
+  color: white;
+}
+
+.delete-button:hover {
+  background: #dc2626;
+  transform: scale(1.05);
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  .categorie-form {
+    flex-direction: column;
+  }
+
+  .form-buttons {
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .submit-button,
+  .cancel-button {
+    flex: 1;
+  }
+}

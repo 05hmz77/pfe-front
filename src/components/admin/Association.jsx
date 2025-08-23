@@ -49,22 +49,26 @@ export default function Association() {
       maxWidth: '90%',
       margin: '0 auto',
       padding: '32px 24px',
-      backgroundColor: '#f9fafb'
+      backgroundColor: '#f9fafb',
+      borderRadius: '23px',
+      height: '100%'
     }}>
       {/* Modal pour afficher les détails */}
       {selectedAssociation && (
         <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: 'rgba(0,0,0,0.5)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 1000
-        }}>
+  position: 'fixed',
+  top: 0,
+  left: 0,
+  right: 0,
+  bottom: 0,
+  backgroundColor: 'rgba(0,0,0,0.5)',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  zIndex: 1000,
+  borderRadius: 23
+}}
+>
           <div style={{
             backgroundColor: 'white',
             borderRadius: '12px',

@@ -1,0 +1,289 @@
+/* ===============================
+   AnnonceManager – Style LinkedIn
+   =============================== */
+:root {
+  --bg: #f3f2ef;           /* fond principal LinkedIn */
+  --card: #ffffff;          /* fond des cartes */
+  --text: #1d1d1d;         /* texte principal */
+  --muted: #6e6e6e;        /* texte secondaire */
+  --border: #d6d6d6;       /* bordure légère */
+  --accent: #0073b1;       /* bleu LinkedIn */
+  --danger: #e03131;
+  --radius: 8px;
+  --shadow: 0 2px 4px rgba(0,0,0,0.08);
+  --font: "Segoe UI", "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+/* Container */
+.annonce-container {
+  max-width: 1200px;
+  margin: 20px auto;
+  padding: 0 16px 20px;
+  font-family: var(--font);
+  color: var(--text);
+  background: var(--bg);
+}
+
+/* Header */
+.annonce-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.annonce-title {
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+/* Filters */
+.filters-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.search-input-container {
+  position: relative;
+  flex: 1 1 240px;
+}
+
+.search-input {
+  width: 100%;
+  padding: 10px 38px 10px 12px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  font-size: 14px;
+  background: var(--card);
+}
+.search-input:focus {
+  border-color: var(--accent);
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(0,115,177,0.2);
+}
+
+.search-icon {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 18px;
+  height: 18px;
+  color: var(--muted);
+}
+
+.filter-select {
+  padding: 10px 12px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--card);
+  font-size: 14px;
+  color: var(--text);
+}
+.filter-select:focus {
+  border-color: var(--accent);
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(0,115,177,0.2);
+}
+
+/* Grid */
+.annonce-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 16px;
+}
+
+/* Card */
+.annonce-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: box-shadow 0.2s ease, transform 0.15s ease;
+}
+.annonce-card:hover {
+  box-shadow: var(--shadow);
+  transform: translateY(-2px);
+}
+
+/* Image */
+.annonce-image-container {
+  width: 100%;
+  height: 160px;
+  overflow: hidden;
+  background: #e6e6e6;
+}
+.annonce-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Content */
+.annonce-content {
+  padding: 12px 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Association info */
+.annonce-header-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.modal-img,
+.default-logo {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid var(--border);
+  background: #e6e6e6;
+}
+.default-logo {
+  display: grid;
+  place-items: center;
+  font-size: 10px;
+  color: var(--muted);
+}
+
+.association-name {
+  font-weight: 600;
+  font-size: 14px;
+}
+.association-contact {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+/* Meta badges */
+.annonce-meta {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.annonce-type,
+.annonce-category {
+  font-size: 12px;
+  padding: 4px 8px;
+  border-radius: 12px;
+  background: #f3f2ef;
+  border: 1px solid var(--border);
+  color: var(--text);
+}
+.annonce-type.evenement { color: #0073b1; border-color: #0073b1; background: #e6f0fa; }
+.annonce-type.don { color: #028760; border-color: #028760; background: #e6f8f3; }
+.annonce-type.appel_benevolat { color: #b06d00; border-color: #b06d00; background: #fff4e6; }
+
+/* Title + description */
+.annonce-title-card {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+}
+.annonce-description {
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.4;
+  max-height: 3em;
+  overflow: hidden;
+}
+
+/* Dates */
+.annonce-dates {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.date-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.date-icon { width: 14px; height: 14px; }
+
+/* Footer */
+.annonce-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 8px;
+}
+
+.annonce-location {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+/* Delete button */
+.delete-btn {
+  padding: 6px 10px;
+  border-radius: 12px;
+  border: 1px solid var(--danger);
+  background: #fdeaea;
+  color: var(--danger);
+  font-size: 13px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transition: background 0.2s ease, transform 0.1s ease;
+}
+.delete-btn:hover {
+  background: #f9d6d6;
+  transform: translateY(-1px);
+}
+
+/* Empty & Error states */
+.empty-state,
+.error-container {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--muted);
+}
+
+.empty-icon,
+.error-icon {
+  width: 32px;
+  height: 32px;
+  margin-bottom: 8px;
+  color: var(--muted);
+}
+
+/* Loading spinner */
+.loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 40vh;
+}
+.loading-spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg);} }
+
+/* Responsive */
+@media (max-width: 720px) {
+  .annonce-card { flex-direction: column; }
+  .annonce-image-container { height: 180px; }
+  .annonce-dates { flex-direction: column; gap: 6px; }
+}

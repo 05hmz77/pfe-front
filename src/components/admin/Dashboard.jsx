@@ -117,22 +117,6 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* ==== Evolution mensuelle ==== */}
-      <div className="dashboard-card dashboard-full-chart">
-        <h3 className="dashboard-card-title">📈 Evolution mensuelle</h3>
-        <ResponsiveContainer width="100%" height={300}>
-          <LineChart data={stats.evolution_mensuelle}>
-            <XAxis dataKey="mois" />
-            <YAxis />
-            <Tooltip />
-            <Legend />
-            <Line type="monotone" dataKey="utilisateurs" stroke="#3b82f6" strokeWidth={2} />
-            <Line type="monotone" dataKey="annonces" stroke="#10b981" strokeWidth={2} />
-            <Line type="monotone" dataKey="candidatures" stroke="#f59e0b" strokeWidth={2} />
-          </LineChart>
-        </ResponsiveContainer>
-      </div>
-
       {/* ==== Top 5 ==== */}
       <div className="dashboard-chart-grid">
         <div className="dashboard-card">
