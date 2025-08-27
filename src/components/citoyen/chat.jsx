@@ -1,10 +1,13 @@
-import React, { useState, useEffect, useRef } from "react";
+// Chat.jsx
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import axios from "axios";
 import "./style/chat.css";
 import { useLocation } from "react-router-dom";
+import { Plus } from "lucide-react"; // icône moderne
 
-function Chat() {
+export default function Chat() {
   const [users, setUsers] = useState([]);
+  const [conversations, setConversations] = useState([]);
   const [receiver, setReceiver] = useState(null);
   const [receiverInfo, setReceiverInfo] = useState(null);
   const [listMsg, setListMsg] = useState([]);
@@ -12,17 +15,45 @@ function Chat() {
   const [loading, setLoading] = useState(false);
   const [isWebSocketConnected, setIsWebSocketConnected] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState("Déconnecté");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [showAllUsers, setShowAllUsers] = useState(false);
 
   const socketRef = useRef(null);
   const authDoneRef = useRef(false);
-  const pendingMessagesRef = useRef([]);
+  const pendingOutboxRef = useRef([]);
+  const pendingReadsRef = useRef([]);
   const messagesEndRef = useRef(null);
+  const reconnectTimerRef = useRef(null);
+
   const location = useLocation();
   const locationUser = location.state?.user || null;
 
   const currentUser = JSON.parse(localStorage.getItem("user"));
   const token = localStorage.getItem("accessToken");
 
+  // --- helpers ---
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  const wsReady = () =>
+    socketRef.current?.readyState === WebSocket.OPEN && authDoneRef.current;
+
+  const sendWS = useCallback((payload) => {
+    if (wsReady()) {
+      try {
+        socketRef.current.send(JSON.stringify(payload));
+      } catch (e) {
+        if (payload.type === "message_read") pendingReadsRef.current.push(payload);
+        else pendingOutboxRef.current.push(payload);
+      }
+    } else {
+      if (payload.type === "message_read") pendingReadsRef.current.push(payload);
+      else pendingOutboxRef.current.push(payload);
+    }
+  }, []);
+
+  // Pré-sélection receiver depuis navigation state
   useEffect(() => {
     if (locationUser != null) {
       setReceiver(locationUser.id);
@@ -31,84 +62,103 @@ function Chat() {
     }
   }, [locationUser]);
 
-  // Fetch all users except current user
+  // Notifications
   useEffect(() => {
-    const fetchUsers = async () => {
+    if ("Notification" in window && Notification.permission === "default") {
+      Notification.requestPermission().catch(() => {});
+    }
+  }, []);
+
+  // Récupérer users et conversations
+  useEffect(() => {
+    const fetchData = async () => {
       try {
         setLoading(true);
-        const res = await axios.get("http://127.0.0.1:8000/api/users/", {
+
+        const usersRes = await axios.get("http://127.0.0.1:8000/api/userss/", {
           headers: { Authorization: `Bearer ${token}` },
         });
-        setUsers(res.data.filter((u) => u.id !== currentUser.id));
-        setLoading(false);
+
+        const conversationsRes = await axios.get("http://127.0.0.1:8000/api/my/", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        setUsers(usersRes.data.filter((u) => u.id !== currentUser.id));
+        setConversations(conversationsRes.data);
       } catch (err) {
-        console.error("Erreur lors de la récupération des utilisateurs:", err);
+        console.error("Erreur lors de la récupération des données:", err);
+      } finally {
         setLoading(false);
       }
     };
-    fetchUsers();
+    fetchData();
   }, [currentUser.id, token]);
 
-  // Fetch message history when receiver changes
+  // Récupérer historique messages
   useEffect(() => {
     const fetchMessages = async () => {
       if (!receiver) return;
-
       try {
         setLoading(true);
         const res = await axios.get(
           `http://127.0.0.1:8000/api/messagess/${receiver}/`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
+          { headers: { Authorization: `Bearer ${token}` } }
         );
         setListMsg(
           res.data.map((msg) => ({
             ...msg,
-            is_own: msg.sender.id === currentUser.id,
+            is_own: msg.sender === currentUser.id,
+            is_read: msg.is_read ?? false,
           }))
         );
-        setLoading(false);
       } catch (err) {
         console.error("Erreur lors de la récupération des messages:", err);
+      } finally {
         setLoading(false);
       }
     };
     fetchMessages();
   }, [receiver, currentUser.id, token]);
 
-  // Auto-scroll to bottom of messages
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    scrollToBottom();
   }, [listMsg]);
 
-  // WebSocket connection management
+  // WS connection
   useEffect(() => {
     if (!receiver) return;
 
-    const wsProtocol =
-      window.location.protocol === "https:" ? "wss://" : "ws://";
-    const socketUrl = `${wsProtocol}127.0.0.1:8000/ws/chat/${currentUser.id}/${receiver}/`;
-
-    // Close existing connection if any
     if (socketRef.current) {
-      socketRef.current.close();
+      try {
+        socketRef.current.close();
+      } catch {}
       socketRef.current = null;
     }
+    if (reconnectTimerRef.current) {
+      clearTimeout(reconnectTimerRef.current);
+      reconnectTimerRef.current = null;
+    }
+
+    const wsProtocol = window.location.protocol === "https:" ? "wss://" : "ws://";
+    const socketUrl = `${wsProtocol}127.0.0.1:8000/ws/chat/${currentUser.id}/${receiver}/`;
 
     setConnectionStatus("Connexion en cours...");
-    socketRef.current = new WebSocket(socketUrl);
+    const ws = new WebSocket(socketUrl);
+    socketRef.current = ws;
 
     const handleOpen = () => {
-      setConnectionStatus("Authentification...");
       setIsWebSocketConnected(true);
-      if (socketRef.current?.readyState === WebSocket.OPEN) {
-        socketRef.current.send(
-          JSON.stringify({
-            type: "authentication",
-            token,
-          })
-        );
+      setConnectionStatus("Authentification...");
+      ws.send(JSON.stringify({ type: "authentication", token }));
+    };
+
+    const flushQueues = () => {
+      if (!wsReady()) return;
+      while (pendingOutboxRef.current.length) {
+        ws.send(JSON.stringify(pendingOutboxRef.current.shift()));
+      }
+      while (pendingReadsRef.current.length) {
+        ws.send(JSON.stringify(pendingReadsRef.current.shift()));
       }
     };
 
@@ -117,78 +167,101 @@ function Chat() {
 
       if (data.type === "authentication") {
         if (data.status === "success") {
-          setConnectionStatus("Connecté");
           authDoneRef.current = true;
-          // Send any pending messages
-          pendingMessagesRef.current.forEach((msg) => {
-            if (socketRef.current?.readyState === WebSocket.OPEN) {
-              socketRef.current.send(JSON.stringify(msg));
-            }
-          });
-          pendingMessagesRef.current = [];
+          setConnectionStatus("Connecté");
+          flushQueues();
+          markThreadAsRead();
         } else {
           setConnectionStatus("Erreur d'authentification");
+          authDoneRef.current = false;
         }
-      } else if (data.type === "chat_message") {
+        return;
+      }
+
+      if (data.type === "chat_message") {
         setListMsg((prev) => [
           ...prev,
           {
             id: data.message_id,
-            sender: { id: data.sender_id },
-            receiver: { id: data.receiver_id },
+            sender: data.sender_id,
+            receiver: data.receiver_id,
             contenu: data.message,
             date_envoi: data.timestamp,
             is_own: data.sender_id === currentUser.id,
+            is_read: data.is_read ?? false,
           },
         ]);
+
+        if (data.receiver_id === currentUser.id && receiver === data.sender_id) {
+          sendWS({ type: "message_read", message_id: data.message_id });
+        }
+        return;
+      }
+
+      if (data.type === "message_read") {
+        setListMsg((prev) =>
+          prev.map((m) =>
+            m.id === data.message_id ? { ...m, is_read: true } : m
+          )
+        );
       }
     };
 
-    const handleError = (e) => {
-      console.error("WebSocket error:", e);
+    const handleError = () => {
       setConnectionStatus("Erreur de connexion");
       setIsWebSocketConnected(false);
     };
 
-    const handleClose = () => {
-      console.log("WebSocket closed");
-      setConnectionStatus("Déconnecté");
-      setIsWebSocketConnected(false);
-      socketRef.current = null;
-      authDoneRef.current = false;
-
-      // Tentative de reconnexion après 5 secondes
-      setTimeout(() => {
-        if (receiver) {
-          setConnectionStatus("Reconnexion...");
-          // Cela va déclencher à nouveau ce useEffect
-          setReceiver((prev) => prev); // Force le re-render avec la même valeur
-        }
-      }, 5000);
+    const scheduleReconnect = () => {
+      if (reconnectTimerRef.current) return;
+      reconnectTimerRef.current = setTimeout(() => {
+        reconnectTimerRef.current = null;
+        setReceiver((prev) => prev);
+      }, 3000);
     };
 
-    socketRef.current.addEventListener("open", handleOpen);
-    socketRef.current.addEventListener("message", handleMessage);
-    socketRef.current.addEventListener("error", handleError);
-    socketRef.current.addEventListener("close", handleClose);
+    const handleClose = () => {
+      setConnectionStatus("Déconnecté");
+      setIsWebSocketConnected(false);
+      authDoneRef.current = false;
+      scheduleReconnect();
+    };
+
+    ws.addEventListener("open", handleOpen);
+    ws.addEventListener("message", handleMessage);
+    ws.addEventListener("error", handleError);
+    ws.addEventListener("close", handleClose);
 
     return () => {
-      if (socketRef.current) {
-        socketRef.current.removeEventListener("open", handleOpen);
-        socketRef.current.removeEventListener("message", handleMessage);
-        socketRef.current.removeEventListener("error", handleError);
-        socketRef.current.removeEventListener("close", handleClose);
-
-        if (socketRef.current.readyState === WebSocket.OPEN) {
-          socketRef.current.close();
-        }
-      }
+      ws.removeEventListener("open", handleOpen);
+      ws.removeEventListener("message", handleMessage);
+      ws.removeEventListener("error", handleError);
+      ws.removeEventListener("close", handleClose);
+      try {
+        ws.close();
+      } catch {}
     };
   }, [receiver, currentUser.id, token]);
 
-  const handleReceiverSelect = async (user) => {
+  const markThreadAsRead = useCallback(() => {
+    if (!receiver) return;
+    const unreadIncoming = listMsg.filter(
+      (m) => !m.is_own && !m.is_read && m.sender === receiver
+    );
+    unreadIncoming.forEach((m) =>
+      sendWS({ type: "message_read", message_id: m.id })
+    );
+  }, [listMsg, receiver, sendWS]);
+
+  useEffect(() => {
+    markThreadAsRead();
+  }, [markThreadAsRead]);
+
+  const handleReceiverSelect = (user) => {
     setReceiver(user.id);
     setReceiverInfo(user);
+    setListMsg([]);
+    setShowAllUsers(false);
   };
 
   const handleSendMessage = (e) => {
@@ -197,120 +270,179 @@ function Chat() {
 
     const messageData = {
       type: "chat_message",
-      message: messageInput,
+      message: messageInput.trim(),
       sender_id: currentUser.id,
       receiver_id: receiver,
     };
 
-    // Create temporary message for immediate UI feedback
-    const tempMsg = {
-      id: Date.now(), // temporary ID
-      contenu: messageInput,
-      sender: { id: currentUser.id },
-      receiver: { id: receiver },
-      date_envoi: new Date().toISOString(),
-      is_own: true,
-    };
     setMessageInput("");
+    sendWS(messageData);
+  };
 
-    // Try to send via WebSocket
-    if (
-      socketRef.current?.readyState === WebSocket.OPEN &&
-      authDoneRef.current
-    ) {
-      try {
-        socketRef.current.send(JSON.stringify(messageData));
-      } catch (err) {
-        console.error("Erreur d'envoi WebSocket:", err);
-        pendingMessagesRef.current.push(messageData);
-      }
+  const filteredUsers = users.filter((user) =>
+    user.username.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const filteredConversations = conversations.filter((conv) =>
+    conv.username.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const getDisplayName = (user) => {
+    if (user.citoyen_profile) {
+      return `${user.citoyen_profile.prenom} ${user.citoyen_profile.nom}`;
+    } else if (user.association_profile) {
+      return user.association_profile.nom;
     } else {
-      pendingMessagesRef.current.push(messageData);
-      console.log("WebSocket non prêt, message mis en attente");
+      return user.username;
     }
   };
 
+  const formatMessageTime = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  };
+
   return (
-    <div className="chat-container">
-      <div className="user-list">
-        <h2>Utilisateurs</h2>
-        {loading && users.length === 0 ? (
-          <p>Chargement des utilisateurs...</p>
+    <div className="pulse-chat-container">
+      {/* SIDEBAR */}
+      <div className="pulse-sidebar">
+        <div className="pulse-sidebar-header">
+          <h2>Messages</h2>
+          <button
+            className="pulse-add-user-btn"
+            onClick={() => setShowAllUsers(!showAllUsers)}
+          >
+            <Plus size={20} />
+          </button>
+        </div>
+
+        {!showAllUsers ? (
+          <div className="pulse-conversation-list">
+            {filteredConversations.length > 0 ? (
+              filteredConversations.map((conv) => (
+                <div
+                  key={conv.id}
+                  className={`pulse-conversation-item ${
+                    receiver === conv.id ? "pulse-active" : ""
+                  }`}
+                  onClick={() => handleReceiverSelect(conv)}
+                >
+                  <div className="pulse-avatar">
+                    {getDisplayName(conv).charAt(0).toUpperCase()}
+                  </div>
+                  <div className="pulse-conversation-info">
+                    <div className="pulse-conversation-name">
+                      {getDisplayName(conv)}
+                    </div>
+                    <div className="pulse-conversation-preview">
+                      {conv.last_message || "Aucun message..."}
+                    </div>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <p className="pulse-no-conversations">Aucune conversation</p>
+            )}
+          </div>
         ) : (
-          <ul>
-            {users.map((user) => (
-              <li
+          <div className="pulse-user-list">
+            <div className="pulse-search-container">
+              <input
+                type="text"
+                placeholder="Rechercher des utilisateurs..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+            {filteredUsers.map((user) => (
+              <div
                 key={user.id}
-                className={receiver === user.id ? "active" : ""}
+                className="pulse-user-item"
                 onClick={() => handleReceiverSelect(user)}
               >
-                {user.username}
-              </li>
+                <div className="pulse-avatar">
+                  {getDisplayName(user).charAt(0).toUpperCase()}
+                </div>
+                <div className="pulse-user-info">
+                  <div className="pulse-username">{getDisplayName(user)}</div>
+                  <div className="pulse-user-handle">@{user.username}</div>
+                </div>
+              </div>
             ))}
-          </ul>
+          </div>
         )}
       </div>
 
-      <div className="chat-area">
+      {/* MAIN CHAT */}
+      <div className="pulse-chat-main">
         {receiver ? (
           <>
-            <div className="chat-header">
-              <h2>Discussion avec {receiverInfo?.username || receiverInfo?.nom}</h2>
-              <div
-                className={`connection-status ${
-                  isWebSocketConnected ? "connected" : "disconnected"
-                }`}
-              ></div>
+            <div className="pulse-chat-header">
+              <div className="pulse-avatar">
+                {getDisplayName(receiverInfo).charAt(0).toUpperCase()}
+              </div>
+              <div className="pulse-chat-info">
+                <div className="pulse-chat-name">
+                  {getDisplayName(receiverInfo)}
+                </div>
+                <div className="pulse-chat-status">
+                  <span
+                    className={`pulse-status-indicator ${
+                      isWebSocketConnected ? "pulse-online" : "pulse-offline"
+                    }`}
+                  ></span>
+                  {isWebSocketConnected ? "En ligne" : "Hors ligne"}
+                </div>
+              </div>
             </div>
 
-            <div className="messages-container">
-              {loading && listMsg.length === 0 ? (
-                <p>Chargement des messages...</p>
+            <div className="pulse-messages-container">
+              {listMsg.length > 0 ? (
+                listMsg.map((msg) => (
+                  <div
+                    key={msg.id}
+                    className={`pulse-message-bubble ${
+                      msg.is_own ? "sent" : "received"
+                    }`}
+                  >
+                    <p>{msg.contenu}</p>
+                    <span className="pulse-message-time">
+                      {formatMessageTime(msg.date_envoi)}
+                    </span>
+                  </div>
+                ))
               ) : (
-                <>
-                  {listMsg.map((msg) => (
-                    <div
-                      key={msg.id}
-                      className={`message ${msg.is_own ? "sent" : "received"}`}
-                    >
-                      <p>{msg.contenu}</p>
-                      <small>
-                        {new Date(msg.date_envoi).toLocaleTimeString([], {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
-                      </small>
-                    </div>
-                  ))}
-                  <div ref={messagesEndRef} />
-                </>
+                <p className="pulse-no-messages">
+                  Aucun message pour le moment
+                </p>
               )}
+              <div ref={messagesEndRef} />
             </div>
 
-            <form onSubmit={handleSendMessage} className="message-form">
+            <form onSubmit={handleSendMessage} className="pulse-message-form">
               <input
                 type="text"
                 value={messageInput}
                 onChange={(e) => setMessageInput(e.target.value)}
-                placeholder="Tapez votre message..."
+                placeholder="Saisissez votre message..."
                 disabled={!isWebSocketConnected}
               />
               <button
                 type="submit"
                 disabled={!isWebSocketConnected || !messageInput.trim()}
+                className="pulse-send-button"
               >
-                Envoyer
+                ➤
               </button>
             </form>
           </>
         ) : (
-          <div className="chat-placeholder">
-            <p>Sélectionnez un utilisateur pour commencer à discuter</p>
+          <div className="pulse-chat-placeholder">
+            <h3>Pulse Messenger</h3>
+            <p>Sélectionnez une conversation ou démarrez-en une nouvelle</p>
           </div>
         )}
       </div>
     </div>
   );
 }
-
-export default Chat;

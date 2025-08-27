@@ -8,6 +8,7 @@ import Citoyen from "./Citoyen";
 import Association from "./Association";
 import CategorieManager from "./CategorieManager";
 import AnnonceManager from "./AnnonceManager";
+import Chat from "./chat";
 import "./style/AdminLayout.css"; // <-- style global du layout
 import Header from "./Header";
 export default function AdminLayout() {
@@ -37,6 +38,7 @@ export default function AdminLayout() {
             <Route path="stats" element={<Statistics />} />
             <Route path="categories" element={<CategorieManager />} />
             <Route path="annonces" element={<AnnonceManager />} />
+            <Route path="chat" element={<Chat />} />
             <Route path="*" element={<Dashboard />} />
           </Routes>
           <Outlet />

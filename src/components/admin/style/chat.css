@@ -1,0 +1,210 @@
+.pulse-chat-container {
+  display: flex;
+  height: 90vh;
+  background: #f9f9fb;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.pulse-sidebar {
+  width: 280px;
+  background: #fff;
+  border-right: 1px solid #e0e0e0;
+  display: flex;
+  flex-direction: column;
+}
+
+.pulse-sidebar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  font-weight: bold;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.pulse-add-user-btn {
+  border: none;
+  background: #007bff;
+  color: #fff;
+  border-radius: 50%;
+  padding: 6px;
+  cursor: pointer;
+}
+
+.pulse-user-list, .pulse-conversation-list {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.pulse-search-container {
+  padding: 10px;
+}
+
+.pulse-search-container input {
+  width: 100%;
+  padding: 8px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+}
+
+.pulse-user-item, .pulse-conversation-item {
+  display: flex;
+  align-items: center;
+  padding: 12px;
+  cursor: pointer;
+  border-bottom: 1px solid #f0f0f0;
+  transition: background 0.2s;
+}
+
+.pulse-user-item:hover, .pulse-conversation-item:hover {
+  background: #f1f5ff;
+}
+
+.pulse-active {
+  background: #e0ecff;
+}
+
+.pulse-avatar {
+  width: 40px;
+  height: 40px;
+  background: #007bff;
+  color: #fff;
+  font-weight: bold;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-right: 12px;
+}
+
+.pulse-user-info, .pulse-conversation-info {
+  flex: 1;
+}
+
+.pulse-chat-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.pulse-chat-header {
+  display: flex;
+  align-items: center;
+  padding: 16px;
+  border-bottom: 1px solid #e0e0e0;
+  background: #fff;
+}
+
+.pulse-chat-info {
+  margin-left: 10px;
+}
+
+.pulse-chat-status {
+  font-size: 12px;
+  color: gray;
+}
+
+.pulse-status-indicator {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 5px;
+}
+
+.pulse-online {
+  background: #28a745;
+}
+
+.pulse-offline {
+  background: #dc3545;
+}
+
+.pulse-messages-container {
+  flex: 1;
+  padding: 16px;
+  overflow-y: auto;
+  background: #f9f9fb;
+}
+
+.pulse-message-bubble {
+  max-width: 60%;
+  margin-bottom: 12px;
+  padding: 10px 14px;
+  border-radius: 16px;
+  font-size: 14px;
+  line-height: 1.4;
+  position: relative;
+}
+
+.pulse-message-bubble.sent {
+  margin-left: auto;
+  background: #007bff;
+  color: #fff;
+}
+
+.pulse-message-bubble.received {
+  margin-right: auto;
+  background: #eaeaea;
+  color: #333;
+}
+
+.pulse-message-time {
+  font-size: 10px;
+  color: rgba(255,255,255,0.8);
+  display: block;
+  margin-top: 4px;
+}
+
+.pulse-message-bubble.received .pulse-message-time {
+  color: gray;
+}
+
+.pulse-message-form {
+  display: flex;
+  padding: 12px;
+  background: #fff;
+  border-top: 1px solid #e0e0e0;
+}
+
+.pulse-message-form input {
+  flex: 1;
+  padding: 10px;
+  border-radius: 20px;
+  border: 1px solid #ddd;
+  margin-right: 8px;
+}
+
+.pulse-send-button {
+  background: #007bff;
+  color: #fff;
+  border: none;
+  border-radius: 50%;
+  width: 38px;
+  height: 38px;
+  cursor: pointer;
+}
+
+.pulse-message-meta {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+  font-size: 11px;
+}
+
+.pulse-read-status {
+  font-weight: bold;
+  font-size: 11px;
+}
+
+.pulse-read-status.unread {
+  color: gray;   /* ✔ simple, pas encore lu */
+}
+
+.pulse-read-status.read {
+  color: #4caf50; /* ✔✔ verts quand lu */
+}

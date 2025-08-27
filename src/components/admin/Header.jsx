@@ -1,7 +1,6 @@
-// Header.jsx
 import React from "react";
 import { Link, NavLink } from "react-router-dom";
-import { Menu } from "lucide-react";
+import { Menu, MessageCircle } from "lucide-react";
 import "./style/Header.css";
 
 export default function Header({ isSidebarOpen, onToggleSidebar }) {
@@ -26,6 +25,13 @@ export default function Header({ isSidebarOpen, onToggleSidebar }) {
 
       <div className="header-right">
         <input className="search" type="search" placeholder="Rechercher…" />
+
+        {/* Icône messagerie cliquable */}
+        <Link to="/welcome/admin/chat" className="header-icon messages">
+          <MessageCircle size={22} />
+          <span className="badge">4</span>
+        </Link>
+
         <div className="avatar" title="Admin">A</div>
       </div>
     </header>
