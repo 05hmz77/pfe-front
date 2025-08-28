@@ -3,6 +3,7 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import axios from "axios";
 import "./style/chat.css";
 import { useLocation } from "react-router-dom";
+import { Plus, X } from "lucide-react"; // icône moderne
 
 export default function Chat() {
   const [users, setUsers] = useState([]);
@@ -15,6 +16,7 @@ export default function Chat() {
   const [isWebSocketConnected, setIsWebSocketConnected] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState("Déconnecté");
   const [searchTerm, setSearchTerm] = useState("");
+  const [showAllUsers, setShowAllUsers] = useState(false);
 
   const socketRef = useRef(null);
   const authDoneRef = useRef(false);
@@ -33,6 +35,13 @@ export default function Chat() {
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
+  const last_message=async(id)=>{
+    const res = await axios.get(
+          `http://127.0.0.1:8000/api/last-message/${id}/`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+    return res.data
+  }
 
   const wsReady = () =>
     socketRef.current?.readyState === WebSocket.OPEN && authDoneRef.current;
@@ -42,11 +51,13 @@ export default function Chat() {
       try {
         socketRef.current.send(JSON.stringify(payload));
       } catch (e) {
-        if (payload.type === "message_read") pendingReadsRef.current.push(payload);
+        if (payload.type === "message_read")
+          pendingReadsRef.current.push(payload);
         else pendingOutboxRef.current.push(payload);
       }
     } else {
-      if (payload.type === "message_read") pendingReadsRef.current.push(payload);
+      if (payload.type === "message_read")
+        pendingReadsRef.current.push(payload);
       else pendingOutboxRef.current.push(payload);
     }
   }, []);
@@ -60,7 +71,7 @@ export default function Chat() {
     }
   }, [locationUser]);
 
-  // Permission Notifications (une fois)
+  // Notifications
   useEffect(() => {
     if ("Notification" in window && Notification.permission === "default") {
       Notification.requestPermission().catch(() => {});
@@ -72,17 +83,18 @@ export default function Chat() {
     const fetchData = async () => {
       try {
         setLoading(true);
-        
-        // Récupérer tous les utilisateurs
+
         const usersRes = await axios.get("http://127.0.0.1:8000/api/userss/", {
           headers: { Authorization: `Bearer ${token}` },
         });
-        
-        // Récupérer les conversations existantes
-        const conversationsRes = await axios.get("http://127.0.0.1:8000/api/my/", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        
+
+        const conversationsRes = await axios.get(
+          "http://127.0.0.1:8000/api/my/",
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+
         setUsers(usersRes.data.filter((u) => u.id !== currentUser.id));
         setConversations(conversationsRes.data);
       } catch (err) {
@@ -120,16 +132,14 @@ export default function Chat() {
     fetchMessages();
   }, [receiver, currentUser.id, token]);
 
-  // Auto-scroll
   useEffect(() => {
     scrollToBottom();
   }, [listMsg]);
 
-  // WS : open connection when receiver changes
+  // WS connection
   useEffect(() => {
     if (!receiver) return;
 
-    // Clean previous
     if (socketRef.current) {
       try {
         socketRef.current.close();
@@ -141,7 +151,8 @@ export default function Chat() {
       reconnectTimerRef.current = null;
     }
 
-    const wsProtocol = window.location.protocol === "https:" ? "wss://" : "ws://";
+    const wsProtocol =
+      window.location.protocol === "https:" ? "wss://" : "ws://";
     const socketUrl = `${wsProtocol}127.0.0.1:8000/ws/chat/${currentUser.id}/${receiver}/`;
 
     setConnectionStatus("Connexion en cours...");
@@ -151,7 +162,6 @@ export default function Chat() {
     const handleOpen = () => {
       setIsWebSocketConnected(true);
       setConnectionStatus("Authentification...");
-      // Authentifier
       ws.send(JSON.stringify({ type: "authentication", token }));
     };
 
@@ -182,38 +192,23 @@ export default function Chat() {
       }
 
       if (data.type === "chat_message") {
-        setListMsg((prev) => {
-          const next = [
-            ...prev,
-            {
-              id: data.message_id,
-              sender: data.sender_id,
-              receiver: data.receiver_id,
-              contenu: data.message,
-              date_envoi: data.timestamp,
-              is_own: data.sender_id === currentUser.id,
-              is_read: data.is_read ?? false,
-            },
-          ];
+        setListMsg((prev) => [
+          ...prev,
+          {
+            id: data.message_id,
+            sender: data.sender_id,
+            receiver: data.receiver_id,
+            contenu: data.message,
+            date_envoi: data.timestamp,
+            is_own: data.sender_id === currentUser.id,
+            is_read: data.is_read ?? false,
+          },
+        ]);
 
-          if (
-            data.receiver_id === currentUser.id &&
-            data.sender_id !== currentUser.id &&
-            "Notification" in window &&
-            Notification.permission === "granted"
-          ) {
-            try {
-              new Notification(
-                `${receiverInfo?.username || "Nouveau message"}`,
-                { body: data.message }
-              );
-            } catch {}
-          }
-
-          return next;
-        });
-
-        if (data.receiver_id === currentUser.id && receiver === data.sender_id) {
+        if (
+          data.receiver_id === currentUser.id &&
+          receiver === data.sender_id
+        ) {
           sendWS({ type: "message_read", message_id: data.message_id });
         }
         return;
@@ -225,16 +220,10 @@ export default function Chat() {
             m.id === data.message_id ? { ...m, is_read: true } : m
           )
         );
-        return;
-      }
-
-      if (data.type === "error") {
-        console.warn("WS error:", data.message);
       }
     };
 
-    const handleError = (e) => {
-      console.error("WebSocket error:", e);
+    const handleError = () => {
       setConnectionStatus("Erreur de connexion");
       setIsWebSocketConnected(false);
     };
@@ -270,7 +259,6 @@ export default function Chat() {
     };
   }, [receiver, currentUser.id, token]);
 
-  // Marquer les messages reçus non lus de ce thread comme lus
   const markThreadAsRead = useCallback(() => {
     if (!receiver) return;
     const unreadIncoming = listMsg.filter(
@@ -281,22 +269,29 @@ export default function Chat() {
     );
   }, [listMsg, receiver, sendWS]);
 
-  // Marquer lus quand on change de receiver ou quand la liste change
   useEffect(() => {
     markThreadAsRead();
   }, [markThreadAsRead]);
 
-  // Marquer lus quand la fenêtre reprend le focus
-  useEffect(() => {
-    const onFocus = () => markThreadAsRead();
-    window.addEventListener("focus", onFocus);
-    return () => window.removeEventListener("focus", onFocus);
-  }, [markThreadAsRead]);
-
   const handleReceiverSelect = (user) => {
-    setReceiver(user.id);
-    setReceiverInfo(user);
-    setListMsg([]);
+    let exist = false;
+    for (const i of conversations) {
+      if (user.id == i.id) {
+        exist = user.id == i.id;
+        break;
+      }
+    }
+    if (exist) { 
+      setReceiver(user.id);
+      setReceiverInfo(user);
+      setShowAllUsers(false);
+    } else {
+      setReceiver(user.id);
+      setReceiverInfo(user);
+      setListMsg([]);
+      setShowAllUsers(false);
+      setConversations([...conversations, user]);
+    }
   };
 
   const handleSendMessage = (e) => {
@@ -314,24 +309,6 @@ export default function Chat() {
     sendWS(messageData);
   };
 
-  // Filtrer les utilisateurs/conversations selon le terme de recherche
-  const filteredUsers = users.filter(user => 
-    user.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (user.citoyen_profile && 
-      `${user.citoyen_profile.prenom} ${user.citoyen_profile.nom}`.toLowerCase().includes(searchTerm.toLowerCase())) ||
-    (user.association_profile && 
-      user.association_profile.nom.toLowerCase().includes(searchTerm.toLowerCase()))
-  );
-
-  const filteredConversations = conversations.filter(conv => 
-    conv.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (conv.citoyen_profile && 
-      `${conv.citoyen_profile.prenom} ${conv.citoyen_profile.nom}`.toLowerCase().includes(searchTerm.toLowerCase())) ||
-    (conv.association_profile && 
-      conv.association_profile.nom.toLowerCase().includes(searchTerm.toLowerCase()))
-  );
-
-  // Obtenir le nom d'affichage d'un utilisateur
   const getDisplayName = (user) => {
     if (user.citoyen_profile) {
       return `${user.citoyen_profile.prenom} ${user.citoyen_profile.nom}`;
@@ -342,75 +319,73 @@ export default function Chat() {
     }
   };
 
-  // Formater la date pour l'affichage
   const formatMessageTime = (dateString) => {
     const date = new Date(dateString);
-    const now = new Date();
-    const diffInHours = (now - date) / (1000 * 60 * 60);
-    
-    if (diffInHours < 24) {
-      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    } else {
-      return date.toLocaleDateString([], { day: 'numeric', month: 'short' });
-    }
+    return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
   };
 
   return (
     <div className="pulse-chat-container">
+      {/* SIDEBAR */}
       <div className="pulse-sidebar">
         <div className="pulse-sidebar-header">
           <h2>Messages</h2>
-          <div className="pulse-search-container">
-            <input 
-              type="text" 
-              placeholder="Rechercher..." 
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
-        </div>
-
-        <div className="pulse-conversation-list">
-          {loading && conversations.length === 0 ? (
-            <p className="pulse-loading">Chargement des conversations...</p>
+          {showAllUsers ? (
+            <button
+              className="pulse-add-user-btn"
+              onClick={() => setShowAllUsers(!showAllUsers)}
+            >
+              <X size={20} />
+            </button>
           ) : (
-            <>
-              {filteredConversations.length > 0 ? (
-                filteredConversations.map((conv) => (
-                  <div
-                    key={conv.id}
-                    className={`pulse-conversation-item ${receiver === conv.id ? "pulse-active" : ""}`}
-                    onClick={() => handleReceiverSelect(conv)}
-                  >
-                    <div className="pulse-avatar">
-                      {getDisplayName(conv).charAt(0).toUpperCase()}
-                    </div>
-                    <div className="pulse-conversation-info">
-                      <div className="pulse-conversation-name">{getDisplayName(conv)}</div>
-                      <div className="pulse-conversation-preview">Aucun message...</div>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <p className="pulse-no-conversations">Aucune conversation</p>
-              )}
-            </>
+            <button
+              className="pulse-add-user-btn"
+              onClick={() => setShowAllUsers(!showAllUsers)}
+            >
+              <Plus size={20} />
+            </button>
           )}
         </div>
 
-        <div className="pulse-new-chat-section">
-          <h3>Nouvelle conversation</h3>
-          <div className="pulse-search-container">
-            <input 
-              type="text" 
-              placeholder="Rechercher des utilisateurs..." 
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
+        {!showAllUsers ? (
+          <div className="pulse-conversation-list">
+            {conversations.length > 0 ? (
+              conversations.map((conv) => (
+                <div
+                  key={conv.id}
+                  className={`pulse-conversation-item ${
+                    receiver === conv.id ? "pulse-active" : ""
+                  }`}
+                  onClick={() => handleReceiverSelect(conv)}
+                >
+                  <div className="pulse-avatar">
+                    {getDisplayName(conv).charAt(0).toUpperCase()}
+                  </div>
+                  <div className="pulse-conversation-info">
+                    <div className="pulse-conversation-name">
+                      {getDisplayName(conv)}
+                    </div>
+                    <div className="pulse-conversation-preview">
+                      {last_message(conv.id).contenu || "Aucun message..."}
+                    </div>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <p className="pulse-no-conversations">Aucune conversation</p>
+            )}
           </div>
-          
+        ) : (
           <div className="pulse-user-list">
-            {filteredUsers.map((user) => (
+            <div className="pulse-search-container">
+              <input
+                type="text"
+                placeholder="Rechercher des utilisateurs..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+            {users.map((user) => (
               <div
                 key={user.id}
                 className="pulse-user-item"
@@ -426,64 +401,53 @@ export default function Chat() {
               </div>
             ))}
           </div>
-        </div>
+        )}
       </div>
 
+      {/* MAIN CHAT */}
       <div className="pulse-chat-main">
         {receiver ? (
           <>
             <div className="pulse-chat-header">
-              <div className="pulse-chat-partner">
-                <div className="pulse-avatar">
-                  {getDisplayName(receiverInfo).charAt(0).toUpperCase()}
-                </div>
-                <div className="pulse-chat-info">
-                  <div className="pulse-chat-name">{getDisplayName(receiverInfo)}</div>
-                  <div className="pulse-chat-status">
-                    <span className={`pulse-status-indicator ${isWebSocketConnected ? "pulse-online" : "pulse-offline"}`}></span>
-                    {isWebSocketConnected ? "En ligne" : "Hors ligne"}
-                  </div>
-                </div>
+              <div className="pulse-avatar">
+                {getDisplayName(receiverInfo).charAt(0).toUpperCase()}
               </div>
-              <div className="pulse-connection-status" title={connectionStatus}>
-                <span className={`pulse-status-dot ${isWebSocketConnected ? "pulse-connected" : "pulse-disconnected"}`}></span>
+              <div className="pulse-chat-info">
+                <div className="pulse-chat-name">
+                  {getDisplayName(receiverInfo)}
+                </div>
+                <div className="pulse-chat-status">
+                  <span
+                    className={`pulse-status-indicator ${
+                      isWebSocketConnected ? "pulse-online" : "pulse-offline"
+                    }`}
+                  ></span>
+                  {isWebSocketConnected ? "En ligne" : "Hors ligne"}
+                </div>
               </div>
             </div>
 
             <div className="pulse-messages-container">
-              {loading && listMsg.length === 0 ? (
-                <p className="pulse-loading">Chargement des messages...</p>
+              {listMsg.length > 0 ? (
+                listMsg.map((msg) => (
+                  <div
+                    key={msg.id}
+                    className={`pulse-message-bubble ${
+                      msg.is_own ? "sent" : "received"
+                    }`}
+                  >
+                    <p>{msg.contenu}</p>
+                    <span className="pulse-message-time">
+                      {formatMessageTime(msg.date_envoi)}
+                    </span>
+                  </div>
+                ))
               ) : (
-                <>
-                  {listMsg.length > 0 ? (
-                    listMsg.map((msg) => (
-                      <div
-                        key={msg.id}
-                        className={`pulse-message ${msg.is_own ? "pulse-sent" : "pulse-received"}`}
-                      >
-                        <div className="pulse-message-content">
-                          <p>{msg.contenu}</p>
-                          <div className="pulse-message-meta">
-                            <span className="pulse-message-time">
-                              {formatMessageTime(msg.date_envoi)}
-                            </span>
-                            {msg.is_own && (
-                              <span className="pulse-message-status" title={msg.is_read ? "Vu" : "Envoyé"}>
-                                {msg.is_read ? "✓✓" : "✓"}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    ))
-                  ) : (
-                    <div className="pulse-no-messages">
-                      <p>Aucun message échangé pour le moment</p>
-                    </div>
-                  )}
-                  <div ref={messagesEndRef} />
-                </>
+                <p className="pulse-no-messages">
+                  Aucun message pour le moment
+                </p>
               )}
+              <div ref={messagesEndRef} />
             </div>
 
             <form onSubmit={handleSendMessage} className="pulse-message-form">
@@ -499,16 +463,14 @@ export default function Chat() {
                 disabled={!isWebSocketConnected || !messageInput.trim()}
                 className="pulse-send-button"
               >
-                Envoyer
+                ➤
               </button>
             </form>
           </>
         ) : (
           <div className="pulse-chat-placeholder">
-            <div className="pulse-placeholder-content">
-              <h3>Pulse Messenger</h3>
-              <p>Sélectionnez une conversation ou démarrez-en une nouvelle</p>
-            </div>
+            <h3>Pulse Messenger</h3>
+            <p>Sélectionnez une conversation ou démarrez-en une nouvelle</p>
           </div>
         )}
       </div>

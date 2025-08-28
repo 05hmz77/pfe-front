@@ -3,9 +3,10 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import axios from "axios";
 import "./style/chat.css";
 import { useLocation } from "react-router-dom";
-import { Plus } from "lucide-react"; // icône moderne
+import { Plus, X, CheckCheck } from "lucide-react";
 
 export default function Chat() {
+  const [showMenu, setShowMenu] = useState(false);
   const [users, setUsers] = useState([]);
   const [conversations, setConversations] = useState([]);
   const [receiver, setReceiver] = useState(null);
@@ -44,11 +45,13 @@ export default function Chat() {
       try {
         socketRef.current.send(JSON.stringify(payload));
       } catch (e) {
-        if (payload.type === "message_read") pendingReadsRef.current.push(payload);
+        if (payload.type === "message_read")
+          pendingReadsRef.current.push(payload);
         else pendingOutboxRef.current.push(payload);
       }
     } else {
-      if (payload.type === "message_read") pendingReadsRef.current.push(payload);
+      if (payload.type === "message_read")
+        pendingReadsRef.current.push(payload);
       else pendingOutboxRef.current.push(payload);
     }
   }, []);
@@ -79,18 +82,53 @@ export default function Chat() {
           headers: { Authorization: `Bearer ${token}` },
         });
 
-        const conversationsRes = await axios.get("http://127.0.0.1:8000/api/my/", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const conversationsRes = await axios.get(
+          "http://127.0.0.1:8000/api/my/",
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
 
         setUsers(usersRes.data.filter((u) => u.id !== currentUser.id));
-        setConversations(conversationsRes.data);
+
+        // Injecte le dernier message et compteur non lu
+        const convsWithLastMessage = await Promise.all(
+          conversationsRes.data.map(async (conv) => {
+            try {
+              const res = await axios.get(
+                `http://127.0.0.1:8000/api/last-message/${conv.id}/`,
+                { headers: { Authorization: `Bearer ${token}` } }
+              );
+
+              const res2 = await axios.get(
+                `http://127.0.0.1:8000/api/last-message-not-lu/${conv.id}/`,
+                { headers: { Authorization: `Bearer ${token}` } }
+              );
+
+              return {
+                ...conv,
+                last_message: res.data.contenu || "Aucun message...",
+                last_message_not_lu: res2.data.nb_msg?.toString() || "0",
+              };
+            } catch (err) {
+              console.error(err);
+              return {
+                ...conv,
+                last_message: "Erreur...",
+                last_message_not_lu: "0",
+              };
+            }
+          })
+        );
+
+        setConversations(convsWithLastMessage);
       } catch (err) {
         console.error("Erreur lors de la récupération des données:", err);
       } finally {
         setLoading(false);
       }
     };
+
     fetchData();
   }, [currentUser.id, token]);
 
@@ -139,7 +177,8 @@ export default function Chat() {
       reconnectTimerRef.current = null;
     }
 
-    const wsProtocol = window.location.protocol === "https:" ? "wss://" : "ws://";
+    const wsProtocol =
+      window.location.protocol === "https:" ? "wss://" : "ws://";
     const socketUrl = `${wsProtocol}127.0.0.1:8000/ws/chat/${currentUser.id}/${receiver}/`;
 
     setConnectionStatus("Connexion en cours...");
@@ -179,6 +218,8 @@ export default function Chat() {
       }
 
       if (data.type === "chat_message") {
+        alert("ha msg ja")
+        // Ajouter le message à la liste
         setListMsg((prev) => [
           ...prev,
           {
@@ -188,10 +229,35 @@ export default function Chat() {
             contenu: data.message,
             date_envoi: data.timestamp,
             is_own: data.sender_id === currentUser.id,
-            is_read: data.is_read ?? false,
+            is_read:
+              data.receiver_id === currentUser.id &&
+              receiver === data.sender_id,
           },
-        ]);
+        ],alert(1));
 
+        // Mettre à jour le dernier message et compteur non lu
+        setConversations((prev) =>
+          prev.map((c) => {
+            const isConv =
+              c.id === data.sender_id || c.id === data.receiver_id;
+            if (!isConv) return c;
+
+            const unreadCount = parseInt(c.last_message_not_lu || "0");
+            const newUnread =
+              data.receiver_id === currentUser.id &&
+              receiver !== data.sender_id
+                ? unreadCount + 1
+                : 0;
+
+            return {
+              ...c,
+              last_message: data.message,
+              last_message_not_lu: newUnread.toString(),
+            };
+          })
+        );
+
+        // Marquer comme lu si conversation ouverte
         if (data.receiver_id === currentUser.id && receiver === data.sender_id) {
           sendWS({ type: "message_read", message_id: data.message_id });
         }
@@ -202,6 +268,12 @@ export default function Chat() {
         setListMsg((prev) =>
           prev.map((m) =>
             m.id === data.message_id ? { ...m, is_read: true } : m
+          )
+        );
+
+        setConversations((prev) =>
+          prev.map((c) =>
+            c.id === receiver ? { ...c, last_message_not_lu: "0" } : c
           )
         );
       }
@@ -258,10 +330,19 @@ export default function Chat() {
   }, [markThreadAsRead]);
 
   const handleReceiverSelect = (user) => {
+    const exist = conversations.some((c) => c.id === user.id);
+
     setReceiver(user.id);
     setReceiverInfo(user);
-    setListMsg([]);
     setShowAllUsers(false);
+
+    if (!exist) {
+      setListMsg([]);
+      setConversations([
+        ...conversations,
+        { ...user, last_message: "", last_message_not_lu: "0" },
+      ]);
+    }
   };
 
   const handleSendMessage = (e) => {
@@ -278,14 +359,6 @@ export default function Chat() {
     setMessageInput("");
     sendWS(messageData);
   };
-
-  const filteredUsers = users.filter((user) =>
-    user.username.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  const filteredConversations = conversations.filter((conv) =>
-    conv.username.toLowerCase().includes(searchTerm.toLowerCase())
-  );
 
   const getDisplayName = (user) => {
     if (user.citoyen_profile) {
@@ -308,18 +381,27 @@ export default function Chat() {
       <div className="pulse-sidebar">
         <div className="pulse-sidebar-header">
           <h2>Messages</h2>
-          <button
-            className="pulse-add-user-btn"
-            onClick={() => setShowAllUsers(!showAllUsers)}
-          >
-            <Plus size={20} />
-          </button>
+          {showAllUsers ? (
+            <button
+              className="pulse-add-user-btn"
+              onClick={() => setShowAllUsers(!showAllUsers)}
+            >
+              <X size={20} />
+            </button>
+          ) : (
+            <button
+              className="pulse-add-user-btn"
+              onClick={() => setShowAllUsers(!showAllUsers)}
+            >
+              <Plus size={20} />
+            </button>
+          )}
         </div>
 
         {!showAllUsers ? (
           <div className="pulse-conversation-list">
-            {filteredConversations.length > 0 ? (
-              filteredConversations.map((conv) => (
+            {conversations.length > 0 ? (
+              conversations.map((conv) => (
                 <div
                   key={conv.id}
                   className={`pulse-conversation-item ${
@@ -336,6 +418,9 @@ export default function Chat() {
                     </div>
                     <div className="pulse-conversation-preview">
                       {conv.last_message || "Aucun message..."}
+                    </div>
+                    <div className="pulse-conversation-not-lu">
+                      {conv.last_message_not_lu}
                     </div>
                   </div>
                 </div>
@@ -354,7 +439,7 @@ export default function Chat() {
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
-            {filteredUsers.map((user) => (
+            {users.map((user) => (
               <div
                 key={user.id}
                 className="pulse-user-item"
@@ -378,21 +463,37 @@ export default function Chat() {
         {receiver ? (
           <>
             <div className="pulse-chat-header">
-              <div className="pulse-avatar">
-                {getDisplayName(receiverInfo).charAt(0).toUpperCase()}
+              <div className="pulse-chat-left">
+                <div className="pulse-avatar">
+                  {getDisplayName(receiverInfo).charAt(0).toUpperCase()}
+                </div>
+                <div className="pulse-chat-info">
+                  <div className="pulse-chat-name">
+                    {getDisplayName(receiverInfo)}
+                  </div>
+                  <div className="pulse-chat-username">
+                    @{receiverInfo.username}
+                  </div>
+                </div>
               </div>
-              <div className="pulse-chat-info">
-                <div className="pulse-chat-name">
-                  {getDisplayName(receiverInfo)}
-                </div>
-                <div className="pulse-chat-status">
-                  <span
-                    className={`pulse-status-indicator ${
-                      isWebSocketConnected ? "pulse-online" : "pulse-offline"
-                    }`}
-                  ></span>
-                  {isWebSocketConnected ? "En ligne" : "Hors ligne"}
-                </div>
+
+              <div className="pulse-chat-actions">
+                <button
+                  className="pulse-menu-btn"
+                  onClick={() => setShowMenu((prev) => !prev)}
+                >
+                  ⋮
+                </button>
+
+                {showMenu && (
+                  <div className="pulse-menu-dropdown">
+                    <div className="pulse-menu-item">👤 Voir profil</div>
+                    <div className="pulse-menu-item">🚫 Bloquer</div>
+                    <div className="pulse-menu-item">
+                      🗑️ Supprimer conversation
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -408,6 +509,11 @@ export default function Chat() {
                     <p>{msg.contenu}</p>
                     <span className="pulse-message-time">
                       {formatMessageTime(msg.date_envoi)}
+                      {msg.is_own && (
+                        <span className={`pulse-read-status`}>
+                          {msg.is_read ? <CheckCheck size={14} /> : "✓"}
+                        </span>
+                      )}
                     </span>
                   </div>
                 ))
