@@ -3,9 +3,12 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import axios from "axios";
 import "./style/chat.css";
 import { useLocation } from "react-router-dom";
-import { Plus, X, CheckCheck } from "lucide-react";
+import { Plus, X, CheckCheck, Bell } from "lucide-react";
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 export default function Chat() {
+  const [x, setX] = useState(0);
   const [showMenu, setShowMenu] = useState(false);
   const [users, setUsers] = useState([]);
   const [conversations, setConversations] = useState([]);
@@ -18,13 +21,16 @@ export default function Chat() {
   const [connectionStatus, setConnectionStatus] = useState("Déconnecté");
   const [searchTerm, setSearchTerm] = useState("");
   const [showAllUsers, setShowAllUsers] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0); // Total unread messages count
 
   const socketRef = useRef(null);
+  const notificationSocketRef = useRef(null);
   const authDoneRef = useRef(false);
   const pendingOutboxRef = useRef([]);
   const pendingReadsRef = useRef([]);
   const messagesEndRef = useRef(null);
   const reconnectTimerRef = useRef(null);
+  const notificationReconnectTimerRef = useRef(null);
 
   const location = useLocation();
   const locationUser = location.state?.user || null;
@@ -122,6 +128,12 @@ export default function Chat() {
         );
 
         setConversations(convsWithLastMessage);
+        
+        // Calculate total unread count
+        const totalUnread = convsWithLastMessage.reduce((total, conv) => {
+          return total + parseInt(conv.last_message_not_lu || "0");
+        }, 0);
+        setUnreadCount(totalUnread);
       } catch (err) {
         console.error("Erreur lors de la récupération des données:", err);
       } finally {
@@ -162,7 +174,7 @@ export default function Chat() {
     scrollToBottom();
   }, [listMsg]);
 
-  // WS connection
+  // WS connection for chat
   useEffect(() => {
     if (!receiver) return;
 
@@ -218,7 +230,7 @@ export default function Chat() {
       }
 
       if (data.type === "chat_message") {
-        alert("ha msg ja")
+        setX(x+1);
         // Ajouter le message à la liste
         setListMsg((prev) => [
           ...prev,
@@ -233,7 +245,7 @@ export default function Chat() {
               data.receiver_id === currentUser.id &&
               receiver === data.sender_id,
           },
-        ],alert(1));
+        ]);
 
         // Mettre à jour le dernier message et compteur non lu
         setConversations((prev) =>
@@ -257,6 +269,9 @@ export default function Chat() {
           })
         );
 
+        // Update total unread count
+        setUnreadCount(prev => prev + 1);
+
         // Marquer comme lu si conversation ouverte
         if (data.receiver_id === currentUser.id && receiver === data.sender_id) {
           sendWS({ type: "message_read", message_id: data.message_id });
@@ -272,10 +287,17 @@ export default function Chat() {
         );
 
         setConversations((prev) =>
-          prev.map((c) =>
-            c.id === receiver ? { ...c, last_message_not_lu: "0" } : c
-          )
+          prev.map((c) => {
+            if (c.id === receiver) {
+              const newUnread = Math.max(0, parseInt(c.last_message_not_lu || "0") - 1);
+              return { ...c, last_message_not_lu: newUnread.toString() };
+            }
+            return c;
+          })
         );
+        
+        // Update total unread count
+        setUnreadCount(prev => Math.max(0, prev - 1));
       }
     };
 
@@ -314,6 +336,81 @@ export default function Chat() {
       } catch {}
     };
   }, [receiver, currentUser.id, token]);
+
+  // WS connection for notifications
+  useEffect(() => {
+    if (!currentUser?.id) return;
+
+    if (notificationSocketRef.current) {
+      try {
+        notificationSocketRef.current.close();
+      } catch {}
+      notificationSocketRef.current = null;
+    }
+    if (notificationReconnectTimerRef.current) {
+      clearTimeout(notificationReconnectTimerRef.current);
+      notificationReconnectTimerRef.current = null;
+    }
+
+    const wsProtocol = window.location.protocol === "https:" ? "wss://" : "ws://";
+    const notificationUrl = `${wsProtocol}127.0.0.1:8000/ws/notifications/${currentUser.id}/`;
+
+    const notificationWs = new WebSocket(notificationUrl);
+    notificationSocketRef.current = notificationWs;
+
+    const handleNotificationMessage = (e) => {
+      try {
+        const data = JSON.parse(e.data);
+        
+        if (data.type === "notification") {
+          // Show toast notification
+          toast.info(`${data.from_user || "Quelqu'un"} vous a envoyé un message: ${data.content}`, {
+            position: "top-right",
+            autoClose: 5000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+          });
+          
+          // Update unread count
+          setUnreadCount(prev => prev + 1);
+        }
+      } catch (error) {
+        console.error("Error processing notification:", error);
+      }
+    };
+
+    const handleNotificationError = () => {
+      console.error("Notification WebSocket error");
+    };
+
+    const scheduleNotificationReconnect = () => {
+      if (notificationReconnectTimerRef.current) return;
+      notificationReconnectTimerRef.current = setTimeout(() => {
+        notificationReconnectTimerRef.current = null;
+        // Reconnect by re-running this effect
+      }, 5000);
+    };
+
+    const handleNotificationClose = () => {
+      console.log("Notification WebSocket closed");
+      scheduleNotificationReconnect();
+    };
+
+    notificationWs.addEventListener("message", handleNotificationMessage);
+    notificationWs.addEventListener("error", handleNotificationError);
+    notificationWs.addEventListener("close", handleNotificationClose);
+
+    return () => {
+      notificationWs.removeEventListener("message", handleNotificationMessage);
+      notificationWs.removeEventListener("error", handleNotificationError);
+      notificationWs.removeEventListener("close", handleNotificationClose);
+      try {
+        notificationWs.close();
+      } catch {}
+    };
+  }, [currentUser?.id]);
 
   const markThreadAsRead = useCallback(() => {
     if (!receiver) return;
@@ -377,10 +474,20 @@ export default function Chat() {
 
   return (
     <div className="pulse-chat-container">
+      <ToastContainer />
+      
       {/* SIDEBAR */}
       <div className="pulse-sidebar">
         <div className="pulse-sidebar-header">
-          <h2>Messages</h2>
+          <div className="pulse-header-title">
+            <h2>Messages {x}</h2>
+            {unreadCount > 0 && (
+              <span className="pulse-unread-badge">
+                <Bell size={16} />
+                {unreadCount}
+              </span>
+            )}
+          </div>
           {showAllUsers ? (
             <button
               className="pulse-add-user-btn"
@@ -419,9 +526,11 @@ export default function Chat() {
                     <div className="pulse-conversation-preview">
                       {conv.last_message || "Aucun message..."}
                     </div>
-                    <div className="pulse-conversation-not-lu">
-                      {conv.last_message_not_lu}
-                    </div>
+                    {conv.last_message_not_lu > 0 && (
+                      <div className="pulse-conversation-not-lu">
+                        {conv.last_message_not_lu}
+                      </div>
+                    )}
                   </div>
                 </div>
               ))
