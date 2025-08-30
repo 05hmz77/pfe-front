@@ -1,343 +1,269 @@
-/* ===========================
-   Global chat container
-=========================== */
-.pulse-chat-container {
-  display: flex;
+/* === Layout général === */
+.dashboard-admin-container {
+  background: #ffffff; /* blanc */
+  min-height: 100vh;
+  padding: 20px;
+  font-family: "Segoe UI", sans-serif;
+  color: #1e293b;
+  animation: fadeIn 0.6s ease-in-out;
+}
+
+/* === Header === */
+.dashboard-header {
+  background: #2563eb; /* bleu */
+  color: white;
+  padding: 15px 25px;
+  border-radius: 12px;
+  font-size: 20px;
+  font-weight: bold;
+  margin-bottom: 20px;
+  box-shadow: 0px 3px 6px rgba(0, 0, 0, 0.1);
+  animation: slideDown 0.7s ease-in-out;
+}
+
+/* === Sidebar === */
+.sidebar {
+  background: #1e40af; /* bleu foncé */
+  color: white;
+  width: 250px;
   height: 100vh;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background-color: #f5f6fa;
-  color: #222;
+  position: fixed;
+  left: 0;
+  top: 0;
+  padding: 20px;
+  transition: all 0.3s ease;
+  box-shadow: 2px 0px 6px rgba(0, 0, 0, 0.15);
 }
 
-/* ===========================
-   Sidebar
-=========================== */
-.pulse-sidebar {
-  width: 320px;
-  background-color: #fff;
-  border-right: 1px solid #e0e0e0;
-  display: flex;
-  flex-direction: column;
+.sidebar h2 {
+  margin-bottom: 25px;
+  font-size: 22px;
+}
+
+.sidebar ul {
+  list-style: none;
+  padding: 0;
+}
+
+.sidebar li {
+  margin: 15px 0;
   padding: 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.3s, transform 0.2s;
 }
 
-.pulse-sidebar-header {
+.sidebar li:hover {
+  background: #2563eb;
+  transform: translateX(5px);
+}
+
+/* === Cards === */
+.dashboard-card {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 20px;
+  margin: 15px 0;
+  box-shadow: 0px 3px 10px rgba(0, 0, 0, 0.08);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  animation: fadeInUp 0.6s ease forwards;
+}
+
+.dashboard-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0px 6px 15px rgba(0, 0, 0, 0.12);
+}
+
+.dashboard-card-title {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 15px;
+  color: #2563eb;
+}
+
+/* === KPI Grid === */
+.dashboard-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 20px;
+}
+
+/* === Charts Grid === */
+.dashboard-chart-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 20px;
+  margin-top: 20px;
+}
+
+/* === Top list === */
+.dashboard-top-list {
+  list-style: none;
+  padding: 0;
+}
+
+.dashboard-top-list li {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  padding-bottom: 10px;
-  border-bottom: 1px solid #e0e0e0;
+  padding: 8px 0;
+  border-bottom: 1px solid #e5e7eb;
+  font-size: 14px;
 }
 
-.pulse-header-title h2 {
+.dashboard-count {
+  font-weight: bold;
+  color: #2563eb;
+}
+
+/* === Conteneur activités récentes === */
+.dashboard-activities-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 25px;
+  margin-top: 30px;
+}
+
+/* === Card activité === */
+.dashboard-activity-card {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 25px 20px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  animation: fadeInUp 0.7s ease forwards;
+}
+
+.dashboard-activity-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 25px rgba(0,0,0,0.12);
+}
+
+.dashboard-activity-card h4 {
   font-size: 20px;
+  margin-bottom: 18px;
+  color: #2563eb;
+  font-weight: 700;
+  border-bottom: 2px solid #e5e7eb;
+  padding-bottom: 8px;
+}
+
+/* === Liste des activités === */
+/* Container */
+.dashboard-activities-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+  margin-top: 20px;
+}
+
+/* Cards */
+.dashboard-activity-card {
+  background: #fff;
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.dashboard-activity-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+}
+
+.dashboard-activity-card h4 {
+  font-size: 18px;
   font-weight: 600;
-  margin: 0;
+  margin-bottom: 15px;
+  color: #333;
   display: flex;
   align-items: center;
   gap: 6px;
 }
 
-.pulse-unread-badge {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  background-color: #ef4444;
-  color: #fff;
-  border-radius: 12px;
-  padding: 2px 6px;
-  font-size: 12px;
+/* Lists */
+.dashboard-activity-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
 }
 
-.pulse-add-user-btn {
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-size: 18px;
-  color: #444;
-}
-
-.pulse-search-container input {
-  width: 100%;
-  padding: 6px 10px;
-  border-radius: 8px;
-  border: 1px solid #ccc;
-  margin-bottom: 10px;
-  font-size: 14px;
-}
-
-/* ===========================
-   Conversation list
-=========================== */
-.pulse-conversation-list,
-.pulse-user-list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  overflow-y: auto;
-  flex-grow: 1;
-  padding-right: 4px;
-}
-
-.pulse-conversation-item,
-.pulse-user-item {
-  display: flex;
-  align-items: center;
-  padding: 8px 10px;
-  border-radius: 12px;
-  background-color: #fdfdfd;
-  cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.pulse-conversation-item:hover,
-.pulse-user-item:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
-}
-
-.pulse-active {
-  background-color: #e0f2fe;
-}
-
-/* ===========================
-   Avatar
-=========================== */
-.pulse-avatar {
-  width: 50px;
-  height: 50px;
-  border-radius: 50%;
-  flex-shrink: 0;
-  overflow: hidden;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: bold;
-  font-size: 20px;
-  color: #555;
-  background-color: #ddd;
-  margin-right: 10px;
-  position: relative;
-}
-
-.association-logo {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-/* ===========================
-   User info
-=========================== */
-.pulse-user-info,
-.pulse-conversation-info {
-  display: flex;
-  flex-direction: column;
-}
-
-.pulse-username,
-.pulse-conversation-name {
-  font-weight: 600;
-  font-size: 16px;
-  color: #222;
-}
-
-.pulse-user-handle,
-.pulse-conversation-preview {
-  font-size: 13px;
-  color: #666;
-}
-
-.pulse-conversation-not-lu {
-  display: inline-block;
-  background-color: #ef4444;
-  color: #fff;
+.dashboard-activity-list li {
+  padding: 10px 12px;
   border-radius: 10px;
-  padding: 2px 6px;
-  font-size: 11px;
-  margin-left: 4px;
-}
-
-/* ===========================
-   Main chat area
-=========================== */
-.pulse-chat-main {
-  flex-grow: 1;
-  display: flex;
-  flex-direction: column;
-  background-color: #f5f6fa;
-  border-left: 1px solid #e0e0e0;
-}
-
-.pulse-chat-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 10px 15px;
-  border-bottom: 1px solid #ddd;
-  background-color: #fff;
-}
-
-.pulse-chat-left {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.pulse-chat-info {
-  display: flex;
-  flex-direction: column;
-}
-
-.pulse-chat-name {
-  font-weight: 600;
-  font-size: 16px;
-}
-
-.pulse-chat-username {
-  font-size: 13px;
-  color: #666;
-}
-
-.pulse-menu-btn {
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-size: 18px;
-  position: relative;
-}
-
-.pulse-menu-dropdown {
-  position: absolute;
-  right: 10px;
-  top: 35px;
-  background: #fff;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.12);
-  z-index: 10;
-  width: 180px;
-}
-
-.pulse-menu-item {
-  padding: 8px 12px;
-  cursor: pointer;
+  margin-bottom: 10px;
+  background: #f8f9fa;
   transition: background 0.2s ease;
 }
 
-.pulse-menu-item:hover {
-  background-color: #f0f0f0;
+.dashboard-activity-list li:hover {
+  background: #eef2f7;
 }
 
-/* ===========================
-   Messages container
-=========================== */
-.pulse-messages-container {
-  flex-grow: 1;
-  padding: 10px 15px;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.pulse-message-bubble {
-  max-width: 65%;
-  padding: 8px 12px;
-  border-radius: 12px;
-  position: relative;
-  word-wrap: break-word;
-}
-
-.pulse-message-bubble.sent {
-  align-self: flex-end;
-  background-color: #38bdf8;
-  color: #fff;
-  border-bottom-right-radius: 4px;
-}
-
-.pulse-message-bubble.received {
-  align-self: flex-start;
-  background-color: #e5e7eb;
-  color: #222;
-  border-bottom-left-radius: 4px;
-}
-
-.pulse-message-time {
+/* Titles & descriptions */
+.activity-title {
+  font-weight: 500;
   display: block;
-  font-size: 10px;
-  color: #555;
-  margin-top: 4px;
+  color: #222;
 }
 
-.pulse-read-status {
-  margin-left: 4px;
-  vertical-align: middle;
-}
-
-/* ===========================
-   Message input form
-=========================== */
-.pulse-message-form {
-  display: flex;
-  border-top: 1px solid #ddd;
-  padding: 8px 10px;
-  background-color: #fff;
-}
-
-.pulse-message-form input {
-  flex-grow: 1;
-  padding: 8px 12px;
-  border-radius: 20px;
-  border: 1px solid #ccc;
-  outline: none;
+.activity-desc {
   font-size: 14px;
-}
-
-.pulse-send-button {
-  background-color: #38bdf8;
-  color: #fff;
-  border: none;
-  border-radius: 50%;
-  width: 38px;
-  height: 38px;
-  margin-left: 8px;
-  cursor: pointer;
-  font-size: 18px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.pulse-send-button:disabled {
-  background-color: #a5f3fc;
-  cursor: not-allowed;
-}
-
-/* ===========================
-   Placeholder for empty chat
-=========================== */
-.pulse-chat-placeholder {
-  flex-grow: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
   color: #666;
-  font-size: 16px;
 }
 
-/* ===========================
-   Scrollbars (optional)
-=========================== */
-.pulse-conversation-list::-webkit-scrollbar,
-.pulse-user-list::-webkit-scrollbar,
-.pulse-messages-container::-webkit-scrollbar {
-  width: 6px;
+/* Specific styles for each type */
+.user .activity-title {
+  color: #2563eb; /* Blue for users */
 }
 
-.pulse-conversation-list::-webkit-scrollbar-thumb,
-.pulse-user-list::-webkit-scrollbar-thumb,
-.pulse-messages-container::-webkit-scrollbar-thumb {
-  background-color: rgba(0,0,0,0.2);
-  border-radius: 3px;
+.annonce .activity-title {
+  color: #16a34a; /* Green for annonces */
+}
+
+.candidature .activity-title {
+  color: #d97706; /* Orange for candidatures */
+}
+
+
+/* === Animations === */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideDown {
+  from {
+    transform: translateY(-20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes fadeInLeft {
+  from {
+    transform: translateX(-20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
 }
