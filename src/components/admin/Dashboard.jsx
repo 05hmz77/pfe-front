@@ -153,48 +153,51 @@ export default function Dashboard() {
       </div>
 
       <div className="dashboard-activities-container">
+        {/* Nouveaux utilisateurs */}
+        <div className="dashboard-activity-card">
+          <h4>👥 Nouveaux utilisateurs</h4>
+          <ul className="dashboard-activity-list">
+            {activities.recent_users.map((u) => (
+              <li key={u.id} className="user">
+                <span className="activity-title">
+                  {u.username} ({u.type})
+                </span>
+                <span className="activity-desc">{u.email}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
 
-  {/* Nouveaux utilisateurs */}
-  <div className="dashboard-activity-card">
-    <h4>👥 Nouveaux utilisateurs</h4>
-    <ul className="dashboard-activity-list">
-      {activities.recent_users.map((u) => (
-        <li key={u.id} className="user">
-          <span className="activity-title">{u.username} ({u.type})</span>
-          <span className="activity-desc">{u.email}</span>
-        </li>
-      ))}
-    </ul>
-  </div>
+        {/* Dernières annonces */}
+        <div className="dashboard-activity-card">
+          <h4>📢 Dernières annonces</h4>
+          <ul className="dashboard-activity-list">
+            {activities.recent_annonces.map((a) => (
+              <li key={a.id} className="annonce">
+                <span className="activity-title">
+                  {a.titre} ({a.type})
+                </span>
+                <span className="activity-desc">{a.lieu}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
 
-  {/* Dernières annonces */}
-  <div className="dashboard-activity-card">
-    <h4>📢 Dernières annonces</h4>
-    <ul className="dashboard-activity-list">
-      {activities.recent_annonces.map((a) => (
-        <li key={a.id} className="annonce">
-          <span className="activity-title">{a.titre} ({a.type})</span>
-          <span className="activity-desc">{a.lieu}</span>
-        </li>
-      ))}
-    </ul>
-  </div>
-
-  {/* Dernières candidatures */}
-  <div className="dashboard-activity-card">
-    <h4>🙋‍♂️ Dernières candidatures</h4>
-    <ul className="dashboard-activity-list">
-      {activities.recent_candidatures.map((c) => (
-        <li key={c.id} className="candidature">
-          <span className="activity-title">Candidature #{c.id} – {c.statut}</span>
-          <span className="activity-desc">{c.message}</span>
-        </li>
-      ))}
-    </ul>
-  </div>
-
-</div>
-
+        {/* Dernières candidatures */}
+        <div className="dashboard-activity-card">
+          <h4>🙋‍♂️ Dernières candidatures</h4>
+          <ul className="dashboard-activity-list">
+            {activities.recent_candidatures.map((c) => (
+              <li key={c.id} className="candidature">
+                <span className="activity-title">
+                  Candidature #{c.id} – {c.statut}
+                </span>
+                <span className="activity-desc">{c.message}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
     </div>
   );
 }
