@@ -22,7 +22,6 @@ export default function Sidebar({ isOpen, toggleSidebar }) {
         <div className="sidebar-top">
           {isOpen ? (
             <>
-              
               <NavLink to="/welcome/admin" className="sidebar-logo-text">SolidarLink</NavLink>
             </>
           ) : (

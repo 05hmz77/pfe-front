@@ -5,9 +5,9 @@ import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 const TYPES = {
-  BENEVOLAT: "Bénévolat",
-  DON: "Don",
-  EVENEMENT: "Événement",
+  BENEVOLAT: "🤝 Bénévolat",
+  DON: "🎁 Don",
+  EVENEMENT: "📅 Événement",
 };
 
 const REACTIONS = [
@@ -22,12 +22,13 @@ export default function ListAnnonces() {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
   const [commentaires, setCommentaires] = useState({});
   const [newComment, setNewComment] = useState({});
   const [reactions, setReactions] = useState({});
+  const [showComments, setShowComments] = useState({});
 
   const token = localStorage.getItem("accessToken");
+  const userId = localStorage.getItem("userId"); // 👈 id utilisateur connecté
   const headers = { Authorization: `Bearer ${token}` };
 
   useEffect(() => {
@@ -37,7 +38,6 @@ export default function ListAnnonces() {
           axios.get("http://127.0.0.1:8000/api/annonces/", { headers }),
           axios.get("http://127.0.0.1:8000/api/categories/", { headers }),
         ]);
-
         setAnnonces(annoncesRes.data);
         setCategories(categoriesRes.data);
 
@@ -53,11 +53,10 @@ export default function ListAnnonces() {
         toast.error("Erreur lors du chargement des données");
       }
     };
-
     fetchData();
   }, []);
 
-  // --- 🔹 Récupérer commentaires ---
+  // 🔹 Commentaires
   const fetchCommentaires = async (annonceId) => {
     try {
       const res = await axios.get(
@@ -73,7 +72,7 @@ export default function ListAnnonces() {
     }
   };
 
-  // --- 🔹 Récupérer réactions ---
+  // 🔹 Réactions
   const fetchReactions = async (annonceId) => {
     try {
       const res = await axios.get(
@@ -86,14 +85,26 @@ export default function ListAnnonces() {
     }
   };
 
-  // --- 🔹 Ajouter une réaction ---
+  // 🔹 Ajouter ou modifier une réaction
   const handleReaction = async (annonceId, type) => {
     try {
-      await axios.post(
-        `http://127.0.0.1:8000/api/annonces/${annonceId}/reactions/`,
-        { type },
-        { headers }
-      );
+      const existing = (reactions[annonceId] || [])
+      if (existing) {
+        // Modifier reaction existante
+         await axios.put(
+    `http://127.0.0.1:8000/api/annonces/${annonceId}/reactions/${existing.id}/`,
+    { type },
+    { headers }
+  );
+      } else {
+        // Ajouter nouvelle reaction
+        await axios.post(
+          `http://127.0.0.1:8000/api/annonces/${annonceId}/reactions/`,
+          { type },
+          { headers }
+        );
+      }
+
       fetchReactions(annonceId);
     } catch (err) {
       toast.error("Erreur lors de la réaction");
@@ -101,14 +112,13 @@ export default function ListAnnonces() {
     }
   };
 
-  // --- 🔹 Ajouter un commentaire ---
+  // 🔹 Ajouter un commentaire
   const handleCommentSubmit = async (annonceId) => {
     if (!newComment[annonceId]) return;
-
     try {
       await axios.post(
         `http://127.0.0.1:8000/api/annonces/${annonceId}/commentaires/`,
-        { contenu: newComment[annonceId] }, // ✅ juste contenu
+        { contenu: newComment[annonceId] },
         { headers }
       );
       setNewComment((prev) => ({ ...prev, [annonceId]: "" }));
@@ -123,7 +133,7 @@ export default function ListAnnonces() {
     const date = new Date(dateString);
     return date.toLocaleDateString("fr-FR", {
       year: "numeric",
-      month: "long",
+      month: "short",
       day: "numeric",
     });
   };
@@ -137,57 +147,84 @@ export default function ListAnnonces() {
   if (error) return <div className="error-screen">Erreur: {error}</div>;
 
   return (
-    <div className="annonces-container">
+    <div className="feed-container">
       <ToastContainer position="top-right" autoClose={3000} />
+      {annonces.map((annonce) => (
+        <div key={annonce.id} className="post-card">
+          {/* 🔹 Header */}
+          <div className="post-header">
+            <img
+              src={`http://127.0.0.1:8000/media/${annonce.association.logo}`}
+              alt="logo"
+              className="post-logo"
+            />
+            <div>
+              <h3>{annonce.association.nom}</h3>
+              <span className="post-date">
+                {formatDate(annonce.date_creation)} ·{" "}
+                {TYPES[annonce.type] || annonce.type}
+              </span>
+            </div>
+          </div>
 
-      <header className="page-header">
-        <h1>Annonces disponibles</h1>
-      </header>
-
-      <div className="annonces-grid">
-        {annonces.map((annonce) => (
-          <div key={annonce.id} className="annonce-card">
+          {/* 🔹 Contenu */}
+          <div className="post-content">
             <h2>{annonce.titre}</h2>
             <p>{annonce.description}</p>
-            <span className="annonce-type">
-              {TYPES[annonce.type] || annonce.type}
-            </span>
-            <span className="annonce-category">
+            <div className="image-wrapper">
+              <img src={annonce.image} alt="annonce" className="post-image" />
+            </div>
+          </div>
+
+          {/* 🔹 Infos */}
+          <div className="post-info">
+            <span className="category">
               {getCategoryName(annonce.categorie)}
             </span>
-            <p>
-              📍 {annonce.lieu} <br />
+            <span>📍 {annonce.lieu}</span>
+            <span>
               🗓 {formatDate(annonce.date_debut)} -{" "}
               {formatDate(annonce.date_fin)}
-            </p>
+            </span>
+          </div>
 
-            {/* ✅ Réactions */}
-            <div className="reactions">
-              {REACTIONS.map((r) => (
-                <button
-                  key={r.type}
-                  onClick={() => handleReaction(annonce.id, r.type)}
-                >
-                  {r.label}{" "}
-                  {
-                    (reactions[annonce.id] || []).filter(
-                      (react) => react.type === r.type
-                    ).length
-                  }
-                </button>
-              ))}
-            </div>
+          {/* 🔹 Réactions */}
+          <div className="post-reactions">
+            {REACTIONS.map((r) => (
+              <button
+                key={r.type}
+                onClick={() => handleReaction(annonce.id, r.type)}
+              >
+                {r.label}{" "}
+                {
+                  (reactions[annonce.id] || []).filter(
+                    (react) => react.type === r.type
+                  ).length
+                }
+              </button>
+            ))}
+            <button
+              className="toggle-comments"
+              onClick={() =>
+                setShowComments((prev) => ({
+                  ...prev,
+                  [annonce.id]: !prev[annonce.id],
+                }))
+              }
+            >
+              💬 Commentaires
+            </button>
+          </div>
 
-            {/* ✅ Commentaires */}
-            <div className="comments-section">
-              <h4>Commentaires</h4>
+          {/* 🔹 Commentaires */}
+          {showComments[annonce.id] && (
+            <div className="post-comments">
               {(commentaires[annonce.id] || []).map((c) => (
                 <div key={c.id} className="comment">
                   <strong>{c.auteur?.username || "Anonyme"}</strong> :{" "}
                   {c.contenu}
                 </div>
               ))}
-
               <div className="comment-form">
                 <input
                   type="text"
@@ -205,9 +242,9 @@ export default function ListAnnonces() {
                 </button>
               </div>
             </div>
-          </div>
-        ))}
-      </div>
+          )}
+        </div>
+      ))}
     </div>
   );
 }

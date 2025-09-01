@@ -1,22 +1,22 @@
 /* AdminLayout.css */
-.layout-container {
+.ass_layout-container {
   display: flex;
   min-height: 100vh;
    background: #ffffff;
 
 }
 
-.layout-sidebar {
+.ass_layout-sidebar {
   position: fixed;
   left: 0;
   top: 0;
   bottom: 0;
   z-index: 1000;
   padding: 1rem;
-
+  background-color: rgb(255, 255, 255);
 }
 
-.layout-main {
+.ass_layout-main {
   
   flex: 1;
   margin-left: 280px;
@@ -26,11 +26,11 @@
   flex-direction: column;
 }
 
-.layout-main.sidebar-collapsed {
+.ass_layout-main.sidebar-collapsed {
   margin-left: 80px;
 }
 
-.layout-header {
+.ass_layout-header {
   position: sticky;
   top: 0;
   z-index: 100;
@@ -38,7 +38,7 @@
   
 }
 
-.layout-content {
+.ass_layout-content {
   flex: 2;
   padding: 2rem;
 
@@ -46,7 +46,7 @@
   
 }
 
-.layout-footer {
+.ass_layout-footer {
    background: #ffffff;
   padding: 1rem 2rem;
   text-align: center;
@@ -56,43 +56,43 @@
 
 /* Responsive */
 @media (max-width: 1024px) {
-  .layout-main {
+  .ass_layout-main {
     margin-left: 80px;
   }
   
-  .layout-main.sidebar-collapsed {
+  .ass_layout-main.sidebar-collapsed {
     margin-left: 0;
   }
   
-  .layout-content {
+  .ass_layout-content {
     padding: 1.5rem;
   }
 }
 
 @media (max-width: 768px) {
-  .layout-main {
+  .ass_layout-main {
     margin-left: 0;
   }
   
-  .layout-main.sidebar-open {
+  .ass_layout-main.sidebar-open {
     margin-left: 0;
   }
   
-  .layout-content {
+  .ass_layout-content {
     padding: 1rem;
   }
   
-  .layout-header {
+  .ass_layout-header {
     padding: 1rem;
   }
 }
 
 @media (max-width: 480px) {
-  .layout-content {
+  .ass_layout-content {
     padding: 0.75rem;
   }
   
-  .layout-header {
+  .ass_layout-header {
     padding: 0.75rem;
   }
 }

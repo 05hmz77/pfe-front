@@ -1,7 +1,7 @@
 /* =====================
    Sidebar
 ===================== */
-.sidebar-container {
+.ass_sidebar-container {
   position: fixed;
   top: 18px;
   left: 10px;
@@ -20,20 +20,20 @@
   opacity: 0;
 }
 
-.sidebar-container.open {
+.ass_sidebar-container.open {
   width: 280px;
   transform: translateX(0);  
   opacity: 1;
 }
 
-.sidebar-container.collapsed {
+.ass_sidebar-container.collapsed {
   width: 80px;
   transform: translateX(0);
   opacity: 1;
 }
 
 /* Wrapper */
-.sidebar-wrapper {
+.ass_sidebar-wrapper {
   height: 100%;
   display: flex;
   flex-direction: column;
@@ -42,7 +42,7 @@
 }
 
 /* Header */
-.sidebar-top {
+.ass_sidebar-top {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -51,7 +51,7 @@
   height: 40px;
 }
 
-.sidebar-logo-text {
+.ass_sidebar-logo-text {
   font-size: 1.5rem;
   font-weight: bold;
   color: #ffffff;
@@ -59,18 +59,18 @@
   transition: opacity 0.3s ease;
 }
 
-.sidebar-logo-text:hover {
+.ass_sidebar-logo-text:hover {
   opacity: 0.8;
 }
 
-.sidebar-top p {
+.ass_sidebar-top p {
   font-size: 1.2rem;
   font-weight: bold;
   margin: 0;
   color: #ffffff;
 }
 
-.sidebar-toggle-btn {
+.ass_sidebar-toggle-btn {
   background: rgba(255, 255, 255, 0.15);
   border: none;
   color: #ffffff;
@@ -84,38 +84,38 @@
   transition: all 0.3s ease;
 }
 
-.sidebar-toggle-btn:hover {
+.ass_sidebar-toggle-btn:hover {
   background: rgba(255, 255, 255, 0.25);
   transform: scale(1.05) rotate(90deg);
 }
 
 
 /* Navigation */
-.sidebar-menu {
+.ass_sidebar-menu {
   flex: 1;
   padding: 2rem 0;
 }
 
-.sidebar-menu-list {
+.ass_sidebar-menu-list {
   list-style: none;
   padding: 0;
   margin: 0;
 }
 
-.sidebar-menu-item {
+.ass_sidebar-menu-item {
   margin-bottom: 0.5rem;
   opacity: 0;
   transform: translateX(-20px);
   animation: fadeSlideIn 0.5s forwards;
 }
 
-.sidebar-menu-item:nth-child(1) { animation-delay: 0.1s; }
-.sidebar-menu-item:nth-child(2) { animation-delay: 0.2s; }
-.sidebar-menu-item:nth-child(3) { animation-delay: 0.3s; }
-.sidebar-menu-item:nth-child(4) { animation-delay: 0.4s; }
-.sidebar-menu-item:nth-child(5) { animation-delay: 0.5s; }
+.ass_sidebar-menu-item:nth-child(1) { animation-delay: 0.1s; }
+.ass_sidebar-menu-item:nth-child(2) { animation-delay: 0.2s; }
+.ass_sidebar-menu-item:nth-child(3) { animation-delay: 0.3s; }
+.ass_sidebar-menu-item:nth-child(4) { animation-delay: 0.4s; }
+.ass_sidebar-menu-item:nth-child(5) { animation-delay: 0.5s; }
 
-.sidebar-link {
+.ass_sidebar-link {
   display: flex;
   align-items: center;
   padding: 0.75rem 1.5rem;
@@ -126,57 +126,57 @@
   margin: 0 0.5rem;
 }
 
-.sidebar-link:hover {
+.ass_sidebar-link:hover {
   background: rgba(255, 255, 255, 0.2);
   color: #ffffff;
   transform: translateX(8px);
 }
 
-.sidebar-link.active {
+.ass_sidebar-link.active {
   background: rgba(255, 255, 255, 0.25);
   color: #ffd700;
   border-left: 4px solid #ffd700;
 }
 
-.sidebar-link-icon {
+.ass_sidebar-link-icon {
   margin-right: 1rem;
   display: flex;
   align-items: center;
   color: #ffffff;
 }
 
-.sidebar-link-label {
+.ass_sidebar-link-label {
   font-weight: 500;
   white-space: nowrap;
   color: #ffffff;
 }
 
 /* Footer */
-.sidebar-bottom {
+.ass_sidebar-bottom {
   padding: 1.5rem;
   border-top: 1px solid rgba(255, 255, 255, 0.2);
 }
 
-.sidebar-user {
+.ass_sidebar-user {
   margin-bottom: 1rem;
   text-align: center;
   opacity: 0;
   animation: fadeSlideIn 0.6s 0.6s forwards;
 }
 
-.sidebar-user-name {
+.ass_sidebar-user-name {
   font-weight: 600;
   font-size: 1.1rem;
   color: #ffffff;
 }
 
-.sidebar-user-role {
+.ass_sidebar-user-role {
   font-size: 0.9rem;
   opacity: 0.85;
   color: #e0e0e0;
 }
 
-.sidebar-user-initials {
+.ass_sidebar-user-initials {
   width: 40px;
   height: 40px;
   border-radius: 50%;
@@ -190,15 +190,15 @@
   color: #ffffff;
 }
 
-.sidebar-actions {
+.ass_sidebar-actions {
   display: flex;
   justify-content: center;
 }
 
-.sidebar-btn-logout {
+.ass_sidebar-btn-logout {
   background: rgba(255, 255, 255, 0.15);
   border: none;
-  color: #ff4d4d;
+  color: #ff0000;
   padding: 0.5rem;
   border-radius: 8px;
   cursor: pointer;
@@ -208,7 +208,7 @@
   justify-content: center;
 }
 
-.sidebar-btn-logout:hover {
+.ass_sidebar-btn-logout:hover {
   background: rgba(255, 255, 255, 0.25);
   transform: scale(1.05);
 }
@@ -220,23 +220,23 @@
 }
 
 /* Sidebar collapsed: centrer icônes et cacher texte */
-.sidebar-container.collapsed .sidebar-link {
+.ass_sidebar-container.collapsed .ass_sidebar-link {
   justify-content: center;
   padding: 0.75rem 0;
 }
 
-.sidebar-container.collapsed .sidebar-link-label {
+.ass_sidebar-container.collapsed .ass_sidebar-link-label {
   display: none;
 }
 
-.sidebar-container.collapsed .sidebar-link-icon {
+.ass_sidebar-container.collapsed .ass_sidebar-link-icon {
   margin: 0;
 }
 
 /* =====================
    Topbar
 ===================== */
-.topbar {
+.ass_topbar {
   position: fixed;
   top: 0;
   left: 0;
@@ -252,13 +252,13 @@
   transition: left 0.4s ease, width 0.4s ease;
 }
 
-.topbar .topbar-left,
-.topbar .topbar-right {
+.ass_topbar .ass_topbar-left,
+.ass_topbar .ass_topbar-right {
   display: flex;
   align-items: center;
 }
 
-.topbar .topbar-btn {
+.ass_topbar .ass_topbar-btn {
   background: rgba(67, 97, 238, 0.1);
   border: none;
   color: #4361ee;
@@ -269,7 +269,7 @@
   transition: all 0.3s ease;
 }
 
-.topbar .topbar-btn:hover {
+.ass_topbar .ass_topbar-btn:hover {
   background: rgba(67, 97, 238, 0.2);
   transform: scale(1.05);
 }
@@ -277,13 +277,13 @@
 /* =====================
    Main Content
 ===================== */
-.main-content {
+.ass_main-content {
   margin-left: 280px; /* largeur sidebar ouverte par défaut */
   padding: 1.5rem;
   transition: margin-left 0.4s ease;
 }
 
-.sidebar-container.collapsed ~ .main-content {
+.ass_sidebar-container.collapsed ~ .ass_main-content {
   margin-left: 80px;
 }
 
@@ -291,15 +291,15 @@
    Responsive
 ===================== */
 @media (max-width: 768px) {
-  .main-content {
+  .ass_main-content {
     margin-left: 0;
   }
 
-  .sidebar-container.open ~ .main-content {
+  .ass_sidebar-container.open ~ .ass_main-content {
     margin-left: 100%;
   }
 
-  .sidebar-toggle-btn {
+  .ass_sidebar-toggle-btn {
     top: 1rem;
     right: 1rem;
   }
