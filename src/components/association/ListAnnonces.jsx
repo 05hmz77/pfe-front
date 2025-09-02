@@ -20,6 +20,7 @@ const REACTIONS = [
 
 export default function ListAnnonces() {
   const [annonces, setAnnonces] = useState([]);
+  const [candidatures, setCandidatures] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -59,7 +60,22 @@ export default function ListAnnonces() {
       }
     };
     fetchData();
+    fetchCandidatures();
   }, []);
+
+  const fetchCandidatures = async () => {
+    try {
+      const token = localStorage.getItem("accessToken");
+      const headers = { Authorization: `Bearer ${token}` };
+      const response = await axios.get("http://127.0.0.1:8000/api/candidatures/mes/", { headers });
+      setCandidatures(response.data);
+      setLoading(false);
+    } catch (err) {
+      setError(err.message);
+      setLoading(false);
+      toast.error("Erreur lors du chargement des candidatures");
+    }
+  };
 
   // 🔹 Commentaires
   const fetchCommentaires = async (annonceId) => {
@@ -162,6 +178,19 @@ export default function ListAnnonces() {
   // 🔹 Activer mode édition
   const handleEditComment = (annonceId, commentId, contenu) => {
     setEditingComment({ id: commentId, annonceId, contenu });
+  };
+
+  const getStatusBadgeClass = (status) => {
+    switch (status) {
+      case "ACCEPTEE":
+        return "status-badge accepted";
+      case "REFUSEE":
+        return "status-badge rejected";
+      case "EN_ATTENTE":
+        return "status-badge pending";
+      default:
+        return "status-badge";
+    }
   };
 
   // 🔹 Sauvegarder modification commentaire
@@ -339,7 +368,24 @@ export default function ListAnnonces() {
     </div>
       </div>
       <div className="candidature-content">
-             
+             {candidatures.length > 0 ? (
+        <div className="candidatures-list">
+          {candidatures.map((candidature) => (
+              <div key={candidature.id} className="candidature-card">
+                <div className="candidature-header">
+                  <h3>Candidature #{candidature.id}</h3>
+                  <span className={getStatusBadgeClass(candidature.statut)}>
+                    {candidature.statut.replace("_", " ")}
+                  </span>
+                </div>
+              </div>
+            ))}
+        </div>
+      ) : (
+        <div className="no-candidatures">
+          <p>Aucune candidature trouvée</p>
+        </div>
+      )} 
       </div>
     </div>
     
