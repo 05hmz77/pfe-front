@@ -3,7 +3,7 @@ import axios from "axios";
 import "./style/ListAnnonces.css";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { FaEdit, FaTrash } from "react-icons/fa";
+import { FaEdit, FaTrash, FaHeart, FaComments, FaMapMarkerAlt, FaCalendarAlt, FaTag, FaUser } from "react-icons/fa";
 
 const TYPES = {
   BENEVOLAT: "🤝 Bénévolat",
@@ -12,10 +12,10 @@ const TYPES = {
 };
 
 const REACTIONS = [
-  { type: "LIKE", label: "👍" },
-  { type: "JADORE", label: "❤️" },
-  { type: "SAD", label: "😢" },
-  { type: "ANGRY", label: "😡" },
+  { type: "LIKE", label: "👍", name: "J'aime" },
+  { type: "JADORE", label: "❤️", name: "J'adore" },
+  { type: "SAD", label: "😢", name: "Triste" },
+  { type: "ANGRY", label: "😡", name: "En colère" },
 ];
 
 export default function ListAnnonces() {
@@ -26,18 +26,17 @@ export default function ListAnnonces() {
   const [error, setError] = useState(null);
   const [commentaires, setCommentaires] = useState({});
   const [newComment, setNewComment] = useState({});
-  const [editingComment, setEditingComment] = useState(null); // {id, annonceId, contenu}
+  const [editingComment, setEditingComment] = useState(null);
   const [reactions, setReactions] = useState({});
   const [showComments, setShowComments] = useState({});
+  const [activeTab, setActiveTab] = useState("annonces");
 
   const token = localStorage.getItem("accessToken");
   const user = JSON.parse(localStorage.getItem("user"));
-  const [userId, setUserId] = useState(user?.id || ""); // 👈 ID utilisateur connecté
+  const [userId, setUserId] = useState(user?.id || "");
   const headers = { Authorization: `Bearer ${token}` };
 
   useEffect(() => {
-    alert(userId);
-    setUserId(user.id);
     const fetchData = async () => {
       try {
         const [annoncesRes, categoriesRes] = await Promise.all([
@@ -65,14 +64,9 @@ export default function ListAnnonces() {
 
   const fetchCandidatures = async () => {
     try {
-      const token = localStorage.getItem("accessToken");
-      const headers = { Authorization: `Bearer ${token}` };
       const response = await axios.get("http://127.0.0.1:8000/api/candidatures/mes/", { headers });
       setCandidatures(response.data);
-      setLoading(false);
     } catch (err) {
-      setError(err.message);
-      setLoading(false);
       toast.error("Erreur lors du chargement des candidatures");
     }
   };
@@ -86,10 +80,7 @@ export default function ListAnnonces() {
       );
       setCommentaires((prev) => ({ ...prev, [annonceId]: res.data }));
     } catch (err) {
-      console.error(
-        "Erreur chargement commentaires",
-        err.response?.data || err
-      );
+      console.error("Erreur chargement commentaires", err.response?.data || err);
     }
   };
 
@@ -228,166 +219,208 @@ export default function ListAnnonces() {
   if (loading) return <div className="loading-screen">Chargement...</div>;
   if (error) return <div className="error-screen">Erreur: {error}</div>;
 
+  
   return (
-    <div className="main-content">
-      <div className="scrol-part"> 
-        <div className="feed-container">
-      <ToastContainer position="top-right" autoClose={3000} />
-      {annonces.map((annonce) => {
-        const userReaction = (reactions[annonce.id] || []).find(
-          (r) => r.utilisateur === userId
-        );
-        return (
-          <div key={annonce.id} className="post-card">
-            {/* 🔹 Header */}
-            <div className="post-header">
-              <img
-                src={`http://127.0.0.1:8000/media/${annonce.association.logo}`}
-                alt="logo"
-                className="post-logo"
-              />
-              <div>
-                <h3>{annonce.association.nom}</h3>
-                <span className="post-date">
-                  {formatDate(annonce.date_creation)} ·{" "}
-                  {TYPES[annonce.type] || annonce.type}
-                </span>
-              </div>
-            </div>
+    <body>
+  <div class="container">
+    {/* <!-- Flux central -->s */}
+    
+    <div class="feed">
+      <div class="post">
+            {annonces.map((annonce) => {
+                const userReaction = (reactions[annonce.id] || []).find(
+                  (r) => r.utilisateur === userId
+                );
+                return (
+                  <div key={annonce.id} className="post-card">
+                    {/* Header */}
+                    <div className="post-header">
+                      <div className="user-avatar">
+                        {annonce.association.logo ? (
+                          <img
+                            src={`http://127.0.0.1:8000/media/${annonce.association.logo}`}
+                            alt="logo"
+                            className="post-logo"
+                          />
+                        ) : (
+                          <FaUser />
+                        )}
+                      </div>
+                      <div className="post-header-info">
+                        <h3>{annonce.association.nom}</h3>
+                        <span className="post-date">
+                          {formatDate(annonce.date_creation)} ·{" "}
+                          {TYPES[annonce.type] || annonce.type}
+                        </span>
+                      </div>
+                    </div>
 
-            {/* 🔹 Contenu */}
-            <div className="post-content">
-              <h2>{annonce.titre}</h2>
-              <p>{annonce.description}</p>
-              <div className="image-wrapper">
-                <img src={annonce.image} alt="annonce" className="post-image" />
-              </div>
-            </div>
+                    {/* Contenu */}
+                    <div className="post-content">
+                      <h2>{annonce.titre}</h2>
+                      <p>{annonce.description}</p>
+                      {annonce.image && (
+                        <div className="image-wrapper">
+                          <img src={annonce.image} alt="annonce" className="post-image" />
+                        </div>
+                      )}
+                    </div>
 
-            {/* 🔹 Infos */}
-            <div className="post-info">
-              <span className="category">
-                {getCategoryName(annonce.categorie)}
-              </span>
-              <span>📍 {annonce.lieu}</span>
-              <span>
-                🗓 {formatDate(annonce.date_debut)} -{" "}
-                {formatDate(annonce.date_fin)}
-              </span>
-            </div>
+                    {/* Infos */}
+                    <div className="post-info">
+                      <span className="category">
+                        <FaTag /> {getCategoryName(annonce.categorie)}
+                      </span>
+                      <span><FaMapMarkerAlt /> {annonce.lieu}</span>
+                      <span>
+                        <FaCalendarAlt /> {formatDate(annonce.date_debut)} -{" "}
+                        {formatDate(annonce.date_fin)}
+                      </span>
+                    </div>
 
-            {/* 🔹 Réactions */}
-            <div className="post-reactions">
-              {REACTIONS.map((r) => (
-                <button
-                  key={r.type}
-                  className={
-                    userReaction?.type === r.type ? "active-reaction" : ""
-                  }
-                  onClick={() => handleReaction(annonce.id, r.type)}
-                >
-                  {r.label}{" "}
-                  {
-                    (reactions[annonce.id] || []).filter(
-                      (react) => react.type === r.type
-                    ).length
-                  }
-                </button>
-              ))}
-              <button
-                className="toggle-comments"
-                onClick={() =>
-                  setShowComments((prev) => ({
-                    ...prev,
-                    [annonce.id]: !prev[annonce.id],
-                  }))
-                }
-              >
-                💬 Commentaires ({(commentaires[annonce.id] || []).length || 0})
-              </button>
-            </div>
-
-            {/* 🔹 Commentaires */}
-            {showComments[annonce.id] && (
-              <div className="post-comments">
-                {(commentaires[annonce.id] || []).map((c) => (
-                  <div key={c.id} className="comment">
-                    <strong>{c.auteur?.username || "Anonyme"}</strong> :{" "}
-                    {editingComment?.id === c.id ? (
-                      <input
-                        type="text"
-                        value={editingComment.contenu}
-                        onChange={(e) =>
-                          setEditingComment((prev) => ({
+                    {/* Réactions */}
+                    <div className="post-reactions">
+                      {REACTIONS.map((r) => (
+                        <button
+                          key={r.type}
+                          className={`reaction-btn ${userReaction?.type === r.type ? "active-reaction" : ""}`}
+                          onClick={() => handleReaction(annonce.id, r.type)}
+                          title={r.name}
+                        >
+                          {r.label}{" "}
+                          {
+                            (reactions[annonce.id] || []).filter(
+                              (react) => react.type === r.type
+                            ).length
+                          }
+                        </button>
+                      ))}
+                      <button
+                        className="toggle-comments"
+                        onClick={() =>
+                          setShowComments((prev) => ({
                             ...prev,
-                            contenu: e.target.value,
+                            [annonce.id]: !prev[annonce.id],
                           }))
                         }
-                        onBlur={handleSaveEdit}
-                      />
-                    ) : (
-                      c.contenu
-                    )}
-                    {c.auteur?.id === userId && (
-                      <span className="comment-actions">
-                        <FaEdit
-                          className="edit-icon"
-                          onClick={() =>
-                            handleEditComment(annonce.id, c.id, c.contenu)
-                          }
-                        />
-                        <FaTrash
-                          className="delete-icon"
-                          onClick={() => handleDeleteComment(annonce.id, c.id)}
-                        />
-                      </span>
+                      >
+                        <FaComments /> Commentaires ({(commentaires[annonce.id] || []).length || 0})
+                      </button>
+                    </div>
+
+                    {/* Commentaires */}
+                    {showComments[annonce.id] && (
+                      <div className="post-comments">
+                        <h4>Commentaires</h4>
+                        {(commentaires[annonce.id] || []).map((c) => (
+                          <div key={c.id} className="comment">
+                            <div className="comment-header">
+                              <strong>{c.auteur?.username || "Anonyme"}</strong>
+                              {c.auteur?.id === userId && (
+                                <span className="comment-actions">
+                                  <FaEdit
+                                    className="edit-icon"
+                                    onClick={() =>
+                                      handleEditComment(annonce.id, c.id, c.contenu)
+                                    }
+                                  />
+                                  <FaTrash
+                                    className="delete-icon"
+                                    onClick={() => handleDeleteComment(annonce.id, c.id)}
+                                  />
+                                </span>
+                              )}
+                            </div>
+                            {editingComment?.id === c.id ? (
+                              <div className="comment-edit">
+                                <input
+                                  type="text"
+                                  value={editingComment.contenu}
+                                  onChange={(e) =>
+                                    setEditingComment((prev) => ({
+                                      ...prev,
+                                      contenu: e.target.value,
+                                    }))
+                                  }
+                                />
+                                <div className="comment-edit-actions">
+                                  <button onClick={handleSaveEdit}>Enregistrer</button>
+                                  <button onClick={() => setEditingComment(null)}>Annuler</button>
+                                </div>
+                              </div>
+                            ) : (
+                              <p>{c.contenu}</p>
+                            )}
+                          </div>
+                        ))}
+                        <div className="comment-form">
+                          <input
+                            type="text"
+                            placeholder="Ajouter un commentaire..."
+                            value={newComment[annonce.id] || ""}
+                            onChange={(e) =>
+                              setNewComment((prev) => ({
+                                ...prev,
+                                [annonce.id]: e.target.value,
+                              }))
+                            }
+                            onKeyPress={(e) => e.key === 'Enter' && handleCommentSubmit(annonce.id)}
+                          />
+                          <button onClick={() => handleCommentSubmit(annonce.id)}>
+                            Publier
+                          </button>
+                        </div>
+                      </div>
                     )}
                   </div>
+                );
+              })}
+      </div>
+    </div>
+   {/* <!-- Sidebar droite --> */}
+    
+    <div class="rightbar">
+      <div class="card">
+        {candidatures.length > 0 ? (
+              <div className="candidatures-list">
+                {candidatures.map((candidature) => (
+                  <div key={candidature.id} className="candidature-card">
+                    <div className="candidature-header">
+                      <h3>Candidature #{candidature.id}</h3>
+                      <span className={getStatusBadgeClass(candidature.statut)}>
+                        {candidature.statut ? candidature.statut.replace("_", " ") : "Non spécifié"}
+                      </span>
+                    </div>
+                    <div className="candidature-details">
+                      <p className="candidature-date">
+                        <FaCalendarAlt /> {formatDate(candidature.date_candidature)}
+                      </p>
+                      {candidature.message && (
+                        <p className="candidature-message">{candidature.message}</p>
+                      )}
+                      {candidature.note_engagement && (
+                        <p className="candidature-note">
+                          <FaHeart /> Note d'engagement: {candidature.note_engagement}/5
+                        </p>
+                      )}
+                    </div>
+                  </div>
                 ))}
-                <div className="comment-form">
-                  <input
-                    type="text"
-                    placeholder="Ajouter un commentaire..."
-                    value={newComment[annonce.id] || ""}
-                    onChange={(e) =>
-                      setNewComment((prev) => ({
-                        ...prev,
-                        [annonce.id]: e.target.value,
-                      }))
-                    }
-                  />
-                  <button onClick={() => handleCommentSubmit(annonce.id)}>
-                    Envoyer
-                  </button>
+              </div>
+            ) : (
+              <div className="no-candidatures">
+                <div className="empty-state">
+                  <h3>Aucune candidature</h3>
+                  <p>Vous n'avez pas encore postulé à une annonce</p>
                 </div>
               </div>
             )}
-          </div>
-        );
-      })}
-    </div>
+        
       </div>
-      <div className="candidature-content">
-             {candidatures.length > 0 ? (
-        <div className="candidatures-list">
-          {candidatures.map((candidature) => (
-              <div key={candidature.id} className="candidature-card">
-                <div className="candidature-header">
-                  <h3>Candidature #{candidature.id}</h3>
-                  <span className={getStatusBadgeClass(candidature.statut)}>
-                    {candidature.statut.replace("_", " ")}
-                  </span>
-                </div>
-              </div>
-            ))}
-        </div>
-      ) : (
-        <div className="no-candidatures">
-          <p>Aucune candidature trouvée</p>
-        </div>
-      )} 
-      </div>
+
+      
     </div>
-    
-  );
+  </div>
+</body>
+  )
 }
