@@ -1,448 +1,178 @@
-/* Style général */
-body {
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background-color: #f0f2f5;
-  margin: 0;
-  padding: 0;
-  color: #333;
-}
-
-/* Conteneur principal */
+/* Container principal */
 .container {
   display: flex;
-  max-width: 1200px;
-  margin: 0 auto;
+  max-width: 100%;
   padding: 20px;
-  gap: 20px;
+  gap: 30px;
+  height: calc(100vh - 40px); /* Prend toute la hauteur moins le padding */
+  overflow: hidden; /* Cache le débordement global */
 }
 
-/* Flux principal des annonces */
+/* Flux central des annonces (scrollable) */
 .feed {
   flex: 2;
-  min-width: 0; /* Empêche le débordement */
-}
-
-/* Carte de publication */
-.post-card {
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  margin-bottom: 20px;
-  padding: 20px;
-  transition: transform 0.2s, box-shadow 0.2s;
-}
-
-.post-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-}
-
-/* En-tête de publication */
-.post-header {
-  display: flex;
-  align-items: center;
-  margin-bottom: 15px;
-}
-
-.user-avatar {
-  width: 50px;
-  height: 50px;
-  border-radius: 50%;
-  background-color: #e4e6eb;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-right: 12px;
-  overflow: hidden;
-}
-
-.post-logo {
-  width: 100%;
+  min-width: 0;
+  overflow-y: auto; /* Permet le défilement vertical */
   height: 100%;
-  object-fit: cover;
+  padding-right: 10px; /* Espace pour la barre de défilement */
 }
 
-.post-header-info h3 {
-  margin: 0;
-  font-size: 16px;
-  color: #333;
+/* Style de la barre de défilement pour le feed */
+.feed::-webkit-scrollbar {
+  width: 6px;
 }
 
-.post-date {
-  font-size: 12px;
-  color: #65676b;
+.feed::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
 }
 
-/* Contenu de la publication */
-.post-content h2 {
-  margin: 0 0 10px 0;
-  font-size: 18px;
-  color: #1a1a1a;
+.feed::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 10px;
 }
 
-.post-content p {
-  margin: 0 0 15px 0;
-  line-height: 1.5;
-  color: #333;
-  max-height: 3em;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
+.feed::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
 }
 
-.image-wrapper {
-  margin: 15px 0;
-  border-radius: 8px;
-  overflow: hidden;
-  max-height: 300px;
-}
-
-.post-image {
-  width: 100%;
-  height: auto;
-  object-fit: cover;
-}
-
-/* Informations de la publication */
-.post-info {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 15px;
-  margin: 15px 0;
-  font-size: 14px;
-  color: #65676b;
-}
-
-.post-info span {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-}
-
-/* Réactions */
-.post-reactions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin: 15px 0;
-  padding-top: 15px;
-  border-top: 1px solid #e4e6eb;
-}
-
-.reaction-btn {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  padding: 6px 12px;
-  background: #f0f2f5;
-  border: none;
-  border-radius: 18px;
-  cursor: pointer;
-  transition: background 0.2s;
-  font-size: 14px;
-}
-
-.reaction-btn:hover {
-  background: #e4e6eb;
-}
-
-.active-reaction {
-  background: #e7f3ff;
-  color: #1877f2;
-}
-
-.toggle-comments {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  padding: 6px 12px;
-  background: #f0f2f5;
-  border: none;
-  border-radius: 18px;
-  cursor: pointer;
-  transition: background 0.2s;
-  font-size: 14px;
-  margin-left: auto;
-}
-
-.toggle-comments:hover {
-  background: #e4e6eb;
-}
-
-/* Commentaires */
-.post-comments {
-  margin-top: 15px;
-  padding-top: 15px;
-  border-top: 1px solid #e4e6eb;
-}
-
-.post-comments h4 {
-  margin: 0 0 15px 0;
-  font-size: 16px;
-  color: #333;
-}
-
-.comment {
-  background: #f0f2f5;
-  border-radius: 8px;
-  padding: 12px;
-  margin-bottom: 12px;
-}
-
-.comment-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 8px;
-}
-
-.comment-header strong {
-  font-size: 14px;
-}
-
-.comment-actions {
-  display: flex;
-  gap: 10px;
-}
-
-.edit-icon, .delete-icon {
-  cursor: pointer;
-  font-size: 14px;
-  transition: color 0.2s;
-}
-
-.edit-icon:hover {
-  color: #1877f2;
-}
-
-.delete-icon:hover {
-  color: #f02849;
-}
-
-.comment p {
-  margin: 0;
-  font-size: 14px;
-  line-height: 1.4;
-}
-
-.comment-edit {
-  margin-top: 8px;
-}
-
-.comment-edit input {
-  width: 100%;
-  padding: 8px;
-  border: 1px solid #dddfe2;
-  border-radius: 4px;
-  margin-bottom: 8px;
-}
-
-.comment-edit-actions {
-  display: flex;
-  gap: 8px;
-}
-
-.comment-edit-actions button {
-  padding: 6px 12px;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 13px;
-}
-
-.comment-edit-actions button:first-child {
-  background: #1877f2;
-  color: white;
-}
-
-.comment-edit-actions button:last-child {
-  background: #e4e6eb;
-  color: #333;
-}
-
-.comment-form {
-  display: flex;
-  gap: 10px;
-  margin-top: 15px;
-}
-
-.comment-form input {
-  flex: 1;
-  padding: 10px;
-  border: 1px solid #dddfe2;
-  border-radius: 20px;
-  outline: none;
-}
-
-.comment-form button {
-  padding: 10px 15px;
-  background: #1877f2;
-  color: white;
-  border: none;
-  border-radius: 20px;
-  cursor: pointer;
-  font-weight: 600;
-}
-
-.comment-form button:hover {
-  background: #166fe5;
-}
-
-/* Sidebar droite */
+/* Sidebar droite (fixe) */
 .rightbar {
   flex: 1;
   min-width: 300px;
+  max-width: 350px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
-.card {
+/* Carte dans la sidebar (fixe) */
+.rightbar .card {
   background: white;
   border-radius: 12px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
   padding: 20px;
-  margin-bottom: 20px;
-  position: sticky;
-  top: 20px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden; /* Important pour contenir le contenu */
 }
 
-/* Candidatures */
+/* Liste des candidatures (scrollable à l'intérieur de la carte fixe) */
 .candidatures-list {
   display: flex;
   flex-direction: column;
-  gap: 15px;
+  gap: 12px;
+  overflow-y: auto; /* Défilement interne */
+  flex-grow: 1;
+  padding-right: 5px;
+  margin-top: 10px;
 }
 
-.candidature-card {
+/* Style de la barre de défilement pour la liste de candidatures */
+.candidatures-list::-webkit-scrollbar {
+  width: 4px;
+}
+
+.candidatures-list::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+.candidatures-list::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 10px;
+}
+
+.candidatures-list::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+/* Carte de candidature miniature */
+.candidature-mini-card {
   background: #f7f8fa;
   border-radius: 8px;
-  padding: 15px;
+  padding: 12px;
   border-left: 4px solid #1877f2;
-}
-
-.candidature-header {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 10px;
+  flex-direction: column;
+  gap: 8px;
+  transition: transform 0.2s, box-shadow 0.2s;
 }
 
-.candidature-header h3 {
-  margin: 0;
-  font-size: 16px;
+.candidature-mini-card:hover {
+  transform: translateX(3px);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
 }
 
-.candidature-details {
-  font-size: 14px;
+.candidature-id {
+  font-size: 12px;
+  font-weight: 600;
+  color: #65676b;
 }
 
 .candidature-date {
-  color: #65676b;
-  margin: 5px 0;
   display: flex;
   align-items: center;
   gap: 5px;
-}
-
-.candidature-message {
-  margin: 10px 0;
-  padding: 10px;
-  background: white;
-  border-radius: 6px;
-  font-style: italic;
-  max-height: 4.5em;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
-}
-
-.candidature-note {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  margin: 5px 0;
-  color: #e61c5d;
-}
-
-/* Badges de statut */
-.status-badge {
-  padding: 4px 8px;
-  border-radius: 12px;
   font-size: 12px;
-  font-weight: 600;
-}
-
-.status-badge.accepted {
-  background: #e6f7ee;
-  color: #00a65a;
-}
-
-.status-badge.rejected {
-  background: #ffe6e6;
-  color: #f2711c;
-}
-
-.status-badge.pending {
-  background: #fff4e6;
-  color: #f2711c;
+  color: #65676b;
 }
 
 /* États vides */
 .no-candidatures {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
   text-align: center;
-  padding: 30px 0;
 }
 
 .empty-state h3 {
   margin: 0 0 10px 0;
   color: #65676b;
+  font-size: 16px;
 }
 
 .empty-state p {
   margin: 0;
   color: #8a8d91;
-}
-
-/* Écrans de chargement et d'erreur */
-.loading-screen, .error-screen {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 50vh;
-  font-size: 18px;
-}
-
-.error-screen {
-  color: #f02849;
+  font-size: 14px;
 }
 
 /* Responsive */
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
   .container {
     flex-direction: column;
+    height: auto;
+  }
+  
+  .feed {
+    overflow-y: visible;
+    height: auto;
+    order: 2;
   }
   
   .rightbar {
-    min-width: auto;
+    max-width: 100%;
+    height: auto;
+    order: 1;
+    margin-bottom: 20px;
   }
   
-  .post-info {
-    flex-direction: column;
-    gap: 8px;
+  .rightbar .card {
+    height: auto;
+    max-height: 300px; /* Limite la hauteur sur mobile */
+  }
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding: 15px;
+    gap: 20px;
   }
   
-  .post-reactions {
-    justify-content: center;
-  }
-  
-  .toggle-comments {
-    margin-left: 0;
-    margin-top: 10px;
-  }
-  
-  .card {
-    position: static;
+  .candidature-mini-card {
+    padding: 10px;
   }
 }

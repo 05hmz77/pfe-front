@@ -17,7 +17,7 @@
 }
 
 .ass_layout-main {
-  
+  background-color: rgb(255, 255, 255);
   flex: 1;
   margin-left: 280px;
   transition: margin-left 0.3s ease;

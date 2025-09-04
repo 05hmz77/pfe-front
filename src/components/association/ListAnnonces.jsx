@@ -382,39 +382,31 @@ export default function ListAnnonces() {
     <div class="rightbar">
       <div class="card">
         {candidatures.length > 0 ? (
-              <div className="candidatures-list">
-                {candidatures.map((candidature) => (
-                  <div key={candidature.id} className="candidature-card">
-                    <div className="candidature-header">
-                      <h3>Candidature #{candidature.id}</h3>
-                      <span className={getStatusBadgeClass(candidature.statut)}>
-                        {candidature.statut ? candidature.statut.replace("_", " ") : "Non spécifié"}
-                      </span>
-                    </div>
-                    <div className="candidature-details">
-                      <p className="candidature-date">
-                        <FaCalendarAlt /> {formatDate(candidature.date_candidature)}
-                      </p>
-                      {candidature.message && (
-                        <p className="candidature-message">{candidature.message}</p>
-                      )}
-                      {candidature.note_engagement && (
-                        <p className="candidature-note">
-                          <FaHeart /> Note d'engagement: {candidature.note_engagement}/5
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="no-candidatures">
-                <div className="empty-state">
-                  <h3>Aucune candidature</h3>
-                  <p>Vous n'avez pas encore postulé à une annonce</p>
-                </div>
-              </div>
-            )}
+  <div className="candidatures-list">
+    {candidatures
+    .sort((a, b) => new Date(b.date_candidature) - new Date(a.date_candidature)) // trie par date
+    .slice(0, 6) // prend les 6 dernières
+    .map((candidature) => (
+      <div key={candidature.id} className="candidature-mini-card">
+        <span className="candidature-id">#{candidature.id}</span>
+        <span className={`status-badge ${getStatusBadgeClass(candidature.statut)}`}>
+          {candidature.statut ? candidature.statut.replace("_", " ") : "Non spécifié"}
+        </span>
+        <span className="candidature-date">
+          <FaCalendarAlt /> {formatDate(candidature.date_candidature)}
+        </span>
+      </div>
+    ))}
+  </div>
+) : (
+  <div className="no-candidatures">
+    <div className="empty-state">
+      <h3>Aucune candidature</h3>
+      <p>Vous n'avez pas encore postulé à une annonce</p>
+    </div>
+  </div>
+)}
+ 
         
       </div>
 
