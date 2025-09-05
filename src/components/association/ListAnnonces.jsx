@@ -35,6 +35,14 @@ export default function ListAnnonces() {
   const user = JSON.parse(localStorage.getItem("user"));
   const [userId, setUserId] = useState(user?.id || "");
   const headers = { Authorization: `Bearer ${token}` };
+  const [expandedPosts, setExpandedPosts] = useState({});
+
+const toggleExpand = (id) => {
+  setExpandedPosts((prev) => ({
+    ...prev,
+    [id]: !prev[id],
+  }));
+};
 
   useEffect(() => {
     const fetchData = async () => {
@@ -257,14 +265,30 @@ export default function ListAnnonces() {
 
                     {/* Contenu */}
                     <div className="post-content">
-                      <h2>{annonce.titre}</h2>
-                      <p>{annonce.description}</p>
-                      {annonce.image && (
-                        <div className="image-wrapper">
-                          <img src={annonce.image} alt="annonce" className="post-image" />
-                        </div>
-                      )}
-                    </div>
+  <h2>
+    {annonce.titre}{" "}
+    <span
+      className="toggle-desc"
+      onClick={() => toggleExpand(annonce.id)}
+    >
+      ({expandedPosts[annonce.id] ? "moins" : "plus"})
+    </span>
+  </h2>
+
+  {expandedPosts[annonce.id] && (
+    <p className="post-description">{annonce.description}</p>
+  )}
+
+  {annonce.image && (
+    <div className="image-wrapper">
+      <img
+        src={annonce.image}
+        alt="annonce"
+        className="post-image"
+      />
+    </div>
+  )}
+</div>
 
                     {/* Infos */}
                     <div className="post-info">

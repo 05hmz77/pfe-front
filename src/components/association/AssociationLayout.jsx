@@ -18,37 +18,35 @@ export default function AssociationLayout() {
 
   return (
     <div className="ass_layout-container">
-      
-      {/* Sidebar */}
-      <div className="ass_layout-sidebar">
-        <SidebarAss isOpen={isOpen} toggleSidebar={toggleSidebar} />
-      </div>
-      
-      {/* Contenu principal */}
-      <div className={`ass_layout-main ${isOpen ? "sidebar-open" : "sidebar-collapsed"}`}>
-        <header className="ass_layout-header">
-          <HeaderAssociation isSidebarOpen={isOpen} onToggleSidebar={toggleSidebar} />
-        </header>
+  <header className="ass_layout-header">
+    <HeaderAssociation isSidebarOpen={isOpen} onToggleSidebar={toggleSidebar} />
+  </header>
 
-        <main className="ass_layout-content">
-          <Routes>
-            <Route index element={<Dashboard />} />
-            <Route path="dashboard" element={<Dashboard />} />
-            <Route path="listannonce" element={<ListAnnonce />} />
-            <Route path="mesannonces" element={<MyAnnonces />} />
-            <Route path="candidature" element={<MyCandidature />} />
-            <Route path="benevoles" element={<ListBenevoles />} />
-            <Route path="profile" element={<AssociationProfile />} />
-            <Route path="chat" element={<Chat />} />
-            <Route path="*" element={<Dashboard />} />
-          </Routes>
-          <Outlet />
-        </main>
+  <div className="ass_layout-content">
+    <aside className="ass_layout-sidebar">
+      <SidebarAss isOpen={isOpen} toggleSidebar={toggleSidebar} />
+    </aside>
 
-        <footer className="ass_layout-footer">
-          {/* Footer si nécessaire */}
-        </footer>
-      </div>
+    <div className={`ass_layout-main ${isOpen ? "sidebar-open" : "sidebar-collapsed"}`}>
+      <main>
+        <Routes>
+          <Route index element={<Dashboard />} />
+          <Route path="dashboard" element={<Dashboard />} />
+          <Route path="listannonce" element={<ListAnnonce />} />
+          <Route path="mesannonces" element={<MyAnnonces />} />
+          <Route path="candidature" element={<MyCandidature />} />
+          <Route path="benevoles" element={<ListBenevoles />} />
+          <Route path="profile" element={<AssociationProfile />} />
+          <Route path="chat" element={<Chat />} />
+          <Route path="*" element={<Dashboard />} />
+        </Routes>
+        <Outlet />
+      </main>
     </div>
+  </div>
+
+
+</div>
+
   );
 }

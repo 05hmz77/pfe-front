@@ -1,178 +1,212 @@
-/* Container principal */
+/* ====== LAYOUT GLOBAL ====== */
 .container {
   display: flex;
-  max-width: 100%;
-  padding: 20px;
-  gap: 30px;
-  height: calc(100vh - 40px); /* Prend toute la hauteur moins le padding */
-  overflow: hidden; /* Cache le débordement global */
+  gap: 50px;
+  height: calc(100vh - 60px); /* espace avec le header */
+  padding: 20px 30px;
+  background: #ffffff;
 }
 
-/* Flux central des annonces (scrollable) */
+/* ====== FEED (centre) ====== */
+/* ===== FEED (centré + compact comme Facebook) ===== */
 .feed {
   flex: 2;
-  min-width: 0;
-  overflow-y: auto; /* Permet le défilement vertical */
+  display: flex;
+  flex-direction: column;
+  align-items: center;        /* centre les posts */
+  padding: 10px 0;
+  overflow-y: auto;
   height: 100%;
-  padding-right: 10px; /* Espace pour la barre de défilement */
 }
 
-/* Style de la barre de défilement pour le feed */
-.feed::-webkit-scrollbar {
-  width: 6px;
-}
-
-.feed::-webkit-scrollbar-track {
-  background: #f1f1f1;
+/* Chaque post est plus petit */
+.post-card {
+  background: #fff;
   border-radius: 10px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+        /* padding réduit */
+  margin-bottom: 14px;
+  width: 100%;
+  max-width: 600px;            /* largeur type Facebook */
+  transition: box-shadow 0.2s ease;
 }
 
-.feed::-webkit-scrollbar-thumb {
-  background: #c1c1c1;
-  border-radius: 10px;
+.post-card:hover {
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
 }
 
-.feed::-webkit-scrollbar-thumb:hover {
-  background: #a8a8a8;
+/* Header compact */
+.post-header {
+  background-color: #2f54eb;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 8px;
 }
 
-/* Sidebar droite (fixe) */
+.post-header .user-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+}
+
+.post-header-info h3 {
+  font-size: 0.95rem;
+  margin: 0;
+  color: #ffffff;
+}
+
+.post-header-info .post-date {
+  font-size: 0.8rem;
+  color: #ffffff;
+}
+
+/* Titre + description plus petits */
+.post-content h2 {
+  font-size: 1rem;
+  margin: 4px 0;
+  color: #ffffff;
+}
+
+.post-description {
+  font-size: 0.9rem;
+  line-height: 1.4;
+  color: #ffffff;
+}
+
+/* Image du post : format FB */
+.image-wrapper {
+  margin-top: 8px;
+  border-radius: 8px;
+  overflow: hidden;
+  width: 100%;
+  aspect-ratio: 1 / 1;    /* force carré */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #f0f2f5;    /* couleur de fond si pas d’image */
+}
+
+/* Image qui remplit le carré */
+.post-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;      /* garde le crop harmonieux */
+  border-radius: 8px;
+}
+
+/* Infos compactes */
+.post-info {
+  margin-top: 8px;
+  font-size: 0.8rem;
+  color: #65676b;
+  display: flex;
+  gap: 12px;
+}
+
+/* Réactions compactes */
+.post-reactions {
+  margin-top: 10px;
+  display: flex;
+  gap: 6px;
+}
+
+.reaction-btn {
+  padding: 4px 10px;
+  font-size: 0.8rem;
+  border-radius: 16px;
+}
+
+/* Commentaires compacts */
+.post-comments {
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid #e5e6eb;
+}
+
+.comment {
+  padding: 6px 10px;
+  font-size: 0.85rem;
+}
+
+
+/* ====== SIDEBAR DROITE ====== */
 .rightbar {
   flex: 1;
   min-width: 300px;
-  max-width: 350px;
+  max-width: 340px;
   height: 100%;
   display: flex;
   flex-direction: column;
 }
 
-/* Carte dans la sidebar (fixe) */
 .rightbar .card {
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-  padding: 20px;
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  padding: 18px;
   height: 100%;
   display: flex;
   flex-direction: column;
-  overflow: hidden; /* Important pour contenir le contenu */
 }
 
-/* Liste des candidatures (scrollable à l'intérieur de la carte fixe) */
+/* Liste candidatures */
 .candidatures-list {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  overflow-y: auto; /* Défilement interne */
+  gap: 10px;
+  overflow-y: auto;
   flex-grow: 1;
-  padding-right: 5px;
   margin-top: 10px;
+  padding-right: 4px;
 }
 
-/* Style de la barre de défilement pour la liste de candidatures */
-.candidatures-list::-webkit-scrollbar {
-  width: 4px;
-}
-
-.candidatures-list::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 10px;
-}
-
-.candidatures-list::-webkit-scrollbar-thumb {
-  background: #c1c1c1;
-  border-radius: 10px;
-}
-
-.candidatures-list::-webkit-scrollbar-thumb:hover {
-  background: #a8a8a8;
-}
-
-/* Carte de candidature miniature */
 .candidature-mini-card {
-  background: #f7f8fa;
-  border-radius: 8px;
-  padding: 12px;
-  border-left: 4px solid #1877f2;
+  background: #f8f9fc;
+  border-radius: 10px;
+  padding: 10px;
+  border-left: 4px solid #2f54eb;
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  transition: transform 0.2s, box-shadow 0.2s;
+  gap: 4px;
+  transition: all 0.2s ease;
 }
-
 .candidature-mini-card:hover {
-  transform: translateX(3px);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  background: #eef0f9;
+  transform: translateX(2px);
 }
 
 .candidature-id {
-  font-size: 12px;
+  font-size: 0.8rem;
   font-weight: 600;
-  color: #65676b;
+  color: #606770;
 }
-
 .candidature-date {
   display: flex;
   align-items: center;
-  gap: 5px;
-  font-size: 12px;
-  color: #65676b;
+  gap: 6px;
+  font-size: 0.75rem;
+  color: #777;
 }
 
-/* États vides */
-.no-candidatures {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
+/* Badges de statut */
+.status-badge {
+  font-size: 0.75rem;
+  padding: 3px 8px;
+  border-radius: 8px;
+  font-weight: 600;
   text-align: center;
+  width: fit-content;
 }
-
-.empty-state h3 {
-  margin: 0 0 10px 0;
-  color: #65676b;
-  font-size: 16px;
+.status-badge.accepted {
+  background: #e6f7e6;
+  color: #2e7d32;
 }
-
-.empty-state p {
-  margin: 0;
-  color: #8a8d91;
-  font-size: 14px;
+.status-badge.rejected {
+  background: #fdeaea;
+  color: #d93025;
 }
-
-/* Responsive */
-@media (max-width: 1024px) {
-  .container {
-    flex-direction: column;
-    height: auto;
-  }
-  
-  .feed {
-    overflow-y: visible;
-    height: auto;
-    order: 2;
-  }
-  
-  .rightbar {
-    max-width: 100%;
-    height: auto;
-    order: 1;
-    margin-bottom: 20px;
-  }
-  
-  .rightbar .card {
-    height: auto;
-    max-height: 300px; /* Limite la hauteur sur mobile */
-  }
-}
-
-@media (max-width: 768px) {
-  .container {
-    padding: 15px;
-    gap: 20px;
-  }
-  
-  .candidature-mini-card {
-    padding: 10px;
-  }
+.status-badge.pending {
+  background: #fff6e5;
+  color: #ff9800;
 }

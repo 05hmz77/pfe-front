@@ -13,8 +13,7 @@
   position: sticky;
   top: 10px;
   margin: 0 10px;
-  width: calc(100% - 20px);
-  border-radius: 23px;
+  width: 100%;
   z-index: 900;
 
   /* Animation entrée */
@@ -129,7 +128,7 @@
 .search {
   height: 36px;
   width: 220px;
-  max-width: 40vw;
+  max-width: 100%;
   background: #10203f;
   border: 1px solid rgba(255,255,255,0.15);
   color: #fff;
@@ -179,7 +178,7 @@
 /* Responsive */
 @media (max-width: 900px) {
   .header-nav { display: none; }
-  .search { width: 140px; }
+  .search { width: 100%; }
 }
 
 /* Conteneur des icônes */

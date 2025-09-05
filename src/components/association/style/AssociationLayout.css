@@ -1,98 +1,44 @@
-/* AdminLayout.css */
+/* Container principal */
 .ass_layout-container {
   display: flex;
-  min-height: 100vh;
-   background: #ffffff;
-
+  flex-direction: column; /* header en haut, footer en bas */
+  height: 100vh; /* prend toute la hauteur de l'écran */
 }
 
-.ass_layout-sidebar {
-  position: fixed;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  z-index: 1000;
-  padding: 1rem;
-  background-color: rgb(255, 255, 255);
-}
-
-.ass_layout-main {
-  background-color: rgb(255, 255, 255);
-  flex: 1;
-  margin-left: 280px;
-  transition: margin-left 0.3s ease;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-}
-
-.ass_layout-main.sidebar-collapsed {
-  margin-left: 80px;
-}
-
+/* Header */
 .ass_layout-header {
-  position: sticky;
-  top: 0;
-  z-index: 100;
-  padding: 1rem;
-  
-}
-
-.ass_layout-content {
-  flex: 2;
-  padding: 2rem;
-
   width: 100%;
-  
+  height: 60px; /* plus pratique que 20px (sinon trop petit) */
+  background-color: rgb(255, 255, 255);
+  color: white;
+  display: flex;
+  align-items: center;
+
 }
 
-.ass_layout-footer {
-   background: #ffffff;
-  padding: 1rem 2rem;
-  text-align: center;
-  color: #a5caff;
-  border-radius: 23px;
+/* Zone de contenu avec sidebar + main */
+.ass_layout-content {
+  background-color: #ffffff;
+  display: flex;
+  flex: 1; /* occupe tout l’espace dispo */
+  overflow: hidden; /* évite les scrollbars inutiles */
 }
 
-/* Responsive */
-@media (max-width: 1024px) {
-  .ass_layout-main {
-    margin-left: 80px;
-  }
-  
-  .ass_layout-main.sidebar-collapsed {
-    margin-left: 0;
-  }
-  
-  .ass_layout-content {
-    padding: 1.5rem;
-  }
+/* Sidebar */
+.ass_layout-sidebar {
+  width: 30%; /* largeur fixe */
+  background-color: #ffffff;
+  color: white;
+  overflow-y: auto; /* scroll si contenu long */
 }
 
-@media (max-width: 768px) {
-  .ass_layout-main {
-    margin-left: 0;
-  }
-  
-  .ass_layout-main.sidebar-open {
-    margin-left: 0;
-  }
-  
-  .ass_layout-content {
-    padding: 1rem;
-  }
-  
-  .ass_layout-header {
-    padding: 1rem;
-  }
+/* Main content */
+.ass_layout-main {
+  flex: 1; /* prend tout l’espace restant */
+  background-color: #ffffff;
+  color: rgb(0, 0, 0);
+  padding: 20px;
+  overflow-y: auto;
 }
 
-@media (max-width: 480px) {
-  .ass_layout-content {
-    padding: 0.75rem;
-  }
-  
-  .ass_layout-header {
-    padding: 0.75rem;
-  }
-}
+
