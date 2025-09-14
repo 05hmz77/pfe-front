@@ -1,178 +1,149 @@
-/* ===============================
-   GENERAL CONTAINER & HEADER
-================================ */
 .annonces-container {
   max-width: 900px;
-  margin: 40px auto;
-  padding: 20px;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background-color: #f9f9f9;
-  border-radius: 10px;
+  margin: 20px auto;
+  padding: 10px;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
 }
 
 .header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 30px;
+  margin-bottom: 25px;
 }
 
 .header h1 {
-  font-size: 28px;
+  font-size: 26px;
   color: #333;
 }
 
 .header button {
-  background-color: #007bff;
+  background: #007bff;
   color: white;
   border: none;
   padding: 10px 16px;
-  font-size: 14px;
-  border-radius: 6px;
+  border-radius: 8px;
   cursor: pointer;
-  transition: background-color 0.2s ease;
+  transition: 0.2s;
 }
 
 .header button:hover {
-  background-color: #0056b3;
+  background: #0056b3;
 }
 
-/* ===============================
-   ANNONCE CARD
-================================ */
+.loading {
+  text-align: center;
+  font-size: 18px;
+  color: #777;
+}
+
+/* ====== ANNONCES ====== */
+
 .annonce-card {
-  background-color: white;
-  border-radius: 10px;
-  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.1);
-  margin-bottom: 25px;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  margin-bottom: 20px;
   padding: 20px;
+  transition: transform 0.2s;
+}
+
+.annonce-card:hover {
+  transform: translateY(-3px);
 }
 
 .annonce-header {
   display: flex;
   align-items: center;
-  gap: 15px;
   margin-bottom: 15px;
 }
 
-.modal-img {
-  width: 60px;
-  height: 60px;
+.logo-img {
+  width: 55px;
+  height: 55px;
   border-radius: 50%;
+  margin-right: 15px;
   object-fit: cover;
-  border: 2px solid #ddd;
 }
 
-.annonce-header h3 {
+.annonce-info h3 {
   margin: 0;
   font-size: 20px;
   color: #222;
 }
 
-.annonce-header p {
-  margin: 4px 0 0;
-  font-size: 13px;
+.annonce-info .date {
+  font-size: 14px;
   color: #777;
 }
 
 .badge {
   margin-left: auto;
-  padding: 6px 10px;
-  font-size: 12px;
+  padding: 6px 12px;
   border-radius: 20px;
+  font-size: 13px;
   font-weight: bold;
-  text-transform: uppercase;
+  text-transform: capitalize;
 }
 
 .badge-evenement {
-  background-color: #007bff;
-  color: white;
+  background: #e3f2fd;
+  color: #1976d2;
 }
 
-.badge-formation {
-  background-color: #28a745;
-  color: white;
+.badge-appel_benevolat {
+  background: #fce4ec;
+  color: #c2185b;
 }
 
-.annonce-body p {
-  margin: 8px 0;
-  font-size: 15px;
-  color: #444;
+.badge-don {
+  background: #e8f5e9;
+  color: #2e7d32;
 }
 
-/* ===============================
-   CANDIDATURES SECTION
-================================ */
-.candidatures-section {
+.annonce-body {
+  margin-top: 10px;
+}
+
+.annonce-img {
+  width: 100%;
+  max-height: 250px;
+  object-fit: cover;
+  border-radius: 10px;
+  margin-bottom: 12px;
+}
+
+/* ====== BOUTONS ====== */
+
+.btn-candidatures {
   margin-top: 15px;
-  background-color: #f1f1f1;
+  background: #28a745;
+  color: white;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.btn-candidatures:hover {
+  background: #1e7e34;
+}
+
+/* ====== CANDIDATURES ====== */
+
+.candidatures-section {
+  margin-top: 20px;
   padding: 15px;
+  background: #f9fafb;
+  border-left: 4px solid #007bff;
   border-radius: 8px;
 }
 
 .candidature-card {
-  background-color: white;
-  border: 1px solid #ddd;
-  padding: 10px 15px;
-  border-radius: 6px;
-  margin-bottom: 10px;
-}
-
-.candidature-card p {
-  margin: 5px 0;
-  font-size: 14px;
-}
-
-/* ===============================
-   BUTTONS
-================================ */
-.btn-candidatures {
-  margin-top: 10px;
-  background-color: #17a2b8;
-  color: white;
-  border: none;
-  padding: 8px 14px;
-  font-size: 14px;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: background-color 0.2s ease;
-}
-
-.btn-candidatures:hover {
-  background-color: #138496;
-}
-
-/* ===============================
-   LOADING
-================================ */
-.loading {
-  text-align: center;
-  font-size: 18px;
-  margin-top: 100px;
-  color: #555;
-}
-
-/* ===============================
-   TOASTIFY CUSTOM STYLES
-================================ */
-.Toastify__toast {
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  font-size: 14px;
+  background: #fff;
+  padding: 12px;
   border-radius: 8px;
-  padding: 12px 16px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-}
-
-.Toastify__toast--success {
-  background-color: #4caf50;
-  color: white;
-}
-
-.Toastify__toast--error {
-  background-color: #f44336;
-  color: white;
-}
-
-.Toastify__progress-bar {
-  background-color: rgba(255, 255, 255, 0.8);
+  margin-bottom: 12px;
+  border: 1px solid #eee;
 }

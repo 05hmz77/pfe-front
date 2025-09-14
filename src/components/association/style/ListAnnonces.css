@@ -1,212 +1,274 @@
-/* ====== LAYOUT GLOBAL ====== */
-.container {
-  display: flex;
-  gap: 50px;
-  height: calc(100vh - 60px); /* espace avec le header */
-  padding: 20px 30px;
-  background: #ffffff;
+/* === Container global === */
+.feed-container {
+  max-width: 700px;
+  margin: 30px auto;
+  padding: 0 15px;
+  font-family: "Segoe UI", Roboto, Arial, sans-serif;
+  color: #333;
 }
 
-/* ====== FEED (centre) ====== */
-/* ===== FEED (centré + compact comme Facebook) ===== */
-.feed {
-  flex: 2;
-  display: flex;
-  flex-direction: column;
-  align-items: center;        /* centre les posts */
-  padding: 10px 0;
-  overflow-y: auto;
-  height: 100%;
-}
-
-/* Chaque post est plus petit */
+/* === Carte d'annonce === */
 .post-card {
   background: #fff;
-  border-radius: 10px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.12);
-        /* padding réduit */
-  margin-bottom: 14px;
-  width: 100%;
-  max-width: 600px;            /* largeur type Facebook */
-  transition: box-shadow 0.2s ease;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  margin-bottom: 25px;
+  padding: 20px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .post-card:hover {
-  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+  transform: translateY(-3px);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
 }
 
-/* Header compact */
+/* === Header === */
 .post-header {
-  background-color: #2f54eb;
   display: flex;
   align-items: center;
-  gap: 4px;
-  margin-bottom: 8px;
+  margin-bottom: 15px;
 }
 
-.post-header .user-avatar {
-  width: 40px;
-  height: 40px;
+.user-avatar {
+  width: 50px;
+  height: 50px;
   border-radius: 50%;
-}
-
-.post-header-info h3 {
-  font-size: 0.95rem;
-  margin: 0;
-  color: #ffffff;
-}
-
-.post-header-info .post-date {
-  font-size: 0.8rem;
-  color: #ffffff;
-}
-
-/* Titre + description plus petits */
-.post-content h2 {
-  font-size: 1rem;
-  margin: 4px 0;
-  color: #ffffff;
-}
-
-.post-description {
-  font-size: 0.9rem;
-  line-height: 1.4;
-  color: #ffffff;
-}
-
-/* Image du post : format FB */
-.image-wrapper {
-  margin-top: 8px;
-  border-radius: 8px;
-  overflow: hidden;
-  width: 100%;
-  aspect-ratio: 1 / 1;    /* force carré */
+  background: #f3f3f3;
   display: flex;
+  align-items: center;
   justify-content: center;
-  align-items: center;
-  background: #f0f2f5;    /* couleur de fond si pas d’image */
+  overflow: hidden;
+  margin-right: 12px;
 }
 
-/* Image qui remplit le carré */
-.post-image {
+.user-avatar img {
   width: 100%;
   height: 100%;
-  object-fit: cover;      /* garde le crop harmonieux */
-  border-radius: 8px;
+  object-fit: cover;
 }
 
-/* Infos compactes */
-.post-info {
-  margin-top: 8px;
-  font-size: 0.8rem;
-  color: #65676b;
-  display: flex;
-  gap: 12px;
-}
-
-/* Réactions compactes */
-.post-reactions {
-  margin-top: 10px;
-  display: flex;
-  gap: 6px;
-}
-
-.reaction-btn {
-  padding: 4px 10px;
-  font-size: 0.8rem;
-  border-radius: 16px;
-}
-
-/* Commentaires compacts */
-.post-comments {
-  margin-top: 10px;
-  padding-top: 8px;
-  border-top: 1px solid #e5e6eb;
-}
-
-.comment {
-  padding: 6px 10px;
-  font-size: 0.85rem;
-}
-
-
-/* ====== SIDEBAR DROITE ====== */
-.rightbar {
-  flex: 1;
-  min-width: 300px;
-  max-width: 340px;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-}
-
-.rightbar .card {
-  background: #fff;
-  border-radius: 14px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-  padding: 18px;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-}
-
-/* Liste candidatures */
-.candidatures-list {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  overflow-y: auto;
-  flex-grow: 1;
-  margin-top: 10px;
-  padding-right: 4px;
-}
-
-.candidature-mini-card {
-  background: #f8f9fc;
-  border-radius: 10px;
-  padding: 10px;
-  border-left: 4px solid #2f54eb;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  transition: all 0.2s ease;
-}
-.candidature-mini-card:hover {
-  background: #eef0f9;
-  transform: translateX(2px);
-}
-
-.candidature-id {
-  font-size: 0.8rem;
+.post-meta h3 {
+  margin: 0;
+  font-size: 16px;
   font-weight: 600;
-  color: #606770;
+  color: #222;
 }
-.candidature-date {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 0.75rem;
+
+.post-meta span {
+  font-size: 13px;
   color: #777;
 }
 
-/* Badges de statut */
-.status-badge {
-  font-size: 0.75rem;
-  padding: 3px 8px;
-  border-radius: 8px;
+/* === Contenu === */
+.post-content h2 {
+  font-size: 18px;
+  margin: 0 0 8px 0;
   font-weight: 600;
+  color: #333;
+}
+
+.toggle-desc {
+  font-size: 13px;
+  background: none;
+  border: none;
+  color: #1877f2;
+  margin-left: 8px;
+  cursor: pointer;
+}
+
+.post-description {
+  font-size: 15px;
+  line-height: 1.5;
+  margin-bottom: 10px;
+  color: #444;
+}
+
+.image-wrapper {
+  margin-top: 10px;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.image-wrapper img {
+  width: 100%;
+  border-radius: 8px;
+  object-fit: cover;
+}
+
+/* === Infos supplémentaires === */
+.post-info {
+  display: flex;
+  gap: 15px;
+  font-size: 14px;
+  color: #666;
+  margin-top: 10px;
+  border-top: 1px solid #eee;
+  padding-top: 10px;
+}
+
+/* === Réactions et actions === */
+.post-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 15px;
+  padding-top: 12px;
+  border-top: 1px solid #eee;
+}
+
+.reactions {
+  display: flex;
+  gap: 8px;
+}
+
+.reaction-btn {
+  background: #f4f4f4;
+  border: none;
+  border-radius: 20px;
+  padding: 6px 12px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.reaction-btn:hover {
+  background: #e7e7e7;
+}
+
+.reaction-btn.active {
+  background: #1877f2;
+  color: #fff;
+}
+
+.toggle-comments {
+  background: none;
+  border: none;
+  font-size: 14px;
+  color: #1877f2;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.toggle-comments:hover {
+  text-decoration: underline;
+}
+
+/* === Commentaires === */
+.post-comments {
+  margin-top: 15px;
+  border-top: 1px solid #eee;
+  padding-top: 12px;
+}
+
+.comment {
+  background: #f9f9f9;
+  padding: 10px 12px;
+  border-radius: 8px;
+  margin-bottom: 10px;
+  position: relative;
+}
+
+.comment-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+
+.comment-header strong {
+  font-size: 14px;
+  color: #333;
+}
+
+.comment-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.comment-actions button {
+  background: none;
+  border: none;
+  font-size: 14px;
+  cursor: pointer;
+  color: #555;
+}
+
+.comment-actions button:hover {
+  color: #1877f2;
+}
+
+.comment p {
+  margin: 0;
+  font-size: 14px;
+  color: #444;
+}
+
+/* === Edition de commentaire === */
+.comment-edit {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.comment-edit input {
+  padding: 6px 10px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+}
+
+.comment-edit-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.comment-edit-actions button {
+  background: #1877f2;
+  border: none;
+  color: white;
+  padding: 5px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.comment-edit-actions button:nth-child(2) {
+  background: #aaa;
+}
+
+.comment-form {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.comment-form input {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 20px;
+}
+
+.comment-form button {
+  background: #1877f2;
+  border: none;
+  color: #fff;
+  padding: 8px 14px;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background 0.2s ease;
+}
+
+.comment-form button:hover {
+  background: #145dbf;
+}
+
+/* === Écrans de chargement/erreur === */
+.loading,
+.error {
   text-align: center;
-  width: fit-content;
-}
-.status-badge.accepted {
-  background: #e6f7e6;
-  color: #2e7d32;
-}
-.status-badge.rejected {
-  background: #fdeaea;
-  color: #d93025;
-}
-.status-badge.pending {
-  background: #fff6e5;
-  color: #ff9800;
+  font-size: 16px;
+  padding: 20px;
+  color: #666;
 }

@@ -1,53 +1,42 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import "./style/ListBenevoles.css";
 import { useNavigate } from "react-router-dom";
 
 const ListBenevoles = () => {
-
-  const navigate=useNavigate()
+  const navigate = useNavigate();
   const [benevoles, setBenevoles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
   const [selectedBenevole, setSelectedBenevole] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [note, setNote] = useState("");
   const [contenu, setContenu] = useState("");
   const [feedbackMessage, setFeedbackMessage] = useState(null);
+
+  // état d’extension des missions par bénévole: { [id]: boolean }
+  const [expanded, setExpanded] = useState({});
+
   const token = localStorage.getItem("accessToken");
-  const currentUser = JSON.parse(localStorage.getItem("user"));
 
   useEffect(() => {
     const fetchBenevolesAcceptes = async () => {
       try {
         const headers = { Authorization: `Bearer ${token}` };
-        const response = await axios.get(
+        const { data } = await axios.get(
           "http://127.0.0.1:8000/api/candidatures/mes/",
-          {
-            headers,
-          }
+          { headers }
         );
 
-        // Filtrer seulement les candidatures avec statut ACCEPTEE
-        const candidaturesAcceptees = response.data.filter(
+        const candidaturesAcceptees = data.filter(
           (c) => c.statut === "ACCEPTEE"
         );
-        console.log(candidaturesAcceptees);
-        // Grouper par bénévole pour éviter les doublons
+
         const benevolesUniques = {};
-
         candidaturesAcceptees.forEach((candidature) => {
-          console.log(candidature);
-
           const citoyenId = candidature.citoyen;
           const details = candidature.citoyen_details;
-
-          if (!details) {
-            console.warn(
-              `citoyen_details manquant pour la candidature ${candidature.id}`
-            );
-            return; // Ignore cette candidature si pas de détails
-          }
+          if (!details) return;
 
           if (!benevolesUniques[citoyenId]) {
             benevolesUniques[citoyenId] = {
@@ -63,8 +52,10 @@ const ListBenevoles = () => {
 
         setBenevoles(Object.values(benevolesUniques));
       } catch (err) {
-        alert(1);
-        setError(err.message);
+        setError(
+          err?.response?.data?.detail ||
+            "Erreur lors du chargement des bénévoles."
+        );
       } finally {
         setLoading(false);
       }
@@ -72,6 +63,16 @@ const ListBenevoles = () => {
 
     fetchBenevolesAcceptes();
   }, [token]);
+
+  const firstPhotoUrl = (album_photos) => {
+    try {
+      const arr = album_photos ? JSON.parse(album_photos) : [];
+      if (Array.isArray(arr) && arr.length > 0) {
+        return `http://127.0.0.1:8000/${arr[0]}`;
+      }
+    } catch {}
+    return "/profile.jpg";
+  };
 
   const showEvaluationModal = (benevole) => {
     setSelectedBenevole(benevole);
@@ -81,14 +82,11 @@ const ListBenevoles = () => {
     setShowModal(true);
   };
 
-  const closeModal = () => {
-    setShowModal(false);
-  };
+  const closeModal = () => setShowModal(false);
 
-  const envoyerMsg=(benevole)=>{
-    
-    navigate("/welcome/association/chat",{state:{user:benevole}})
-   }
+  const envoyerMsg = (benevole) => {
+    navigate("/welcome/association/chat", { state: { user: benevole } });
+  };
 
   const handleSendFeedback = async () => {
     if (!note || !contenu) {
@@ -98,190 +96,285 @@ const ListBenevoles = () => {
 
     try {
       const headers = { Authorization: `Bearer ${token}` };
-      const res = await axios.post(
+      await axios.post(
         `http://localhost:8000/api/feedback/${selectedBenevole.user_id}/`,
         { note, contenu },
         { headers }
       );
       setFeedbackMessage("Évaluation envoyée avec succès !");
-      // Mettre à jour la note d'engagement dans la liste
       setBenevoles((prev) =>
         prev.map((b) =>
           b.id === selectedBenevole.id ? { ...b, note_engagement: note } : b
         )
       );
     } catch (error) {
-      if (error.response?.data?.detail) {
-        setFeedbackMessage(error.response.data.detail);
-      } else {
-        setFeedbackMessage("Erreur lors de l'envoi de l'évaluation.");
-      }
+      setFeedbackMessage(
+        error?.response?.data?.detail ||
+          "Erreur lors de l'envoi de l'évaluation."
+      );
     }
   };
 
+  const toggleMissions = (id) =>
+    setExpanded((p) => ({ ...p, [id]: !p[id] }));
+
   if (loading) {
-    return <div className="loading-benevoles">Chargement en cours...</div>;
+    return (
+      <div className="min-h-[60vh] grid place-items-center">
+        <div className="h-12 w-12 rounded-full border-4 border-gray-200 border-t-blue-600 animate-spin" />
+      </div>
+    );
   }
 
   if (error) {
-    return <div className="error-benevoles">Erreur: {error}</div>;
+    return (
+      <div className="max-w-5xl mx-auto p-4">
+        <div className="rounded-2xl border border-rose-200 bg-rose-50 text-rose-800 p-4">
+          {error}
+        </div>
+      </div>
+    );
   }
 
   return (
-    <div className="liste-benevoles-container">
-      <header className="page-header">
-        <h1 className="page-title">👥 Vos Bénévoles Acceptés</h1>
-        <p className="page-subtitle">
+    <div className="max-w-6xl mx-auto p-4 sm:p-6">
+      {/* Header */}
+      <header className="mb-4">
+        <h1 className="text-2xl sm:text-3xl font-semibold">
+          👥 Vos Bénévoles Acceptés
+        </h1>
+        <p className="text-gray-600">
           Voici les bénévoles qui ont rejoint vos missions
         </p>
       </header>
 
+      {/* Empty state */}
       {benevoles.length === 0 ? (
-        <div className="empty-state">
-          <img src="/no-data.svg" alt="Aucun bénévole" className="empty-img" />
-          <p className="empty-text">Aucun bénévole accepté pour le moment.</p>
+        <div className="border rounded-2xl bg-white shadow-sm p-10 text-center">
+          <div className="mx-auto h-16 w-16 grid place-items-center rounded-2xl bg-gray-100 border">
+            📭
+          </div>
+          <p className="mt-4 text-gray-700">
+            Aucun bénévole accepté pour le moment.
+          </p>
         </div>
       ) : (
-        <section className="benevoles-grid">
-          {benevoles.map((benevole) => (
-            <div key={benevole.id} className="benevole-card">
-              <div className="benevole-header">
-                <img
-                  src={
-                    benevole.album_photos &&
-                    JSON.parse(benevole.album_photos).length > 0
-                      ? `http://127.0.0.1:8000/${
-                          JSON.parse(benevole.album_photos)[0]
-                        }`
-                      : "/profile.jpg"
-                  }
-                  onError={(e) => (e.target.src = "/profile.jpg")}
-                  className="benevole-img"
-                  alt={`${benevole.nom} ${benevole.prenom}`}
-                />
-                <div>
-                  <h3 className="benevole-name">
-                    {benevole.nom} {benevole.prenom}
-                  </h3>
-                  <span className="statut acceptee">Accepté</span>
+        <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+          {benevoles.map((benevole) => {
+            const missionsCount = benevole.candidatures?.length || 0;
+            const isOpen = !!expanded[benevole.id];
+
+            return (
+              <article
+                key={benevole.id}
+                className="bg-white border rounded-2xl shadow-sm overflow-hidden flex flex-col"
+              >
+                {/* Header */}
+                <div className="p-4 flex items-center gap-3 border-b">
+                  <img
+                    src={firstPhotoUrl(benevole.album_photos)}
+                    onError={(e) => (e.currentTarget.src = "/profile.jpg")}
+                    className="h-12 w-12 rounded-full object-cover border"
+                    alt={`${benevole.nom} ${benevole.prenom}`}
+                  />
+                  <div className="min-w-0">
+                    <h3 className="font-semibold truncate">
+                      {benevole.nom} {benevole.prenom}
+                    </h3>
+                    <span className="inline-flex items-center rounded-full bg-emerald-100 text-emerald-700 text-xs px-2 py-0.5 mt-1">
+                      Accepté
+                    </span>
+                  </div>
                 </div>
-              </div>
 
-              <div className="benevole-info">
-                <p className="benevole-bio">
-                  {benevole.bio || "Aucune bio disponible"}
-                </p>
-                <p className="benevole-experience">
-                  <strong>Expérience:</strong>{" "}
-                  {benevole.experiences || "Non spécifiée"}
-                </p>
+                {/* Infos */}
+                <div className="p-4 space-y-2 text-sm text-gray-700">
+                  <p className="line-clamp-3">
+                    <span className="font-medium">Bio : </span>
+                    {benevole.bio || "Aucune bio disponible"}
+                  </p>
+                  <p className="line-clamp-3">
+                    <span className="font-medium">Expérience : </span>
+                    {benevole.experiences || "Non spécifiée"}
+                  </p>
 
-                <div className="candidatures-list">
-                  <h4>Missions acceptées:</h4>
-                  {benevole.candidatures.map((candidature) => (
-                    <div key={candidature.id} className="candidature-item">
-                      <p>
-                        <strong>Message:</strong> {candidature.message}
-                      </p>
-                      <p>
-                        <strong>Date:</strong>{" "}
-                        {new Date(
-                          candidature.date_candidature
-                        ).toLocaleDateString()}
-                      </p>
-                      {candidature.note_engagement && (
-                        <p>
-                          <strong>Note:</strong> {candidature.note_engagement}
-                          /10
-                        </p>
-                      )}
-                    </div>
-                  ))}
+                  {/* Toggle Missions */}
+                  <div className="mt-3">
+                    <button
+                      onClick={() => toggleMissions(benevole.id)}
+                      className="w-full inline-flex items-center justify-between rounded-xl border px-3 py-2 text-sm hover:bg-gray-50"
+                      aria-expanded={isOpen}
+                      aria-controls={`missions-${benevole.id}`}
+                    >
+                      <span className="font-semibold text-gray-900">
+                        Missions acceptées
+                      </span>
+                      <span className="text-gray-600 text-xs">
+                        {isOpen ? "Masquer" : "Afficher"} ({missionsCount})
+                      </span>
+                    </button>
+
+                    {/* Liste masquée par défaut */}
+                    {isOpen && (
+                      <div
+                        id={`missions-${benevole.id}`}
+                        className="mt-2 space-y-2"
+                      >
+                        {missionsCount === 0 ? (
+                          <div className="rounded-xl border bg-gray-50 px-3 py-2 text-sm text-gray-600">
+                            Aucune mission.
+                          </div>
+                        ) : (
+                          <ul className="space-y-2">
+                            {benevole.candidatures.map((candidature) => (
+                              <li
+                                key={candidature.id}
+                                className="rounded-xl border bg-gray-50 px-3 py-2"
+                              >
+                                <p className="truncate">
+                                  <span className="font-medium">Message :</span>{" "}
+                                  {candidature.message}
+                                </p>
+                                <p className="text-xs text-gray-600 mt-1">
+                                  <span className="font-medium">Date :</span>{" "}
+                                  {new Date(
+                                    candidature.date_candidature
+                                  ).toLocaleDateString("fr-FR")}
+                                </p>
+                                {candidature.note_engagement && (
+                                  <p className="text-xs text-gray-600">
+                                    <span className="font-medium">Note :</span>{" "}
+                                    {candidature.note_engagement}/10
+                                  </p>
+                                )}
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
 
-              <div className="benevole-actions">
-                <button
-                  onClick={() => showEvaluationModal(benevole)}
-                  className="evaluer-btn"
-                >
-                  Évaluer
-                </button>
-                <button className="message-btn" onClick={()=>{envoyerMsg(benevole)}} >Envoyer message</button>
-              </div>
-            </div>
-          ))}
+                {/* Actions */}
+                <div className="mt-auto p-4 border-t flex items-center justify-between gap-2">
+                  <button
+                    onClick={() => showEvaluationModal(benevole)}
+                    className="inline-flex items-center justify-center rounded-xl border px-3 py-2 text-sm hover:bg-gray-50"
+                  >
+                    Évaluer
+                  </button>
+                  <button
+                    onClick={() => envoyerMsg(benevole)}
+                    className="inline-flex items-center justify-center rounded-xl bg-blue-600 text-white px-3 py-2 text-sm hover:bg-blue-700"
+                  >
+                    Envoyer message
+                  </button>
+                </div>
+              </article>
+            );
+          })}
         </section>
       )}
 
       {/* Modal d'évaluation */}
       {showModal && selectedBenevole && (
-        <div className="modal-overlay">
-          <div className="modal-box">
-            <button className="modal-close" onClick={closeModal}>
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center"
+          role="dialog"
+          aria-modal="true"
+        >
+          <div
+            className="absolute inset-0 bg-black/40 backdrop-blur-[1px]"
+            onClick={closeModal}
+          />
+          <div className="relative w-[95%] max-w-lg bg-white rounded-2xl border shadow-2xl overflow-hidden">
+            {/* Close */}
+            <button
+              className="absolute right-3 top-3 h-8 w-8 rounded-full grid place-items-center border hover:bg-gray-50"
+              onClick={closeModal}
+              aria-label="Fermer"
+            >
               ×
             </button>
 
-            <div className="modal-header">
+            {/* Header */}
+            <div className="p-5 border-b flex items-center gap-3">
               <img
-                src={
-                  selectedBenevole.album_photos &&
-                  JSON.parse(selectedBenevole.album_photos).length > 0
-                    ? `http://127.0.0.1:8000/${
-                        JSON.parse(selectedBenevole.album_photos)[0]
-                      }`
-                    : "/profile.jpg"
-                }
-                onError={(e) => (e.target.src = "/profile.jpg")}
+                src={firstPhotoUrl(selectedBenevole.album_photos)}
+                onError={(e) => (e.currentTarget.src = "/profile.jpg")}
                 alt={`${selectedBenevole.nom} ${selectedBenevole.prenom}`}
-                className="modal-img"
+                className="h-12 w-12 rounded-full object-cover border"
               />
-              <h2>
+              <h2 className="font-semibold">
                 {selectedBenevole.nom} {selectedBenevole.prenom}
               </h2>
             </div>
 
-            <div className="modal-body">
+            {/* Body */}
+            <div className="p-5 space-y-3 text-sm text-gray-700">
               <p>
-                <strong>Bio:</strong> {selectedBenevole.bio || "Non disponible"}
+                <span className="font-medium">Bio :</span>{" "}
+                {selectedBenevole.bio || "Non disponible"}
               </p>
               <p>
-                <strong>Expérience:</strong>{" "}
+                <span className="font-medium">Expérience :</span>{" "}
                 {selectedBenevole.experiences || "Non disponible"}
               </p>
 
-              <hr />
-              <h3>Évaluer ce bénévole</h3>
-              <div className="feedback-form">
-                <div className="form-group">
-                  <label>Note sur 10:</label>
+              <hr className="my-2" />
+
+              <h3 className="font-semibold text-gray-900">Évaluer ce bénévole</h3>
+              <div className="space-y-3">
+                <div>
+                  <label className="text-sm text-gray-600">Note sur 10</label>
                   <input
                     type="number"
                     value={note}
                     onChange={(e) => setNote(e.target.value)}
                     min="1"
                     max="10"
+                    className="mt-1 w-full rounded-xl border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
-                <div className="form-group">
-                  <label>Commentaire:</label>
+                <div>
+                  <label className="text-sm text-gray-600">Commentaire</label>
                   <textarea
                     value={contenu}
                     onChange={(e) => setContenu(e.target.value)}
+                    rows={4}
                     placeholder="Votre évaluation..."
-                  ></textarea>
+                    className="mt-1 w-full rounded-xl border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
                 </div>
+
                 {feedbackMessage && (
-                  <p className="feedback-msg">{feedbackMessage}</p>
+                  <p
+                    className={`text-sm ${
+                      feedbackMessage.includes("succès")
+                        ? "text-emerald-600"
+                        : "text-rose-600"
+                    }`}
+                  >
+                    {feedbackMessage}
+                  </p>
                 )}
-                <button className="send-btn" onClick={handleSendFeedback}>
+
+                <button
+                  onClick={handleSendFeedback}
+                  className="w-full rounded-xl bg-blue-600 text-white px-4 py-2 hover:bg-blue-700"
+                >
                   Envoyer l'évaluation
                 </button>
               </div>
             </div>
 
-            <div className="modal-footer">
-              <button className="close-btn" onClick={closeModal}>
+            {/* Footer */}
+            <div className="p-4 border-t bg-gray-50 flex items-center justify-end">
+              <button
+                className="rounded-xl border px-4 py-2 hover:bg-gray-100"
+                onClick={closeModal}
+              >
                 Fermer
               </button>
             </div>
