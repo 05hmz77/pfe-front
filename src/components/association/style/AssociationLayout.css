@@ -1,44 +1,71 @@
-/* Container principal */
+
+
+/* Conteneur global */
 .ass_layout-container {
-  display: flex;
-  flex-direction: column; /* header en haut, footer en bas */
-  height: 100vh; /* prend toute la hauteur de l'écran */
+  @apply min-h-screen bg-gray-50 text-slate-900 flex flex-col;
 }
 
-/* Header */
+/* Header sticky */
 .ass_layout-header {
-  width: 100%;
-  height: 60px; /* plus pratique que 20px (sinon trop petit) */
-  background-color: rgb(255, 255, 255);
-  color: white;
-  display: flex;
-  align-items: center;
-
+  @apply sticky top-0 z-30 bg-white/95 backdrop-blur border-b;
 }
 
-/* Zone de contenu avec sidebar + main */
+/* Wrapper principal : sidebar + main */
 .ass_layout-content {
-  background-color: #ffffff;
-  display: flex;
-  flex: 1; /* occupe tout l’espace dispo */
-  overflow: hidden; /* évite les scrollbars inutiles */
+  @apply flex flex-1 min-h-0;
 }
 
-/* Sidebar */
+/* SIDEBAR — largeur animée */
 .ass_layout-sidebar {
-  width: 30%; /* largeur fixe */
-  background-color: #ffffff;
-  color: white;
-  overflow-y: auto; /* scroll si contenu long */
+  @apply h-[calc(100vh-3.5rem)] /* 3.5rem ≈ h-14 du header */
+         sticky top-14 /* colle sous le header */
+         bg-white border-r shadow-sm
+         transition-[width] duration-300 ease-in-out;
 }
 
-/* Main content */
+/* Ouverte: large */
+.ass_layout-sidebar.open {
+  @apply w-1/4;
+}
+
+/* Fermée: compacte */
+.ass_layout-sidebar.collapsed {
+  @apply w-16;
+}
+
+/* MAIN — prend tout l’espace restant */
 .ass_layout-main {
-  flex: 1; /* prend tout l’espace restant */
-  background-color: #ffffff;
-  color: rgb(0, 0, 0);
-  padding: 20px;
-  overflow-y: auto;
+  @apply flex-1 min-w-0;
 }
 
+/* Variantes (pas obligatoires, mais gardées pour compat) */
+.ass_layout-main.sidebar-open {
+  @apply w-auto;
+}
+.ass_layout-main.sidebar-collapsed {
+  @apply w-auto;
+}
 
+/* Contenu <main> interne (marges/paddings jolis) */
+.ass_layout-main > main {
+  @apply max-w-7xl mx-auto w-full px-3 sm:px-6 py-4 sm:py-6;
+}
+
+/* --------- Optionnel : comportement mobile simple --------- */
+/* En mobile, on laisse la sidebar visible mais scrollable verticalement */
+@media (max-width: 1024px) {
+  .ass_layout-sidebar {
+    @apply fixed inset-y-14 left-0 z-40; /* sous le header sticky */
+  }
+  .ass_layout-content {
+    @apply relative; /* pour éviter que le fixed casse le flux */
+  }
+  /* Par défaut on peut masquer la sidebar en mobile si isOpen=false */
+  .ass_layout-sidebar.collapsed {
+    @apply -translate-x-full w-64; /* la garde hors écran */
+    @apply transition-transform duration-300 ease-in-out;
+  }
+  .ass_layout-sidebar.open {
+    @apply translate-x-0 w-64;
+  }
+}

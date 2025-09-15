@@ -202,13 +202,7 @@ export default function ListAnnonces() {
 
   // ======= Participer (UI toggle) =======
   const handleParticiper = async (annonceId) => {
-    const active = !!participations[annonceId];
-    try {
-      setParticipations((p) => ({ ...p, [annonceId]: !active }));
-      toast.success(!active ? "Participation enregistrée" : "Participation annulée");
-    } catch {
-      toast.error("Impossible d'enregistrer la participation");
-    }
+    toast.error("Impossible d'enregistrer la participation avec un compte association");
   };
 
   // ======= Comments (CRUD optimiste + API | ou static local) =======

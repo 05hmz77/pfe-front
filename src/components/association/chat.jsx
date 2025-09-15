@@ -1,4 +1,4 @@
-// Chat.jsx (Tailwind-only, no external CSS)
+// Chat.jsx — Tailwind only
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import axios from "axios";
 import { useLocation } from "react-router-dom";
@@ -40,7 +40,6 @@ export default function Chat() {
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
-
   const wsReady = () =>
     socketRef.current?.readyState === WebSocket.OPEN && authDoneRef.current;
 
@@ -48,19 +47,17 @@ export default function Chat() {
     if (wsReady()) {
       try {
         socketRef.current.send(JSON.stringify(payload));
-      } catch (e) {
-        if (payload.type === "message_read")
-          pendingReadsRef.current.push(payload);
+      } catch {
+        if (payload.type === "message_read") pendingReadsRef.current.push(payload);
         else pendingOutboxRef.current.push(payload);
       }
     } else {
-      if (payload.type === "message_read")
-        pendingReadsRef.current.push(payload);
+      if (payload.type === "message_read") pendingReadsRef.current.push(payload);
       else pendingOutboxRef.current.push(payload);
     }
   }, []);
 
-  // Receiver pré-sélectionné depuis navigation
+  // Pré-sélection depuis navigation
   useEffect(() => {
     if (locationUser != null) {
       setReceiver(locationUser.id);
@@ -69,27 +66,26 @@ export default function Chat() {
     }
   }, [locationUser]);
 
-  // Permission Notifications
+  // Permission notifs
   useEffect(() => {
     if ("Notification" in window && Notification.permission === "default") {
       Notification.requestPermission().catch(() => {});
     }
   }, []);
 
-  // Récupération users + conversations
+  // Récup data (users + convos)
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
+        const headers = { Authorization: `Bearer ${token}` };
 
         const usersRes = await axios.get("http://127.0.0.1:8000/api/userss/", {
-          headers: { Authorization: `Bearer ${token}` },
+          headers,
         });
-
-        const conversationsRes = await axios.get(
-          "http://127.0.0.1:8000/api/my/",
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
+        const conversationsRes = await axios.get("http://127.0.0.1:8000/api/my/", {
+          headers,
+        });
 
         setUsers(usersRes.data.filter((u) => u.id !== currentUser.id));
 
@@ -98,47 +94,39 @@ export default function Chat() {
             try {
               const res = await axios.get(
                 `http://127.0.0.1:8000/api/last-message/${conv.id}/`,
-                { headers: { Authorization: `Bearer ${token}` } }
+                { headers }
               );
-
               const res2 = await axios.get(
                 `http://127.0.0.1:8000/api/last-message-not-lu/${conv.id}/`,
-                { headers: { Authorization: `Bearer ${token}` } }
+                { headers }
               );
-
               return {
                 ...conv,
                 last_message: res.data.contenu || "Aucun message...",
                 last_message_not_lu: res2.data.nb_msg?.toString() || "0",
               };
-            } catch (err) {
-              console.error(err);
-              return {
-                ...conv,
-                last_message: "Erreur...",
-                last_message_not_lu: "0",
-              };
+            } catch {
+              return { ...conv, last_message: "Erreur...", last_message_not_lu: "0" };
             }
           })
         );
 
         setConversations(convsWithLastMessage);
-
-        const totalUnread = convsWithLastMessage.reduce((total, conv) => {
-          return total + parseInt(conv.last_message_not_lu || "0");
-        }, 0);
+        const totalUnread = convsWithLastMessage.reduce(
+          (t, c) => t + parseInt(c.last_message_not_lu || "0"),
+          0
+        );
         setUnreadCount(totalUnread);
       } catch (err) {
-        console.error("Erreur lors de la récupération des données:", err);
+        console.error(err);
       } finally {
         setLoading(false);
       }
     };
-
     fetchData();
   }, [currentUser.id, token]);
 
-  // Récupérer l'historique de messages
+  // Historique messages d'un receiver
   useEffect(() => {
     const fetchMessages = async () => {
       if (!receiver) return;
@@ -156,7 +144,7 @@ export default function Chat() {
           }))
         );
       } catch (err) {
-        console.error("Erreur lors de la récupération des messages:", err);
+        console.error(err);
       } finally {
         setLoading(false);
       }
@@ -164,9 +152,7 @@ export default function Chat() {
     fetchMessages();
   }, [receiver, currentUser.id, token]);
 
-  useEffect(() => {
-    scrollToBottom();
-  }, [listMsg]);
+  useEffect(scrollToBottom, [listMsg]);
 
   // Connexion WS (chat)
   useEffect(() => {
@@ -176,15 +162,13 @@ export default function Chat() {
       try {
         socketRef.current.close();
       } catch {}
-      socketRef.current = null;
     }
     if (reconnectTimerRef.current) {
       clearTimeout(reconnectTimerRef.current);
       reconnectTimerRef.current = null;
     }
 
-    const wsProtocol =
-      window.location.protocol === "https:" ? "wss://" : "ws://";
+    const wsProtocol = window.location.protocol === "https:" ? "wss://" : "ws://";
     const socketUrl = `${wsProtocol}127.0.0.1:8000/ws/chat/${currentUser.id}/${receiver}/`;
 
     setConnectionStatus("Connexion en cours...");
@@ -225,7 +209,6 @@ export default function Chat() {
 
       if (data.type === "chat_message") {
         setX((v) => v + 1);
-        // Ajouter le message
         setListMsg((prev) => [
           ...prev,
           {
@@ -236,62 +219,47 @@ export default function Chat() {
             date_envoi: data.timestamp,
             is_own: data.sender_id === currentUser.id,
             is_read:
-              data.receiver_id === currentUser.id &&
-              receiver === data.sender_id,
+              data.receiver_id === currentUser.id && receiver === data.sender_id,
           },
         ]);
 
-        // MAJ dernier message + non lus
         setConversations((prev) =>
           prev.map((c) => {
-            const isConv = c.id === data.sender_id || c.id === data.receiver_id;
-            if (!isConv) return c;
-
-            const unreadCount = parseInt(c.last_message_not_lu || "0");
-            const newUnread =
-              data.receiver_id === currentUser.id &&
-              receiver !== data.sender_id
-                ? unreadCount + 1
-                : 0;
-
-            return {
-              ...c,
-              last_message: data.message,
-              last_message_not_lu: newUnread.toString(),
-            };
-          })
-        );
-
-        // Total non lus
-        setUnreadCount((prev) => prev + 1);
-
-        // Marquer comme lu si la conv est ouverte
-        if (data.receiver_id === currentUser.id && receiver === data.sender_id) {
-          sendWS({ type: "message_read", message_id: data.message_id });
-        }
-        return;
-      }
-
-      if (data.type === "message_read") {
-        setListMsg((prev) =>
-          prev.map((m) =>
-            m.id === data.message_id ? { ...m, is_read: true } : m
-          )
-        );
-
-        setConversations((prev) =>
-          prev.map((c) => {
-            if (c.id === receiver) {
-              const newUnread = Math.max(
-                0,
-                parseInt(c.last_message_not_lu || "0") - 1
-              );
-              return { ...c, last_message_not_lu: newUnread.toString() };
+            if (c.id === data.sender_id || c.id === data.receiver_id) {
+              const unread = parseInt(c.last_message_not_lu || "0");
+              const newUnread =
+                data.receiver_id === currentUser.id && receiver !== data.sender_id
+                  ? unread + 1
+                  : 0;
+              return {
+                ...c,
+                last_message: data.message,
+                last_message_not_lu: newUnread.toString(),
+              };
             }
             return c;
           })
         );
 
+        if (data.receiver_id === currentUser.id && receiver !== data.sender_id)
+          setUnreadCount((prev) => prev + 1);
+        if (data.receiver_id === currentUser.id && receiver === data.sender_id)
+          sendWS({ type: "message_read", message_id: data.message_id });
+      }
+
+      if (data.type === "message_read") {
+        setListMsg((prev) =>
+          prev.map((m) => (m.id === data.message_id ? { ...m, is_read: true } : m))
+        );
+        setConversations((prev) =>
+          prev.map((c) => {
+            if (c.id === receiver) {
+              const newUnread = Math.max(0, parseInt(c.last_message_not_lu || "0") - 1);
+              return { ...c, last_message_not_lu: newUnread.toString() };
+            }
+            return c;
+          })
+        );
         setUnreadCount((prev) => Math.max(0, prev - 1));
       }
     };
@@ -300,15 +268,13 @@ export default function Chat() {
       setConnectionStatus("Erreur de connexion");
       setIsWebSocketConnected(false);
     };
-
     const scheduleReconnect = () => {
       if (reconnectTimerRef.current) return;
       reconnectTimerRef.current = setTimeout(() => {
         reconnectTimerRef.current = null;
-        setReceiver((prev) => prev); // retrigger effect
+        setReceiver((prev) => prev);
       }, 3000);
     };
-
     const handleClose = () => {
       setConnectionStatus("Déconnecté");
       setIsWebSocketConnected(false);
@@ -347,8 +313,7 @@ export default function Chat() {
       notificationReconnectTimerRef.current = null;
     }
 
-    const wsProtocol =
-      window.location.protocol === "https:" ? "wss://" : "ws://";
+    const wsProtocol = window.location.protocol === "https:" ? "wss://" : "ws://";
     const notificationUrl = `${wsProtocol}127.0.0.1:8000/ws/notifications/${currentUser.id}/`;
 
     const notificationWs = new WebSocket(notificationUrl);
@@ -357,57 +322,59 @@ export default function Chat() {
     const handleNotificationMessage = (e) => {
       try {
         const data = JSON.parse(e.data);
-
         if (data.type === "notification") {
-          toast.info(
-            `${data.from_user || "Quelqu'un"} vous a envoyé un message: ${
-              data.content
-            }`,
-            {
+          const msg = data.msg;
+          const senderId = msg.sender_id;
+
+          if (receiver !== senderId) {
+            const senderUser = users.find((u) => u.id === senderId);
+            const senderName = senderUser ? getDisplayName(senderUser) : "Quelqu'un";
+            toast.info(`${senderName} vous a envoyé un message: "${msg.contenu}"`, {
               position: "top-right",
               autoClose: 5000,
               hideProgressBar: false,
               closeOnClick: true,
               pauseOnHover: true,
               draggable: true,
-            }
+            });
+          }
+
+          setConversations((prev) =>
+            prev.map((c) => {
+              if (c.id === senderId) {
+                const unread = parseInt(c.last_message_not_lu || "0") + 1;
+                return {
+                  ...c,
+                  last_message: msg.contenu,
+                  last_message_not_lu: unread.toString(),
+                };
+              }
+              return c;
+            })
           );
+
           setUnreadCount((prev) => prev + 1);
         }
-      } catch (error) {
-        console.error("Error processing notification:", error);
+      } catch (err) {
+        console.error(err);
       }
     };
 
-    const scheduleNotificationReconnect = () => {
-      if (notificationReconnectTimerRef.current) return;
-      notificationReconnectTimerRef.current = setTimeout(() => {
-        notificationReconnectTimerRef.current = null;
-        // effect will re-run naturally
-      }, 5000);
-    };
-
-    const handleNotificationError = () => {
-      console.error("Notification WebSocket error");
-    };
-
     const handleNotificationClose = () => {
-      scheduleNotificationReconnect();
+      notificationReconnectTimerRef.current = setTimeout(() => {}, 5000);
     };
 
     notificationWs.addEventListener("message", handleNotificationMessage);
-    notificationWs.addEventListener("error", handleNotificationError);
     notificationWs.addEventListener("close", handleNotificationClose);
 
     return () => {
       notificationWs.removeEventListener("message", handleNotificationMessage);
-      notificationWs.removeEventListener("error", handleNotificationError);
       notificationWs.removeEventListener("close", handleNotificationClose);
       try {
         notificationWs.close();
       } catch {}
     };
-  }, [currentUser?.id]);
+  }, [currentUser?.id, receiver, users]);
 
   const markThreadAsRead = useCallback(() => {
     if (!receiver) return;
@@ -425,26 +392,15 @@ export default function Chat() {
 
   const handleReceiverSelect = (user) => {
     const exist = conversations.some((c) => c.id === user.id);
-
     setReceiver(user.id);
     setReceiverInfo(user);
     setShowAllUsers(false);
 
-    // Reset non lus pour la conv affichée
-    setConversations((prev) =>
-      prev.map((c) =>
-        c.id === user.id ? { ...c, last_message_not_lu: "0" } : c
-      )
-    );
-    markThreadAsRead();
-
-    if (!exist) {
-      setListMsg([]);
+    if (!exist)
       setConversations([
         ...conversations,
         { ...user, last_message: "", last_message_not_lu: "0" },
       ]);
-    }
   };
 
   const handleSendMessage = (e) => {
@@ -457,26 +413,19 @@ export default function Chat() {
       sender_id: currentUser.id,
       receiver_id: receiver,
     };
-
     setMessageInput("");
     sendWS(messageData);
   };
 
-  const getDisplayName = (user) => {
-    if (!user) return "";
-    if (user.citoyen_profile) {
-      return `${user.citoyen_profile.prenom} ${user.citoyen_profile.nom}`;
-    } else if (user.association_profile) {
-      return user.association_profile.nom;
-    } else {
-      return user.username || "";
-    }
-  };
+  const getDisplayName = (user) =>
+    user?.citoyen_profile
+      ? `${user.citoyen_profile.prenom} ${user.citoyen_profile.nom}`
+      : user?.association_profile
+      ? user.association_profile.nom
+      : user?.username || "";
 
-  const formatMessageTime = (dateString) => {
-    const date = new Date(dateString);
-    return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-  };
+  const formatMessageTime = (dateString) =>
+    new Date(dateString).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 
   const connectionBadge = (status) => {
     switch (status) {
@@ -490,29 +439,25 @@ export default function Chat() {
     }
   };
 
-  const filteredUsers = users.filter((u) =>
-    getDisplayName(u).toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
   return (
-    <div className="h-screen w-full bg-gray-50 text-gray-900 flex">
+    <div className="h-[100svh] md:h-screen w-full bg-gradient-to-br from-slate-50 via-white to-slate-50 text-slate-900 flex overflow-hidden">
       <ToastContainer />
 
       {/* SIDEBAR */}
-      <aside className="w-[320px] shrink-0 border-r bg-white flex flex-col">
-        {/* Sidebar header */}
-        <div className="px-4 py-3 border-b sticky top-0 bg-white/90 backdrop-blur z-10 flex items-center justify-between">
+      <aside className="w-80 lg:w-96 shrink-0 border-r bg-white/80 backdrop-blur-sm flex flex-col">
+        {/* Header sidebar */}
+        <div className="px-4 py-3 border-b sticky top-0 bg-white/70 backdrop-blur z-10 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <h2 className="text-lg font-semibold">Messages {x}</h2>
+            <h2 className="text-lg font-semibold tracking-tight">Messages {x}</h2>
             {unreadCount > 0 && (
-              <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-700">
+              <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-700 ring-1 ring-inset ring-blue-200">
                 <Bell size={14} />
                 {unreadCount}
               </span>
             )}
           </div>
           <button
-            className="inline-flex items-center justify-center rounded-lg border px-2.5 py-1.5 hover:bg-gray-50"
+            className="inline-flex items-center justify-center rounded-lg border px-2.5 py-1.5 hover:bg-gray-50 active:scale-95 transition"
             onClick={() => setShowAllUsers((v) => !v)}
             title={showAllUsers ? "Fermer" : "Nouveau message"}
           >
@@ -520,118 +465,140 @@ export default function Chat() {
           </button>
         </div>
 
-        {/* Toggle area: Conversations or Users */}
+        {/* Conversations OR Users (scroll area) */}
         {!showAllUsers ? (
-          <>
-            {/* Conversation list */}
-            <div className="flex-1 overflow-y-auto">
-              {loading && conversations.length === 0 ? (
-                <div className="p-4 text-sm text-gray-500">Chargement...</div>
-              ) : conversations.length > 0 ? (
-                <ul className="p-2">
-                  {conversations.map((conv) => {
-                    const isActive = receiver === conv.id;
-                    const unread = parseInt(conv.last_message_not_lu || "0");
-                    return (
-                      <li key={conv.id}>
-                        <button
-                          onClick={() => handleReceiverSelect(conv)}
-                          className={`w-full flex items-center gap-3 rounded-xl px-3 py-2.5 text-left hover:bg-gray-50 ${
-                            isActive ? "bg-gray-100" : ""
-                          }`}
-                        >
-                          <div className="h-10 w-10 rounded-full bg-gray-200 grid place-items-center font-semibold">
-                            {getDisplayName(conv).charAt(0).toUpperCase()}
+          <div className="flex-1 overflow-y-auto">
+            {loading && conversations.length === 0 ? (
+              <div className="p-4 text-sm text-gray-500">Chargement…</div>
+            ) : conversations.length > 0 ? (
+              <ul className="p-2 space-y-1">
+                {conversations.map((conv) => {
+                  const isActive = receiver === conv.id;
+                  const unread = Number(conv.last_message_not_lu || "0");
+                  const avatarImg =
+                    conv.citoyen_profile?.album_photos
+                      ? `http://localhost:8000/media/${JSON.parse(conv.citoyen_profile.album_photos)[0]}`
+                      : conv.association_profile?.logo
+                      ? `http://localhost:8000/media/${conv.association_profile.logo}`
+                      : null;
+
+                  return (
+                    <li key={conv.id}>
+                      <button
+                        onClick={() => handleReceiverSelect(conv)}
+                        className={[
+                          "group w-full flex items-center gap-3 rounded-xl px-3 py-2.5 text-left transition",
+                          "hover:bg-gray-50 active:scale-[0.995]",
+                          isActive ? "bg-gray-100 ring-1 ring-inset ring-gray-200 shadow-sm" : "",
+                        ].join(" ")}
+                      >
+                        <div className="h-10 w-10 rounded-full ring-1 ring-inset ring-slate-200 overflow-hidden grid place-items-center font-semibold bg-slate-100 text-slate-700">
+                          {avatarImg ? (
+                            <img
+                              src={avatarImg}
+                              alt="avatar"
+                              className="h-full w-full object-cover"
+                              onError={(e) => (e.currentTarget.style.display = "none")}
+                            />
+                          ) : (
+                            getDisplayName(conv).charAt(0).toUpperCase()
+                          )}
+                        </div>
+
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2">
+                            <p className="font-medium truncate">{getDisplayName(conv)}</p>
+                            {unread > 0 && (
+                              <span className="ml-auto inline-flex items-center justify-center rounded-full bg-blue-600 text-white text-xs h-5 min-w-[20px] px-1 shadow">
+                                {unread}
+                              </span>
+                            )}
                           </div>
-                          <div className="min-w-0 flex-1">
-                            <div className="flex items-center gap-2">
-                              <p className="font-medium truncate">
-                                {getDisplayName(conv)}
-                              </p>
-                              {unread > 0 && (
-                                <span className="ml-auto inline-flex items-center justify-center rounded-full bg-blue-600 text-white text-xs h-5 min-w-[20px] px-1">
-                                  {unread}
-                                </span>
-                              )}
-                            </div>
-                            <p className="text-xs text-gray-600 line-clamp-1">
-                              {conv.last_message || "Aucun message..."}
-                            </p>
-                          </div>
-                        </button>
-                      </li>
-                    );
-                  })}
-                </ul>
-              ) : (
-                <p className="p-4 text-sm text-gray-500">
-                  Aucune conversation pour le moment.
-                </p>
-              )}
-            </div>
-          </>
+                          <p className="text-xs text-gray-600 line-clamp-1">
+                            {conv.last_message || "Aucun message…"}
+                          </p>
+                        </div>
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            ) : (
+              <p className="p-4 text-sm text-gray-500">Aucune conversation</p>
+            )}
+          </div>
         ) : (
           <>
-            {/* Users picker */}
-            <div className="p-3 border-b">
+            <div className="p-3 border-b sticky top-[49px] bg-white/70 backdrop-blur z-10">
               <input
                 type="text"
-                placeholder="Rechercher des utilisateurs..."
+                placeholder="Rechercher des utilisateurs…"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full rounded-xl border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
+
             <div className="flex-1 overflow-y-auto">
-              {filteredUsers.length > 0 ? (
-                <ul className="p-2">
-                  {filteredUsers.map((user) => (
-                    <li key={user.id}>
-                      <button
-                        onClick={() => handleReceiverSelect(user)}
-                        className="w-full flex items-center gap-3 rounded-xl px-3 py-2.5 text-left hover:bg-gray-50"
-                      >
-                        <div className="h-10 w-10 rounded-full bg-gray-200 grid place-items-center font-semibold">
-                          {getDisplayName(user).charAt(0).toUpperCase()}
-                        </div>
-                        <div className="min-w-0">
-                          <p className="font-medium truncate">
-                            {getDisplayName(user)}
-                          </p>
-                          <p className="text-xs text-gray-600 truncate">
-                            @{user.username}
-                          </p>
-                        </div>
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="p-4 text-sm text-gray-500">Aucun résultat.</p>
-              )}
+              <ul className="p-2 space-y-1">
+                {users
+                  .filter((u) =>
+                    getDisplayName(u).toLowerCase().includes(searchTerm.toLowerCase())
+                  )
+                  .map((user) => {
+                    const avatarImg =
+                      user.citoyen_profile?.album_photos
+                        ? `http://localhost:8000/media/${JSON.parse(user.citoyen_profile.album_photos)[0]}`
+                        : user.association_profile?.logo
+                        ? `http://localhost:8000/media/${user.association_profile.logo}`
+                        : null;
+
+                    return (
+                      <li key={user.id}>
+                        <button
+                          onClick={() => handleReceiverSelect(user)}
+                          className="w-full flex items-center gap-3 rounded-xl px-3 py-2.5 text-left hover:bg-gray-50 active:scale-[0.995] transition"
+                        >
+                          <div className="h-10 w-10 rounded-full ring-1 ring-inset ring-slate-200 overflow-hidden grid place-items-center font-semibold bg-slate-100 text-slate-700">
+                            {avatarImg ? (
+                              <img
+                                src={avatarImg}
+                                alt="avatar"
+                                className="h-full w-full object-cover"
+                                onError={(e) => (e.currentTarget.style.display = "none")}
+                              />
+                            ) : (
+                              getDisplayName(user).charAt(0).toUpperCase()
+                            )}
+                          </div>
+                          <div className="min-w-0">
+                            <p className="font-medium truncate">{getDisplayName(user)}</p>
+                            <p className="text-xs text-gray-600 truncate">@{user.username}</p>
+                          </div>
+                        </button>
+                      </li>
+                    );
+                  })}
+              </ul>
             </div>
           </>
         )}
       </aside>
 
       {/* MAIN CHAT */}
-      <main className="flex-1 flex flex-col">
+      <main className="flex-1 flex flex-col bg-white/60 backdrop-blur-sm">
         {receiver ? (
           <>
-            {/* Header main chat */}
-            <div className="px-4 py-3 border-b bg-white sticky top-0 z-10">
+            {/* Header chat (sticky) */}
+            <div className="px-4 py-3 border-b bg-white/70 backdrop-blur sticky top-0 z-10">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3 min-w-0">
-                  <div className="h-10 w-10 rounded-full bg-gray-200 grid place-items-center font-semibold">
+                  <div className="h-10 w-10 rounded-full grid place-items-center font-semibold bg-gradient-to-br from-purple-50 to-purple-100 text-purple-700 ring-1 ring-inset ring-purple-200">
                     {getDisplayName(receiverInfo).charAt(0).toUpperCase()}
                   </div>
                   <div className="min-w-0">
-                    <p className="font-semibold truncate">
-                      {getDisplayName(receiverInfo)}
-                    </p>
-                    <p className="text-xs text-gray-500 truncate">
-                      @{receiverInfo?.username}
-                    </p>
+                    <p className="font-semibold truncate">{getDisplayName(receiverInfo)}</p>
+                    <p className="text-xs text-gray-500 truncate">@{receiverInfo?.username}</p>
                   </div>
                 </div>
 
@@ -641,12 +608,22 @@ export default function Chat() {
                       connectionStatus
                     )}`}
                   >
+                    <span
+                      className={[
+                        "mr-1 inline-block h-2 w-2 rounded-full",
+                        connectionStatus === "Connecté"
+                          ? "bg-emerald-500"
+                          : connectionStatus.includes("Connexion")
+                          ? "bg-amber-500"
+                          : "bg-rose-500",
+                      ].join(" ")}
+                    />
                     {connectionStatus}
                   </span>
 
                   <div className="relative">
                     <button
-                      className="rounded-lg border px-2.5 py-1.5 hover:bg-gray-50"
+                      className="rounded-lg border px-2.5 py-1.5 hover:bg-gray-50 active:scale-95 transition"
                       onClick={() => setShowMenu((prev) => !prev)}
                     >
                       ⋮
@@ -669,8 +646,8 @@ export default function Chat() {
               </div>
             </div>
 
-            {/* Messages */}
-            <div className="flex-1 overflow-y-auto px-4 py-4 bg-gradient-to-b from-gray-50 to-white">
+            {/* Messages (scroll area) */}
+            <div className="flex-1 overflow-y-auto px-4 py-4 bg-gradient-to-b from-slate-50/60 to-white">
               {listMsg.length > 0 ? (
                 <ul className="space-y-2">
                   {listMsg.map((msg) => {
@@ -678,18 +655,18 @@ export default function Chat() {
                     return (
                       <li
                         key={msg.id}
-                        className={`flex ${isOwn ? "justify-end" : "justify-start"}`}
+                        className={`flex ${isOwn ? "justify-end" : "justify-start"} transition`}
                       >
                         <div
-                          className={`max-w-[70%] rounded-2xl px-3 py-2 shadow-sm text-sm ${
+                          className={[
+                            "max-w-[70%] rounded-2xl px-3 py-2 shadow-sm text-sm transition",
+                            "hover:translate-y-[-1px] hover:shadow",
                             isOwn
                               ? "bg-blue-600 text-white rounded-br-sm"
-                              : "bg-white text-gray-900 border rounded-bl-sm"
-                          }`}
+                              : "bg-white text-gray-900 border rounded-bl-sm",
+                          ].join(" ")}
                         >
-                          <p className="whitespace-pre-wrap break-words">
-                            {msg.contenu}
-                          </p>
+                          <p className="whitespace-pre-wrap break-words">{msg.contenu}</p>
                           <div
                             className={`mt-1 flex items-center gap-1 text-[11px] ${
                               isOwn ? "text-blue-100/90" : "text-gray-500"
@@ -699,10 +676,7 @@ export default function Chat() {
                             {isOwn && (
                               <span className="ml-1">
                                 {msg.is_read ? (
-                                  <CheckCheck
-                                    size={14}
-                                    className="inline-block align-[-2px]"
-                                  />
+                                  <CheckCheck size={14} className="inline-block align-[-2px]" />
                                 ) : (
                                   "✓"
                                 )}
@@ -722,24 +696,21 @@ export default function Chat() {
               <div ref={messagesEndRef} />
             </div>
 
-            {/* Composer */}
-            <form
-              onSubmit={handleSendMessage}
-              className="border-t bg-white px-3 py-2"
-            >
+            {/* Composer (fixe en bas) */}
+            <form onSubmit={handleSendMessage} className="border-t bg-white px-3 py-2">
               <div className="flex items-end gap-2">
                 <input
                   type="text"
                   value={messageInput}
                   onChange={(e) => setMessageInput(e.target.value)}
-                  placeholder="Saisissez votre message..."
+                  placeholder="Saisissez votre message…"
                   disabled={!isWebSocketConnected}
-                  className="flex-1 rounded-2xl border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
+                  className="flex-1 rounded-2xl border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 transition"
                 />
                 <button
                   type="submit"
                   disabled={!isWebSocketConnected || !messageInput.trim()}
-                  className="rounded-2xl bg-blue-600 text-white px-4 py-2 text-sm font-medium hover:bg-blue-700 disabled:opacity-60"
+                  className="rounded-2xl bg-blue-600 text-white px-4 py-2 text-sm font-medium hover:bg-blue-700 active:scale-95 transition disabled:opacity-60"
                 >
                   Envoyer
                 </button>
