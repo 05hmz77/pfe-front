@@ -1,159 +1,431 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import './style/AssDashboard.css';
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import {
+  PieChart, Pie, Cell, Tooltip, Legend,
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer,
+  AreaChart, Area
+} from "recharts";
+// import { BarChart3, PieChart as PieIcon } from "lucide-react"; // optionnel
 
-const Dashboard = () => {
-  const [stats, setStats] = useState({
-    annonces: 0,
-    benevoles: 0,
-    candidatures: 0,
-    evenements: 0,
-    deltaAnnonces: 0,
-    deltaBenevoles: 0,
-    deltaCandidatures: 0,
-    deltaEvenements: 0
-  });
-  
-  const [annonces, setAnnonces] = useState([]);
-  const [candidatures, setCandidatures] = useState([]);
+const API_BASE = import.meta?.env?.VITE_API_BASE || "http://127.0.0.1:8000";
+const DASHBOARD_URL = `${API_BASE}/api/associations/me/dashboard/`;
+
+// ---------- Helpers ----------
+const fmtDate = (d) => {
+  if (!d) return "";
+  try {
+    return new Intl.DateTimeFormat(undefined, {
+      dateStyle: "medium",
+      timeStyle: "short",
+    }).format(new Date(d));
+  } catch {
+    return d;
+  }
+};
+
+// groupe la timeline par jour pour un petit sparkline activité
+const groupTimelineByDay = (timeline = []) => {
+  const m = new Map();
+  for (const item of timeline) {
+    const day = new Date(item.date);
+    if (isNaN(day)) continue;
+    const key = day.toISOString().slice(0, 10);
+    m.set(key, (m.get(key) || 0) + 1);
+  }
+  // 14 derniers jours pour le mini-chart
+  const today = new Date();
+  const arr = [];
+  for (let i = 13; i >= 0; i--) {
+    const dd = new Date(today);
+    dd.setDate(today.getDate() - i);
+    const key = dd.toISOString().slice(0, 10);
+    arr.push({ day: key.slice(5), events: m.get(key) || 0 }); // MM-DD
+  }
+  return arr;
+};
+
+const COLORS = ["#2563EB", "#0EA5E9", "#10B981", "#F59E0B", "#EF4444", "#8B5CF6"];
+
+// ---------- Composant principal ----------
+export default function AssociationDashboard() {
+  const currentUser = useMemo(() => {
+    try { return JSON.parse(localStorage.getItem("user")) || null; } catch { return null; }
+  }, []);
+  const token = localStorage.getItem("accessToken");
+
+  const [data, setData] = useState(null);
+  const [rangeDays, setRangeDays] = useState(30);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [err, setErr] = useState("");
+
+  // garde-fou contre les double-fetchs en dev (React.StrictMode)
+  const didFetch = useRef(false);
+
+  const fetchDashboard = async (days = 30) => {
+    if (!token) {
+      setErr("Vous n'êtes pas connecté.");
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
+    setErr("");
+    try {
+      const res = await fetch(`${DASHBOARD_URL}?range_days=${days}`, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        mode: "cors",
+      });
+      if (!res.ok) {
+        const j = await res.json().catch(() => ({}));
+        throw new Error(j.detail || `Erreur ${res.status}`);
+      }
+      const json = await res.json();
+      setData(json);
+    } catch (e) {
+      setErr(e.message || "Erreur de chargement.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const token = localStorage.getItem('accessToken');
-        const headers = { Authorization: `Bearer ${token}` };
-        
-        // Fetch announcements
-        const annoncesRes = await axios.get('http://127.0.0.1:8000/api/annonces/', { headers });
-        setAnnonces(annoncesRes.data.slice(0, 6)); // Get last 6
-        
-        // Fetch applications
-        const candidaturesRes = await axios.get('http://127.0.0.1:8000/api/candidatures/mes/', { headers });
-        setCandidatures(candidaturesRes.data.slice(0, 6)); // Get last 6
-        
-        // Calculate statistics
-        const totalAnnonces = annoncesRes.data.length;
-        const acceptedCandidatures = new Set(
-          candidaturesRes.data.filter(c => c.statut === 'ACCEPTEE').map(c => c.citoyen)
-        ).size;
-        const totalCandidatures = candidaturesRes.data.length;
-        
-        setStats({
-          annonces: totalAnnonces,
-          benevoles: acceptedCandidatures,
-          candidatures: totalCandidatures,
-          evenements: 5, // Example static value - replace with actual API data if available
-          deltaAnnonces: 3, // Example - you might want to calculate this
-          deltaBenevoles: 10, // Example - calculate from previous month
-          deltaCandidatures: 15, // Example - calculate from previous month
-          deltaEvenements: 2 // Example
-        });
-        
-        setLoading(false);
-      } catch (err) {
-        setError(err.message);
-        setLoading(false);
-      }
-    };
-    
-    fetchData();
-  }, []);
+    if (didFetch.current) return;
+    didFetch.current = true;
+    fetchDashboard(rangeDays);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rangeDays]);
 
-  if (loading) return <div className="loading">Chargement...</div>;
-  if (error) return <div className="error">Erreur: {error}</div>;
+  // ---------- datasets pour les charts ----------
+  const pieCandidatures = useMemo(() => {
+    return (data?.candidatures_par_statut || []).map((r) => ({
+      name: r.statut.replace("_", " "),
+      value: r.n,
+    }));
+  }, [data]);
+
+  const barReactions = useMemo(() => {
+    return (data?.reactions_par_type || []).map((r) => ({
+      name: r.type,
+      count: r.n,
+    }));
+  }, [data]);
+
+  const donutCategories = useMemo(() => {
+    return (data?.dist_categories || []).map((c) => ({
+      name: c.name || c.categorie__nom || "Sans catégorie",
+      value: c.n,
+    }));
+  }, [data]);
+
+  const activitySeries = useMemo(() => groupTimelineByDay(data?.timeline), [data]);
+
+  if (!token) {
+    return (
+      <div className="min-h-screen bg-gray-50 text-gray-900">
+        <div className="max-w-6xl mx-auto px-4 py-10">
+          <div className="rounded-xl bg-red-50 border border-red-200 p-4 text-red-700">
+            Token manquant. Veuillez vous connecter.
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="dashboard">
-      <header className="dashboard-header">
-        <h1>Tableau de bord - Les Amis de la Terre</h1>
-        <p>Gérez vos annonces et vos bénévoles</p>
-      </header>
-      
-      <div className="stats-grid">
-  <div className="stat-card">
-    <h3>Annonces publiées</h3>
-    <div className="stat-value">10</div>
-    <div className="stat-delta">+3 ce mois-ci</div>
-  </div>
-  <div className="stat-card">
-    <h3>Bénévoles recrutés</h3>
-    <div className="stat-value">2</div>
-    <div className="stat-delta">+10 ce mois-ci</div>
-  </div>
-  <div className="stat-card">
-    <h3>Candidatures reçues</h3>
-    <div className="stat-value">32</div>
-    <div className="stat-delta">+15 ce mois-ci</div>
-  </div>
-  <div className="stat-card">
-    <h3>Événements organisés</h3>
-    <div className="stat-value">5</div>
-    <div className="stat-delta">+2 ce mois-ci</div>
-  </div>
-</div>
-      
-      <div className="dashboard-sections">
-        <RecentAnnonces annonces={annonces} />
-        <RecentCandidatures candidatures={candidatures} />
+    <div className="min-h-screen bg-gray-50 text-gray-900">
+      <div className="max-w-7xl mx-auto px-4 py-6 md:py-8">
+        {/* Header */}
+        <div className="flex items-start md:items-center justify-between gap-4 mb-6">
+          <div className="flex items-center gap-4">
+            
+            <div>
+              <h1 className="text-2xl md:text-3xl font-bold tracking-tight">
+                {data?.association?.nom || currentUser?.username || "Mon Association"}
+              </h1>
+              <p className="text-gray-500">
+                Tableau de bord (fond clair) — période: {data?.range_days ?? rangeDays} jours
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <select
+              value={rangeDays}
+              onChange={(e) => setRangeDays(Number(e.target.value))}
+              className="bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value={7}>7 jours</option>
+              <option value={30}>30 jours</option>
+              <option value={90}>90 jours</option>
+            </select>
+            <button
+              onClick={() => fetchDashboard(rangeDays)}
+              className="rounded-lg bg-blue-600 hover:bg-blue-700 px-4 py-2 text-white font-medium shadow"
+            >
+              Actualiser
+            </button>
+          </div>
+        </div>
+
+        {/* Loading / Error */}
+        {loading && (
+          <div className="grid gap-4 grid-cols-1 md:grid-cols-3">
+            {[...Array(6)].map((_, i) => (
+              <div key={i} className="h-28 rounded-xl bg-white border border-gray-200 animate-pulse" />
+            ))}
+          </div>
+        )}
+        {!!err && !loading && (
+          <div className="mb-6 rounded-xl bg-red-50 border border-red-200 p-4 text-red-700">
+            {err}
+          </div>
+        )}
+
+        {/* Content */}
+        {data && !loading && (
+          <>
+            {/* KPIs */}
+            <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 mb-6">
+              <KpiCard title="Annonces totales" value={data.cards.annonces_total} />
+              <KpiCard title="Annonces actives" value={data.cards.annonces_actives} />
+              <KpiCard title="Annonces expirées" value={data.cards.annonces_expirees} />
+              <KpiCard title="Candidatures" value={data.cards.candidatures_total} />
+              <KpiCard title="Commentaires" value={data.cards.engagement_total_commentaires} />
+              <KpiCard title="Messages non lus" value={data.cards.messages_non_lus} accent="blue" />
+            </div>
+
+            {/* Activity sparkline */}
+            <div className="grid grid-cols-1 mb-6">
+              <Panel title="Activité globale (14 jours)">
+                <div className="h-40">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart data={activitySeries}>
+                      <defs>
+                        <linearGradient id="grad" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="#2563EB" stopOpacity={0.4} />
+                          <stop offset="100%" stopColor="#2563EB" stopOpacity={0.05} />
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
+                      <XAxis dataKey="day" tick={{ fontSize: 12 }} />
+                      <YAxis allowDecimals={false} tick={{ fontSize: 12 }} />
+                      <Tooltip />
+                      <Area type="monotone" dataKey="events" stroke="#2563EB" fill="url(#grad)" />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </div>
+              </Panel>
+            </div>
+
+            {/* Charts */}
+            <div className="grid gap-4 grid-cols-1 lg:grid-cols-2 mb-6">
+              <Panel title="Candidatures par statut">
+                <div className="h-72">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={pieCandidatures}
+                        dataKey="value"
+                        nameKey="name"
+                        cx="50%"
+                        cy="50%"
+                        outerRadius={100}
+                        innerRadius={50}
+                        paddingAngle={2}
+                      >
+                        {pieCandidatures.map((_, i) => (
+                          <Cell key={i} fill={COLORS[i % COLORS.length]} />
+                        ))}
+                      </Pie>
+                      <Tooltip />
+                      <Legend />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+              </Panel>
+
+              <Panel title="Réactions par type">
+                <div className="h-72">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={barReactions} barSize={28}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
+                      <XAxis dataKey="name" tick={{ fontSize: 12 }} />
+                      <YAxis allowDecimals={false} tick={{ fontSize: 12 }} />
+                      <Tooltip />
+                      <Bar dataKey="count">
+                        {barReactions.map((_, i) => (
+                          <Cell key={i} fill={COLORS[i % COLORS.length]} />
+                        ))}
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </Panel>
+            </div>
+
+            {/* Donut + Table */}
+            <div className="grid gap-4 grid-cols-1 lg:grid-cols-2 mb-6">
+              <Panel title="Répartition par catégorie (annonces)">
+                <div className="h-72">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={donutCategories}
+                        dataKey="value"
+                        nameKey="name"
+                        cx="50%"
+                        cy="50%"
+                        outerRadius={100}
+                        innerRadius={65}
+                        paddingAngle={3}
+                      >
+                        {donutCategories.map((_, i) => (
+                          <Cell key={i} fill={COLORS[(i + 2) % COLORS.length]} />
+                        ))}
+                      </Pie>
+                      <Tooltip />
+                      <Legend />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+              </Panel>
+
+              <Panel title="Top annonces (sur période)">
+                <div className="overflow-x-auto">
+                  <table className="min-w-full text-sm">
+                    <thead>
+                      <tr className="text-left text-gray-500">
+                        <th className="py-2 pr-3">Titre</th>
+                        <th className="py-2 pr-3">Début</th>
+                        <th className="py-2 pr-3">Fin</th>
+                        <th className="py-2 pr-3">Candidatures</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-200">
+                      {(!data.top_annonces_30j || data.top_annonces_30j.length === 0) && (
+                        <tr><td className="py-3 text-gray-500" colSpan={4}>Aucune donnée.</td></tr>
+                      )}
+                      {data.top_annonces_30j?.map((a) => (
+                        <tr key={a.id} className="hover:bg-gray-50">
+                          <td className="py-2 pr-3 font-medium text-gray-900">{a.titre}</td>
+                          <td className="py-2 pr-3">{fmtDate(a.date_debut)}</td>
+                          <td className="py-2 pr-3">{fmtDate(a.date_fin)}</td>
+                          <td className="py-2 pr-3 font-semibold text-blue-700">{a.nb_cand}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </Panel>
+            </div>
+
+            {/* Timeline + Messages + Top bénévoles */}
+            <div className="grid gap-4 grid-cols-1 xl:grid-cols-3">
+              <Panel title="Activité récente" className="xl:col-span-2">
+                <ul className="space-y-3">
+                  {(!data.timeline || data.timeline.length === 0) && (
+                    <li className="text-gray-500">Aucune activité.</li>
+                  )}
+                  {data.timeline?.map((item, i) => (
+                    <li key={i} className="p-3 rounded-lg bg-white border border-gray-200">
+                      <div className="text-xs uppercase tracking-wide text-gray-500">{item.type}</div>
+                      <div className="text-sm mt-1 text-gray-800">
+                        {item.type === "ANNONCE" && (
+                          <span>Nouvelle annonce : <b>{item.payload.titre}</b></span>
+                        )}
+                        {item.type === "CANDIDATURE" && (
+                          <span>
+                            <b>{item.payload.citoyen_username}</b> a candidaté à <b>{item.payload.annonce_titre}</b> — <i>{item.payload.statut}</i>
+                          </span>
+                        )}
+                        {item.type === "COMMENTAIRE" && (
+                          <span>
+                            <b>{item.payload.auteur_username}</b> a commenté <b>{item.payload.annonce_titre}</b> : “{item.payload.contenu}”
+                          </span>
+                        )}
+                        {item.type === "REACTION" && (
+                          <span>
+                            <b>{item.payload.utilisateur_username}</b> a réagi ({item.payload.type}) sur <b>{item.payload.annonce_titre}</b>
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-xs text-gray-500 mt-1">{fmtDate(item.date)}</div>
+                    </li>
+                  ))}
+                </ul>
+              </Panel>
+
+              <div className="space-y-4">
+                <Panel title="Derniers messages">
+                  <ul className="space-y-3">
+                    {(!data.dernier_messages || data.dernier_messages.length === 0) && (
+                      <li className="text-gray-500">Aucun message.</li>
+                    )}
+                    {data.dernier_messages?.map((m) => (
+                      <li key={m.id} className="p-3 rounded-lg bg-white border border-gray-200">
+                        <div className="text-sm text-gray-800">
+                          <b>{m.sender_username}</b> → <b>{m.receiver_username}</b>
+                        </div>
+                        <div className="text-gray-700 text-sm mt-1 line-clamp-2">{m.contenu}</div>
+                        <div className="text-xs text-gray-500 mt-1 flex items-center justify-between">
+                          <span>{fmtDate(m.date_envoi)}</span>
+                          {!m.is_read && (
+                            <span className="px-2 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200">
+                              non lu
+                            </span>
+                          )}
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                </Panel>
+
+                <Panel title="Top bénévoles (période)">
+                  <ul className="divide-y divide-gray-200">
+                    {(!data.top_citoyens_30j || data.top_citoyens_30j.length === 0) && (
+                      <li className="py-3 text-gray-500">Aucune donnée.</li>
+                    )}
+                    {data.top_citoyens_30j?.map((c) => (
+                      <li key={c.citoyen_id} className="py-3 flex items-center justify-between">
+                        <span className="text-gray-800">{c["citoyen__user__username"]}</span>
+                        <span className="px-2 py-1 rounded-lg bg-gray-100 border border-gray-200">{c.nb}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </Panel>
+              </div>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
-};
+}
 
-// Stat Card Component
-const StatCard = ({ title, value, delta }) => (
-  <div className="stat-card">
-    <h3>{title}</h3>
-    <div className="stat-value">{value}</div>
-    <div className="stat-delta">+{delta} ce mois-ci</div>
-  </div>
-);
+// ---------- UI bits ----------
+function KpiCard({ title, value, accent = "indigo" }) {
+  const accents = {
+    indigo: "from-indigo-50 to-white border-indigo-100",
+    blue: "from-blue-50 to-white border-blue-100",
+    green: "from-emerald-50 to-white border-emerald-100",
+    amber: "from-amber-50 to-white border-amber-100",
+  };
+  return (
+    <div className={`rounded-xl bg-gradient-to-b ${accents[accent] || accents.indigo} border p-4 shadow-sm`}>
+      <div className="text-gray-500 text-sm">{title}</div>
+      <div className="text-3xl font-extrabold mt-1 text-gray-900">{value ?? 0}</div>
+    </div>
+  );
+}
 
-// Recent Announcements Component
-const RecentAnnonces = ({ annonces }) => (
-  <div className="dashboard-section">
-    <h2>Mes annonces récentes</h2>
-    <p>Vos dernières publications</p>
-    
-    {annonces.map(annonce => (
-      <div key={annonce.id} className="annonce-card">
-        <h3>{annonce.titre}</h3>
-        <p>{annonce.lieu}</p>
-        <div className="annonce-meta">
-          <span className="annonce-type">{annonce.type || 'benevolat'}</span>
-          <span className="annonce-date">{new Date(annonce.date).toLocaleDateString()}</span>
-          <span className="annonce-candidates">
-            {annonce.candidatures_acceptees}/{annonce.candidatures_max} candidats
-          </span>
-        </div>
+function Panel({ title, children, className = "" }) {
+  return (
+    <div className={`rounded-xl bg-white border border-gray-200 p-4 shadow-sm ${className}`}>
+      <div className="flex items-center justify-between mb-3">
+        <h2 className="font-semibold text-gray-900">{title}</h2>
       </div>
-    ))}
-  </div>
-);
-
-// Recent Applications Component
-const RecentCandidatures = ({ candidatures }) => (
-  <div className="dashboard-section">
-    <h2>Candidatures reçues</h2>
-    <p>Nouvelles demandes de participation</p>
-    
-    {candidatures.map(candidature => (
-      <div key={candidature.id} className="candidature-card">
-        <h3>{candidature.citoyen_nom || `Candidat #${candidature.citoyen}`}</h3>
-        <p>{candidature.annonce_titre || `Annonce #${candidature.annonce}`}</p>
-        <div className={`candidature-status ${candidature.statut.toLowerCase()}`}>
-          {candidature.statut === 'ACCEPTEE' ? 'Acceptée' : 
-           candidature.statut === 'EN_ATTENTE' ? 'En attente' : 
-           candidature.statut === 'REFUSEE' ? 'Refusée' : candidature.statut}
-        </div>
-        <div className="candidature-date">
-          {new Date(candidature.date_candidature).toLocaleDateString()}
-        </div>
-      </div>
-    ))}
-  </div>
-);
-
-export default Dashboard;
+      {children}
+    </div>
+  );
+}

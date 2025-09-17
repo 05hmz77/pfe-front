@@ -586,7 +586,7 @@ export default function Chat() {
       </aside>
 
       {/* MAIN CHAT */}
-      <main className="flex-1 flex flex-col bg-white/60 backdrop-blur-sm">
+      <main className="flex-1 flex flex-col bg-white/60 backdrop-blur-sm h-full">
         {receiver ? (
           <>
             {/* Header chat (sticky) */}
