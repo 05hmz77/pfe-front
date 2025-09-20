@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import "./style/candidatures.css";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
@@ -8,10 +7,6 @@ export default function MyCandidature() {
   const [candidatures, setCandidatures] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
-  const [statusFilter, setStatusFilter] = useState("");
-  const [startAfterNow, setStartAfterNow] = useState(false);
-  const [endBeforeNow, setEndBeforeNow] = useState(false);
 
   useEffect(() => {
     fetchCandidatures();
@@ -22,13 +17,12 @@ export default function MyCandidature() {
       const token = localStorage.getItem("accessToken");
       const headers = { Authorization: `Bearer ${token}` };
       const response = await axios.get("http://127.0.0.1:8000/api/candidatures/mes/", { headers });
-      
-      // Trier les candidatures par date (du plus récent au plus ancien)
-      const sortedCandidatures = response.data.sort((a, b) => 
-        new Date(b.date_candidature) - new Date(a.date_candidature)
+
+      const sorted = response.data.sort(
+        (a, b) => new Date(b.date_candidature) - new Date(a.date_candidature)
       );
-      
-      setCandidatures(sortedCandidatures);
+
+      setCandidatures(sorted);
       setLoading(false);
     } catch (err) {
       setError(err.message);
@@ -37,163 +31,93 @@ export default function MyCandidature() {
     }
   };
 
-  const handleStatusChange = async (candidatureId, newStatus) => {
-    try {
-      const token = localStorage.getItem("accessToken");
-      const headers = { Authorization: `Bearer ${token}` };
-
-      await axios.put(
-        `http://127.0.0.1:8000/api/candidatures/mes/${candidatureId}/`,
-        { statut: newStatus },
-        { headers }
-      );
-
-      toast.success(`Candidature ${newStatus === "ACCEPTEE" ? "acceptée" : "refusée"} avec succès!`);
-
-      setCandidatures(candidatures.map(cand =>
-        cand.id === candidatureId ? { ...cand, statut: newStatus } : cand
-      ));
-    } catch (err) {
-      toast.error("Erreur lors de la mise à jour de la candidature");
-      console.error(err);
-    }
-  };
-
   const formatDate = (dateString) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('fr-FR', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
+    return date.toLocaleDateString("fr-FR", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
     });
   };
 
-  const getStatusBadgeClass = (status) => {
+  const getStatusClasses = (status) => {
     switch (status) {
       case "ACCEPTEE":
-        return "status-badge accepted";
+        return "bg-green-100 text-green-700 ring-1 ring-green-300";
       case "REFUSEE":
-        return "status-badge rejected";
+        return "bg-red-100 text-red-700 ring-1 ring-red-300";
       case "EN_ATTENTE":
-        return "status-badge pending";
+        return "bg-yellow-100 text-yellow-700 ring-1 ring-yellow-300";
       default:
-        return "status-badge";
-    }
-  };
-
-  // Fonction pour gérer la suppression d'une candidature
-  const handleDeleteCandidature = async (candidatureId) => {
-    try {
-      const token = localStorage.getItem("accessToken");
-      const headers = { Authorization: `Bearer ${token}` };
-
-      await axios.delete(
-        `http://127.0.0.1:8000/api/candidatures/mes/${candidatureId}/`,
-        { headers }
-      );
-
-      toast.success("Candidature supprimée avec succès!");
-      setCandidatures(candidatures.filter(cand => cand.id !== candidatureId));
-    } catch (err) {
-      toast.error("Erreur lors de la suppression de la candidature");
-      console.error(err);
+        return "bg-gray-100 text-gray-600 ring-1 ring-gray-300";
     }
   };
 
   if (loading) {
     return (
-      <div className="loader-overlay">
-        <div className="simple-loader"></div>
+      <div className="flex items-center justify-center h-64">
+        <div className="w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
       </div>
     );
   }
-  if (error) return <div className="dashboard error">Erreur: {error}</div>;
-
-  // Filtrer et trier les candidatures
-  const filteredCandidatures = candidatures
-    .filter((c) => {
-      const now = new Date();
-      const validStatus = statusFilter ? c.statut === statusFilter : true;
-      const validStart = startAfterNow ? new Date(c.date_candidature) > now : true;
-      const validEnd = endBeforeNow ? new Date(c.date_candidature) < now : true;
-      return validStatus && validStart && validEnd;
-    });
+  if (error) return <div className="text-red-600 font-semibold">Erreur: {error}</div>;
 
   return (
-    <div className="dashboard">
-      <ToastContainer 
-        position="top-right"
-        autoClose={3000}
-        hideProgressBar={false}
-        newestOnTop={true}  // Les nouvelles notifications apparaissent en haut
-        closeOnClick
-        rtl={false}
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
-      />
+    <div className="p-6">
+      <ToastContainer position="top-right" autoClose={3000} />
 
-      <h1>Mes Candidatures</h1>
+      <h1 className="text-2xl font-bold text-gray-800 mb-6">📄 Mes Candidatures</h1>
 
-      <div className="filters-container">
-        <label>
-          Statut :
-          <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
-            <option value="">Tous</option>
-            <option value="ACCEPTEE">Acceptée</option>
-            <option value="REFUSEE">Refusée</option>
-            <option value="EN_ATTENTE">En attente</option>
-          </select>
-        </label>
-
-        <label>
-          <input
-            type="checkbox"
-            checked={startAfterNow}
-            onChange={() => setStartAfterNow(!startAfterNow)}
-          />
-          Début après maintenant
-        </label>
-
-        <label>
-          <input
-            type="checkbox"
-            checked={endBeforeNow}
-            onChange={() => setEndBeforeNow(!endBeforeNow)}
-          />
-          Fin avant maintenant
-        </label>
-      </div>
-
-      {filteredCandidatures.length > 0 ? (
-        <div className="candidatures-list">
-          {filteredCandidatures.map((candidature) => (
-            <div key={candidature.id} className="candidature-card">
-              <div className="candidature-header">
-                <div>
-                  <h3>{candidature.annonce_titre || `Candidature #${candidature.id}`}</h3>
-                  <p className="candidature-date">{formatDate(candidature.date_candidature)}</p>
-                </div>
-                <span className={getStatusBadgeClass(candidature.statut)}>
-                  {candidature.statut.replace("_", " ")}
+      {candidatures.length > 0 ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {candidatures.map((c) => (
+            <div
+              key={c.id}
+              className="bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md transition flex flex-col"
+            >
+              {/* Header box */}
+              <div className="p-4 border-b border-gray-100 flex items-center justify-between">
+                <h3 className="text-lg font-semibold text-gray-800">
+                  {c.annonce_titre || `Candidature #${c.id}`}
+                </h3>
+                <span
+                  className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusClasses(
+                    c.statut
+                  )}`}
+                >
+                  {c.statut.replace("_", " ")}
                 </span>
               </div>
 
-              <div className="candidature-details">
-                <p><strong>Association:</strong> {candidature.annonce_association || "Non spécifié"}</p>
-                <p><strong>Message:</strong> {candidature.message}</p>
-                {candidature.note_engagement && (
-                  <p><strong>Note d'engagement:</strong> {candidature.note_engagement}</p>
+              {/* Body box */}
+              <div className="flex-1 p-4 space-y-2 text-sm text-gray-700">
+                <p>
+                  <span className="font-medium">Association :</span>{" "}
+                  {c.annonce_association || "Non spécifié"}
+                </p>
+                <p>
+                  <span className="font-medium">Message :</span> {c.message}
+                </p>
+                {c.note_engagement && (
+                  <p>
+                    <span className="font-medium">Note d'engagement :</span>{" "}
+                    {c.note_engagement}
+                  </p>
                 )}
+              </div>
+
+              {/* Footer box */}
+              <div className="p-4 border-t border-gray-100 text-xs text-gray-500">
+                {formatDate(c.date_candidature)}
               </div>
             </div>
           ))}
         </div>
       ) : (
-        <div className="no-candidatures">
-          <p>Aucune candidature trouvée</p>
+        <div className="text-center py-12 bg-white border rounded-xl shadow-sm">
+          <p className="text-gray-500">Aucune candidature trouvée</p>
         </div>
       )}
     </div>

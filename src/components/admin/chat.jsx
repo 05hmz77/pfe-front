@@ -1,11 +1,22 @@
-// Chat.jsx
+// Chat.jsx — Tailwind only
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import axios from "axios";
-import "./style/chat.css";
 import { useLocation } from "react-router-dom";
 import { Plus, X, CheckCheck, Bell } from "lucide-react";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { motion, AnimatePresence } from "framer-motion";
+
+
+/* Helpers pour comparer IDs/usernames proprement */
+const toId = (v) => {
+  if (v == null) return null;
+  const n = Number(v);
+  return Number.isNaN(n) ? String(v) : n;
+};
+const toName = (s) => (s || "").toString().trim().toLowerCase();
+const sameId = (a, b) => String(toId(a)) === String(toId(b));
+const sameName = (a, b) => toName(a) === toName(b);
 
 export default function Chat() {
   const [x, setX] = useState(0);
@@ -41,7 +52,6 @@ export default function Chat() {
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
-
   const wsReady = () =>
     socketRef.current?.readyState === WebSocket.OPEN && authDoneRef.current;
 
@@ -49,18 +59,17 @@ export default function Chat() {
     if (wsReady()) {
       try {
         socketRef.current.send(JSON.stringify(payload));
-      } catch (e) {
-        if (payload.type === "message_read")
-          pendingReadsRef.current.push(payload);
+      } catch {
+        if (payload.type === "message_read") pendingReadsRef.current.push(payload);
         else pendingOutboxRef.current.push(payload);
       }
     } else {
-      if (payload.type === "message_read")
-        pendingReadsRef.current.push(payload);
+      if (payload.type === "message_read") pendingReadsRef.current.push(payload);
       else pendingOutboxRef.current.push(payload);
     }
   }, []);
 
+  // Pré-sélection depuis navigation
   useEffect(() => {
     if (locationUser != null) {
       setReceiver(locationUser.id);
@@ -69,28 +78,22 @@ export default function Chat() {
     }
   }, [locationUser]);
 
+  // Permission notifs
   useEffect(() => {
     if ("Notification" in window && Notification.permission === "default") {
       Notification.requestPermission().catch(() => {});
     }
   }, []);
 
-  // Fetch users and conversations
+  // Récup data (users + convos)
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
+        const headers = { Authorization: `Bearer ${token}` };
 
-        const usersRes = await axios.get("http://127.0.0.1:8000/api/userss/", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-
-        const conversationsRes = await axios.get(
-          "http://127.0.0.1:8000/api/my/",
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
+        const usersRes = await axios.get("http://127.0.0.1:8000/api/userss/", { headers });
+        const conversationsRes = await axios.get("http://127.0.0.1:8000/api/my/", { headers });
 
         setUsers(usersRes.data.filter((u) => u.id !== currentUser.id));
 
@@ -99,11 +102,11 @@ export default function Chat() {
             try {
               const res = await axios.get(
                 `http://127.0.0.1:8000/api/last-message/${conv.id}/`,
-                { headers: { Authorization: `Bearer ${token}` } }
+                { headers }
               );
               const res2 = await axios.get(
                 `http://127.0.0.1:8000/api/last-message-not-lu/${conv.id}/`,
-                { headers: { Authorization: `Bearer ${token}` } }
+                { headers }
               );
               return {
                 ...conv,
@@ -111,20 +114,16 @@ export default function Chat() {
                 last_message_not_lu: res2.data.nb_msg?.toString() || "0",
               };
             } catch {
-              return {
-                ...conv,
-                last_message: "Erreur...",
-                last_message_not_lu: "0",
-              };
+              return { ...conv, last_message: "Erreur...", last_message_not_lu: "0" };
             }
           })
         );
 
         setConversations(convsWithLastMessage);
-
-        const totalUnread = convsWithLastMessage.reduce((total, conv) => {
-          return total + parseInt(conv.last_message_not_lu || "0");
-        }, 0);
+        const totalUnread = convsWithLastMessage.reduce(
+          (t, c) => t + parseInt(c.last_message_not_lu || "0"),
+          0
+        );
         setUnreadCount(totalUnread);
       } catch (err) {
         console.error(err);
@@ -135,7 +134,7 @@ export default function Chat() {
     fetchData();
   }, [currentUser.id, token]);
 
-  // Fetch messages for selected conversation
+  // Historique messages d'un receiver (⚠️ compat sender_username)
   useEffect(() => {
     const fetchMessages = async () => {
       if (!receiver) return;
@@ -143,15 +142,26 @@ export default function Chat() {
         setLoading(true);
         const res = await axios.get(
           `http://127.0.0.1:8000/api/messagess/${receiver}/`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
+          { headers: { Authorization: `Bearer ${token}` } }
         );
+
+        const meName = toName(currentUser?.username);
+        console.log(res.data)
+        // L’API renvoie: { id, sender_username, receiver_username, contenu, date_envoi, is_read }
         setListMsg(
           res.data.map((msg) => ({
-            ...msg,
-            is_own: msg.sender === currentUser.id,
-            is_read: msg.is_read ?? false,
+            id: msg.id,
+            contenu: msg.contenu,
+            date_envoi: msg.date_envoi,
+            is_read: !!msg.is_read,
+            // on garde aussi les usernames pour comparaison
+            sender_username: msg.sender_username,
+            receiver_username: msg.receiver_username,
+            // fallback au cas où (anciens champs)
+            sender: msg.sender,
+            receiver: msg.receiver,
+            // séparation fiable via username, sinon via id
+            is_own: msg.is_own,
           }))
         );
       } catch (err) {
@@ -161,43 +171,45 @@ export default function Chat() {
       }
     };
     fetchMessages();
-  }, [receiver, currentUser.id, token]);
+  }, [receiver, currentUser.id, token, currentUser?.username]);
 
   useEffect(scrollToBottom, [listMsg]);
 
-  // --- WebSocket Chat ---
+  // Connexion WS (chat)
   useEffect(() => {
     if (!receiver) return;
 
-    if (socketRef.current)
+    if (socketRef.current) {
       try {
         socketRef.current.close();
       } catch {}
+    }
     if (reconnectTimerRef.current) {
       clearTimeout(reconnectTimerRef.current);
       reconnectTimerRef.current = null;
     }
 
-    const wsProtocol =
-      window.location.protocol === "https:" ? "wss://" : "ws://";
+    const wsProtocol = window.location.protocol === "https:" ? "wss://" : "ws://";
     const socketUrl = `${wsProtocol}127.0.0.1:8000/ws/chat/${currentUser.id}/${receiver}/`;
 
     setConnectionStatus("Connexion en cours...");
     const ws = new WebSocket(socketUrl);
     socketRef.current = ws;
 
+    const flushQueues = () => {
+      if (!wsReady()) return;
+      while (pendingOutboxRef.current.length) {
+        ws.send(JSON.stringify(pendingOutboxRef.current.shift()));
+      }
+      while (pendingReadsRef.current.length) {
+        ws.send(JSON.stringify(pendingReadsRef.current.shift()));
+      }
+    };
+
     const handleOpen = () => {
       setIsWebSocketConnected(true);
       setConnectionStatus("Authentification...");
       ws.send(JSON.stringify({ type: "authentication", token }));
-    };
-
-    const flushQueues = () => {
-      if (!wsReady()) return;
-      while (pendingOutboxRef.current.length)
-        ws.send(JSON.stringify(pendingOutboxRef.current.shift()));
-      while (pendingReadsRef.current.length)
-        ws.send(JSON.stringify(pendingReadsRef.current.shift()));
     };
 
     const handleMessage = (e) => {
@@ -217,18 +229,30 @@ export default function Chat() {
       }
 
       if (data.type === "chat_message") {
+        setX((v) => v + 1);
+
+        // On supporte deux formats WS: avec usernames OU avec ids
+        const meName = toName(currentUser?.username);
+        const isOwn = data.sender_username
+          ? sameName(data.sender_username, meName)
+          : data.sender_id === currentUser.id;
+
         setListMsg((prev) => [
           ...prev,
           {
             id: data.message_id,
+            // on stocke tout ce qu’on a pour robustesse
             sender: data.sender_id,
             receiver: data.receiver_id,
+            sender_username: data.sender_username,
+            receiver_username: data.receiver_username,
             contenu: data.message,
             date_envoi: data.timestamp,
-            is_own: data.sender_id === currentUser.id,
+            is_own:data.sender_id==currentUser.id,
             is_read:
-              data.receiver_id === currentUser.id &&
-              receiver === data.sender_id,
+              data.receiver_username
+                ? sameName(data.receiver_username, meName) && receiver === data.sender_id
+                : data.receiver_id === currentUser.id && receiver === data.sender_id,
           },
         ]);
 
@@ -237,8 +261,7 @@ export default function Chat() {
             if (c.id === data.sender_id || c.id === data.receiver_id) {
               const unread = parseInt(c.last_message_not_lu || "0");
               const newUnread =
-                data.receiver_id === currentUser.id &&
-                receiver !== data.sender_id
+                data.receiver_id === currentUser.id && receiver !== data.sender_id
                   ? unread + 1
                   : 0;
               return {
@@ -259,17 +282,12 @@ export default function Chat() {
 
       if (data.type === "message_read") {
         setListMsg((prev) =>
-          prev.map((m) =>
-            m.id === data.message_id ? { ...m, is_read: true } : m
-          )
+          prev.map((m) => (m.id === data.message_id ? { ...m, is_read: true } : m))
         );
         setConversations((prev) =>
           prev.map((c) => {
             if (c.id === receiver) {
-              const newUnread = Math.max(
-                0,
-                parseInt(c.last_message_not_lu || "0") - 1
-              );
+              const newUnread = Math.max(0, parseInt(c.last_message_not_lu || "0") - 1);
               return { ...c, last_message_not_lu: newUnread.toString() };
             }
             return c;
@@ -311,23 +329,24 @@ export default function Chat() {
         ws.close();
       } catch {}
     };
-  }, [receiver, currentUser.id, token]);
+  }, [receiver, currentUser.id, token, sendWS, currentUser?.username]);
 
-  // --- WebSocket Notifications ---
+  // WS notifications
   useEffect(() => {
     if (!currentUser?.id) return;
 
-    if (notificationSocketRef.current)
+    if (notificationSocketRef.current) {
       try {
         notificationSocketRef.current.close();
       } catch {}
+      notificationSocketRef.current = null;
+    }
     if (notificationReconnectTimerRef.current) {
       clearTimeout(notificationReconnectTimerRef.current);
       notificationReconnectTimerRef.current = null;
     }
 
-    const wsProtocol =
-      window.location.protocol === "https:" ? "wss://" : "ws://";
+    const wsProtocol = window.location.protocol === "https:" ? "wss://" : "ws://";
     const notificationUrl = `${wsProtocol}127.0.0.1:8000/ws/notifications/${currentUser.id}/`;
 
     const notificationWs = new WebSocket(notificationUrl);
@@ -339,22 +358,18 @@ export default function Chat() {
         if (data.type === "notification") {
           const msg = data.msg;
           const senderId = msg.sender_id;
+
           if (receiver !== senderId) {
             const senderUser = users.find((u) => u.id === senderId);
-            const senderName = senderUser
-              ? getDisplayName(senderUser)
-              : "Quelqu'un";
-            toast.info(
-              `${senderName} vous a envoyé un message: "${msg.contenu}"`,
-              {
-                position: "top-right",
-                autoClose: 5000,
-                hideProgressBar: false,
-                closeOnClick: true,
-                pauseOnHover: true,
-                draggable: true,
-              }
-            );
+            const senderName = senderUser ? getDisplayName(senderUser) : "Quelqu'un";
+            toast.info(`${senderName} vous a envoyé un message: "${msg.contenu}"`, {
+              position: "top-right",
+              autoClose: 5000,
+              hideProgressBar: false,
+              closeOnClick: true,
+              pauseOnHover: true,
+              draggable: true,
+            });
           }
 
           setConversations((prev) =>
@@ -379,7 +394,6 @@ export default function Chat() {
     };
 
     const handleNotificationClose = () => {
-      console.log("Notification WS closed");
       notificationReconnectTimerRef.current = setTimeout(() => {}, 5000);
     };
 
@@ -395,15 +409,24 @@ export default function Chat() {
     };
   }, [currentUser?.id, receiver, users]);
 
+  // 🔁 Corrigé: tenir compte des usernames pour marquer "lu"
   const markThreadAsRead = useCallback(() => {
     if (!receiver) return;
+    const peerName = toName(receiverInfo?.username);
     const unreadIncoming = listMsg.filter(
-      (m) => !m.is_own && !m.is_read && m.sender === receiver
+      (m) =>
+        !m.is_own &&
+        !m.is_read &&
+        // si on a les usernames, on compare au peer courant
+        (m.sender_username
+          ? sameName(m.sender_username, peerName)
+          // fallback ancien schéma id
+          : m.sender === receiver)
     );
     unreadIncoming.forEach((m) =>
       sendWS({ type: "message_read", message_id: m.id })
     );
-  }, [listMsg, receiver, sendWS]);
+  }, [listMsg, receiver, receiverInfo?.username, sendWS]);
 
   useEffect(() => {
     markThreadAsRead();
@@ -437,269 +460,247 @@ export default function Chat() {
   };
 
   const getDisplayName = (user) =>
-    user.citoyen_profile
+    user?.citoyen_profile
       ? `${user.citoyen_profile.prenom} ${user.citoyen_profile.nom}`
-      : user.association_profile
+      : user?.association_profile
       ? user.association_profile.nom
-      : user.username;
+      : user?.username || "";
+
+  
+
+  const connectionBadge = (status) => {
+    switch (status) {
+      case "Connecté":
+        return "bg-emerald-100 text-emerald-700 ring-emerald-200";
+      case "Authentification...":
+      case "Connexion en cours...":
+        return "bg-amber-100 text-amber-700 ring-amber-200";
+      default:
+        return "bg-rose-100 text-rose-700 ring-rose-200";
+    }
+  };
+
+  
+
   const formatMessageTime = (dateString) =>
-    new Date(dateString).toLocaleTimeString([], {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
+    new Date(dateString).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 
   return (
-    <div className="pulse-chat-container">
+    <div className="h-[100svh] md:h-screen w-full bg-gradient-to-br from-slate-100 via-white to-slate-50 text-slate-900 flex overflow-hidden">
       <ToastContainer />
 
       {/* SIDEBAR */}
-      <div className="pulse-sidebar">
-        <div className="pulse-sidebar-header">
-          <div className="pulse-header-title">
-            <h2>Messages </h2>
+      <motion.aside
+        initial={{ x: -80, opacity: 0 }}
+        animate={{ x: 0, opacity: 1 }}
+        transition={{ type: "spring", stiffness: 100, damping: 15 }}
+        className="w-80 lg:w-96 shrink-0 border-r bg-white/90 backdrop-blur-sm flex flex-col shadow-lg"
+      >
+        {/* Header sidebar */}
+        <div className="px-4 py-3 border-b sticky top-0 bg-white/80 backdrop-blur z-10 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <h2 className="text-lg font-semibold tracking-tight">Messages {x}</h2>
             {unreadCount > 0 && (
-              <span className="pulse-unread-badge">
-                <Bell size={20} />
+              <motion.span
+                initial={{ scale: 0.7, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-700 ring-1 ring-inset ring-blue-200"
+              >
+                <Bell size={14} />
                 {unreadCount}
-              </span>
+              </motion.span>
             )}
           </div>
           <button
-            className="pulse-add-user-btn"
-            onClick={() => setShowAllUsers(!showAllUsers)}
+            className="inline-flex items-center justify-center rounded-lg border px-2.5 py-1.5 hover:bg-gray-100 active:scale-95 transition"
+            onClick={() => setShowAllUsers((v) => !v)}
           >
-            {showAllUsers ? <X size={20} /> : <Plus size={20} />}
+            {showAllUsers ? <X size={18} /> : <Plus size={18} />}
           </button>
         </div>
 
-        {!showAllUsers ? (
-          <div className="pulse-conversation-list">
-            {conversations.length > 0 ? (
-              conversations.map((conv) => (
-                <div
-                  key={conv.id}
-                  className={`pulse-conversation-item ${
-                    receiver === conv.id ? "pulse-active" : ""
-                  }`}
-                  onClick={() => handleReceiverSelect(conv)}
-                >
-                  <div className="pulse-avatar">
-                    {conv.citoyen_profile && (
-                      <img
-                        src={
-                          conv.citoyen_profile.album_photos
-                            ? `http://localhost:8000/media/${
-                                JSON.parse(conv.citoyen_profile.album_photos)[0]
-                              }`
-                            : "/profile.jpg"
-                        }
-                        onError={(e) => {
-                          e.currentTarget.src = "/profile.jpg"; // fallback image
-                        }}
-                        alt="image"
-                        className="image"
-                      />
-                    )}
-                    {conv.association_profile && (
-                      <img
-                        src={
-                          conv.association_profile.logo
-                            ? `http://localhost:8000/media/${
-                                conv.association_profile.logo
-                              }`
-                            : "/profile.jpg"
-                        }
-                        onError={(e) => {
-                          e.currentTarget.src = "/profile.jpg"; // fallback image
-                        }}
-                        alt="image"
-                        className="image"
-                      />
-                    )}
-                    {conv.type=="ADMIN" &&(<div>
-                            {getDisplayName(conv).charAt(0).toUpperCase()}
-                    </div>
-                      
-                    )}
-                  </div>
-                  <div className="pulse-conversation-info">
-                    <div className="pulse-conversation-name">
-                      
-                      {getDisplayName(conv)}
-                    </div>
-                    <div>
-                      <div className="pulse-conversation-preview">
-                        {conv.last_message || "Aucun message..."}{" "}
-                        {conv.last_message_not_lu > 0 && (
-                          <p className="pulse-conversation-not-lu">
-                            {conv.last_message_not_lu}
-                          </p>
-                        )}
+        {/* Conversations / Users */}
+        <div className="flex-1 overflow-y-auto p-2">
+          <AnimatePresence>
+            {!showAllUsers ? (
+              conversations.length > 0 ? (
+                conversations.map((conv) => {
+                  const isActive = receiver === conv.id;
+                  const unread = Number(conv.last_message_not_lu || "0");
+                  return (
+                    <motion.button
+                      key={conv.id}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0 }}
+                      onClick={() => handleReceiverSelect(conv)}
+                      className={[
+                        "w-full flex items-center gap-3 rounded-xl px-3 py-2.5 mb-1 text-left transition-all",
+                        "hover:bg-gray-50 active:scale-[0.98]",
+                        isActive
+                          ? "bg-blue-50 ring-1 ring-inset ring-blue-200 shadow-sm"
+                          : "bg-white",
+                      ].join(" ")}
+                    >
+                      <div className="h-10 w-10 rounded-full bg-gradient-to-br from-slate-100 to-slate-200 grid place-items-center font-semibold text-slate-700 shadow-inner">
+                        {getDisplayName(conv).charAt(0).toUpperCase()}
                       </div>
-                    </div>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <p className="pulse-no-conversations">Aucune conversation</p>
-            )}
-          </div>
-        ) : (
-          <div className="pulse-list-container">
-            <div className="pulse-search-container">
-              <input
-                type="text"
-                placeholder="Rechercher des utilisateurs..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
-            <div className="pulse-user-list">
-              {users.map((user) => (
-                <div
-                  key={user.id}
-                  className="pulse-user-item"
-                  onClick={() => handleReceiverSelect(user)}
-                >
-                  <div className="pulse-avatar">
-                    {user.citoyen_profile && (
-                      <img
-                        src={
-                          user.citoyen_profile.album_photos
-                            ? `http://localhost:8000/media/${
-                                JSON.parse(user.citoyen_profile.album_photos)[0]
-                              }`
-                            : "/profile.jpg"
-                        }
-                        onError={(e) => {
-                          e.currentTarget.src = "/profile.jpg"; // fallback image
-                        }}
-                        alt="image"
-                        className="image"
-                      />
-                    )}
-                    {user.association_profile && (
-                      <img
-                        src={
-                          user.association_profile.logo
-                            ? `http://localhost:8000/media/${
-                                user.association_profile.logo
-                              }`
-                            : "/profile.jpg"
-                        }
-                        onError={(e) => {
-                          e.currentTarget.src = "/profile.jpg"; // fallback image
-                        }}
-                        alt="image"
-                        className="image"
-                      />
-                    )}
-                    {user.type=="ADMIN" &&(<div>
-                            {getDisplayName(user).charAt(0).toUpperCase()}
-                    </div>
-                      
-                    )}
-                  </div>
-                  <div className="pulse-user-info">
-                    <div className="pulse-username">{getDisplayName(user)}</div>
-                    <div className="pulse-user-handle">@{user.username}</div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* MAIN CHAT */}
-      <div className="pulse-chat-main">
-        {receiver ? (
-          <>
-            <div className="pulse-chat-header">
-              <div className="pulse-chat-left">
-                <div className="pulse-avatar">
-                  {getDisplayName(receiverInfo).charAt(0).toUpperCase()}
-                </div>
-                <div className="pulse-chat-info">
-                  <div className="pulse-chat-name">
-                    {getDisplayName(receiverInfo)}
-                  </div>
-                  <div className="pulse-chat-username">
-                    @{receiverInfo.username}
-                  </div>
-                </div>
-              </div>
-              <div className="pulse-chat-actions">
-                <button
-                  className="pulse-menu-btn"
-                  onClick={() => setShowMenu((prev) => !prev)}
-                >
-                  ⋮
-                </button>
-                {showMenu && (
-                  <div className="pulse-menu-dropdown">
-                    <div className="pulse-menu-item">👤 Voir profil</div>
-                    <div className="pulse-menu-item">🚫 Bloquer</div>
-                    <div className="pulse-menu-item">
-                      🗑️ Supprimer conversation
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <div className="pulse-messages-container">
-              {listMsg.length > 0 ? (
-                listMsg.map((msg) => (
-                  <div
-                    key={msg.id}
-                    className={`pulse-message-bubble ${
-                      msg.is_own ? "sent" : "received"
-                    }`}
-                  >
-                    <p>{msg.contenu}</p>
-                    <span className="pulse-message-time">
-                      {formatMessageTime(msg.date_envoi)}
-                      {msg.is_own && (
-                        <span className={`pulse-read-status`}>
-                          {msg.is_read ? <CheckCheck size={14} /> : "✓"}
+                      <div className="min-w-0 flex-1">
+                        <p className="font-medium truncate">{getDisplayName(conv)}</p>
+                        <p className="text-xs text-gray-500 truncate">
+                          {conv.last_message || "Aucun message…"}
+                        </p>
+                      </div>
+                      {unread > 0 && (
+                        <span className="ml-auto rounded-full bg-blue-600 text-white text-xs h-5 min-w-[20px] px-1 grid place-items-center shadow">
+                          {unread}
                         </span>
                       )}
-                    </span>
-                  </div>
-                ))
+                    </motion.button>
+                  );
+                })
               ) : (
-                <p className="pulse-no-messages">
-                  Aucun message pour le moment
-                </p>
-              )}
-              <div ref={messagesEndRef} />
+                <p className="p-4 text-sm text-gray-500">Aucune conversation</p>
+              )
+            ) : (
+              <div>
+                <input
+                  type="text"
+                  placeholder="Rechercher..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full rounded-xl border px-3 py-2 text-sm mb-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+                {users
+                  .filter((u) =>
+                    getDisplayName(u).toLowerCase().includes(searchTerm.toLowerCase())
+                  )
+                  .map((user) => (
+                    <motion.button
+                      key={user.id}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0 }}
+                      onClick={() => handleReceiverSelect(user)}
+                      className="w-full flex items-center gap-3 rounded-xl px-3 py-2.5 mb-1 hover:bg-gray-50 transition"
+                    >
+                      <div className="h-10 w-10 rounded-full bg-slate-200 grid place-items-center font-semibold text-slate-700">
+                        {getDisplayName(user).charAt(0).toUpperCase()}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="font-medium truncate">{getDisplayName(user)}</p>
+                        <p className="text-xs text-gray-600 truncate">@{user.username}</p>
+                      </div>
+                    </motion.button>
+                  ))}
+              </div>
+            )}
+          </AnimatePresence>
+        </div>
+      </motion.aside>
+
+      {/* MAIN CHAT */}
+      <main className="flex-1 flex flex-col bg-white/70 backdrop-blur-sm">
+        {receiver ? (
+          <>
+            {/* Header chat */}
+            <div className="px-4 py-3 border-b bg-white/80 backdrop-blur sticky top-0 z-10 flex justify-between items-center">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="h-10 w-10 rounded-full bg-gradient-to-br from-blue-50 to-blue-100 text-blue-700 grid place-items-center font-semibold ring-1 ring-blue-200">
+                  {getDisplayName(receiverInfo).charAt(0).toUpperCase()}
+                </div>
+                <div className="min-w-0">
+                  <p className="font-semibold truncate">{getDisplayName(receiverInfo)}</p>
+                  <p className="text-xs text-gray-500 truncate">@{receiverInfo?.username}</p>
+                </div>
+              </div>
             </div>
 
-            <form onSubmit={handleSendMessage} className="pulse-message-form">
-              <input
-                type="text"
-                value={messageInput}
-                onChange={(e) => setMessageInput(e.target.value)}
-                placeholder="Saisissez votre message..."
-                disabled={!isWebSocketConnected}
-              />
-              <button
-                type="submit"
-                disabled={!isWebSocketConnected || !messageInput.trim()}
-                className="pulse-send-button"
-              >
-                ➤
-              </button>
+            {/* Messages */}
+            <div className="flex-1 overflow-y-auto px-4 py-4 bg-gradient-to-b from-slate-50/70 to-white space-y-3">
+              <AnimatePresence>
+                {listMsg.map((msg) => {
+                  const isOwn = msg.is_own;
+                  return (
+                    <motion.div
+                      key={msg.id}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0 }}
+                      className={`flex ${isOwn ? "justify-end" : "justify-start"}`}
+                    >
+                      <div
+                        className={[
+                          "max-w-[70%] rounded-2xl px-3 py-2 text-sm shadow-sm transition",
+                          isOwn
+                            ? "bg-blue-600 text-white rounded-br-sm"
+                            : "bg-white border border-slate-200 rounded-bl-sm",
+                        ].join(" ")}
+                      >
+                        <p>{msg.contenu}</p>
+                        <div
+                          className={`mt-1 flex items-center gap-1 text-[11px] ${
+                            isOwn ? "text-blue-100/90" : "text-gray-500"
+                          }`}
+                        >
+                          <span>{formatMessageTime(msg.date_envoi)}</span>
+                          {isOwn && (
+                            <span className="ml-1">
+                              {msg.is_read ? (
+                                <CheckCheck size={14} className="inline-block" />
+                              ) : (
+                                "✓"
+                              )}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </motion.div>
+                  );
+                })}
+              </AnimatePresence>
+            </div>
+
+            {/* Input */}
+            <form onSubmit={handleSendMessage} className="border-t bg-white px-3 py-2">
+              <div className="flex items-end gap-2">
+                <input
+                  type="text"
+                  value={messageInput}
+                  onChange={(e) => setMessageInput(e.target.value)}
+                  placeholder="Saisissez votre message…"
+                  disabled={!isWebSocketConnected}
+                  className="flex-1 rounded-2xl border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
+                />
+                <motion.button
+                  type="submit"
+                  whileTap={{ scale: 0.9 }}
+                  disabled={!isWebSocketConnected || !messageInput.trim()}
+                  className="rounded-2xl bg-blue-600 text-white px-4 py-2 text-sm font-medium hover:bg-blue-700 disabled:opacity-60"
+                >
+                  Envoyer
+                </motion.button>
+              </div>
             </form>
           </>
         ) : (
-          <div className="pulse-chat-placeholder">
-            <h3>Pulse Messenger</h3>
-            <p>Sélectionnez une conversation ou démarrez-en une nouvelle</p>
+          <div className="flex-1 grid place-items-center">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="text-center"
+            >
+              <div className="mx-auto h-12 w-12 rounded-2xl grid place-items-center bg-gray-100 border text-2xl">
+                💬
+              </div>
+              <h3 className="mt-3 text-lg font-semibold">Pulse Messenger</h3>
+              <p className="text-sm text-gray-600">
+                Sélectionnez une conversation ou démarrez-en une nouvelle
+              </p>
+            </motion.div>
           </div>
         )}
-      </div>
+      </main>
     </div>
   );
 }

@@ -1,331 +1,262 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import axios from "axios";
 import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
+  ResponsiveContainer,
   PieChart,
   Pie,
   Cell,
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  Tooltip,
+  BarChart,
+  Bar,
 } from "recharts";
-import { Toaster } from 'react-hot-toast'; 
-import { toast } from "react-hot-toast";
-import "./style/Dashboard.css";
-import RecommendationCard from "./RecommendationCard ";
+import { Clock, Heart, MessageCircle } from "lucide-react";
+import { motion } from "framer-motion";
 
-const Dashboard = () => {
-  const [stats, setStats] = useState(null);
-  const [recommendations, setRecommendations] = useState([]);
-  const [loading, setLoading] = useState({
-    stats: true,
-    recommendations: true,
-  });
-  const [error, setError] = useState({
-    stats: null,
-    recommendations: null,
-  });
-  const [selectedAnnonce, setSelectedAnnonce] = useState(null);
-  const [showModal, setShowModal] = useState(false);
-  const [message, setMessage] = useState("");
-
-  const currentUser = JSON.parse(localStorage.getItem("user"));
-  const token = localStorage.getItem("accessToken");
+export default function CitoyenDashboard() {
+  const [data, setData] = useState(null);
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        // Fetch stats
-        const statsResponse = await axios.get(
-          "http://localhost:8000/api/citoyen/dashboard/stats/",
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-        setStats(statsResponse.data);
-        setLoading((prev) => ({ ...prev, stats: false }));
+    const token = localStorage.getItem("accessToken");
+    const headers = { Authorization: `Bearer ${token}` };
+    axios
+      .get("http://localhost:8000/api/citoyen/dashboard/", { headers })
+      .then((res) => setData(res.data))
+      .catch((err) => console.error(err));
+  }, []);
 
-        // Fetch recommendations
-        const recResponse = await axios.get(
-          `http://localhost:8000/api/citoyen/${currentUser.id}/recommendations/`,
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-        setRecommendations(
-          Array.isArray(recResponse.data.recommendations)
-            ? recResponse.data.recommendations
-            : []
-        );
-        setLoading((prev) => ({ ...prev, recommendations: false }));
-      } catch (err) {
-        setError({
-          stats: err.response?.data?.detail || err.message,
-          recommendations: err.response?.data?.detail || err.message,
-        });
-        setLoading({ stats: false, recommendations: false });
-        toast.error("Erreur lors du chargement des données");
-      }
-    };
-
-    fetchData();
-  }, [currentUser.id, token]);
-
-  const handlePostulerClick = (annonce) => {
-    setSelectedAnnonce(annonce);
-    setShowModal(true);
-  };
-
-  const handleSubmitCandidature = async () => {
-    try {
-      const formData = {
-        annonce: selectedAnnonce.id,
-        statut: "EN_ATTENTE",
-        message: message || "Je souhaite participer à cette annonce",
-        date_candidature: new Date().toISOString(),
-        citoyen: currentUser.id,
-      };
-
-      const res=await axios.post("http://127.0.0.1:8000/api/candidatures/", formData, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      toast.success("Votre candidature a bien été envoyée !");
-      ;
-      if (res.status === 201) {
-      toast.success('Candidature envoyée avec succès!', {
-        icon: '👏',
-        style: {
-          borderRadius: '10px',
-          background: '#333',
-          color: '#fff',
-        },
-      });
-      setShowModal(false);
-      setMessage("");
-      setRecommendations((prev) =>
-        prev.filter((a) => a.id !== selectedAnnonce.id)
-      )
-    }
-    } catch (err) {
-      toast.error("Erreur lors de l'envoi de la candidature");
-      console.error(err);
-    }
-  };
-
-  if (loading.stats || loading.recommendations) {
+  if (!data)
     return (
-      <div className="loader-overlay">
-        <div className="spinner"></div>
-      </div>
+      <p className="text-center text-gray-500 font-medium mt-10 animate-pulse">
+        Chargement du tableau de bord...
+      </p>
     );
-  }
 
-  if (error.stats) {
-    return <div className="error-message">Erreur: {error.stats}</div>;
-  }
-
-  if (!stats) {
-    return <div className="no-data">Aucune donnée disponible</div>;
-  }
-
-  // Prepare chart data
-  const typeData = stats.candidatures_by_type.map((item) => ({
-    name: item.type,
-    value: item.count,
-  }));
-
-  const categoryData = stats.candidatures_by_category.map((item) => ({
-    name: item.nom,
-    value: item.count,
-  }));
-
-  const COLORS = ["#4361ee", "#3f37c9", "#4895ef", "#4cc9f0", "#7209b7"];
+  const COLORS = ["#10B981", "#EF4444", "#F59E0B", "#3B82F6"];
 
   return (
-    <div className="dashboard-container">
-      <Toaster 
-      position="top-center"
-      toastOptions={{
-        duration: 4000,
-        style: {
-          background: '#363636',
-          color: '#fff',
-        },
-        success: {
-          duration: 3000,
-          theme: {
-            primary: 'green',
-            secondary: 'black',
-          },
-        },
-        error: {
-          duration: 5000,
-        },
-      }}
-    />
-      <h1 className="dashboard-title">Tableau de bord Citoyen</h1>
-
-      <div className="stats-grid">
-        <div className="stat-card">
-          <h3>Total Candidatures</h3>
-          <p className="stat-value">{stats.total_candidatures}</p>
-        </div>
-        <div className="stat-card">
-          <h3>Candidatures Acceptées</h3>
-          <p className="stat-value">{stats.accepted_candidatures}</p>
-        </div>
-        <div className="stat-card">
-          <h3>Candidatures en Attente</h3>
-          <p className="stat-value">{stats.pending_candidatures}</p>
-        </div>
+    <div className="p-8 space-y-10 bg-gradient-to-br from-gray-100 via-white to-gray-100 min-h-screen">
+      {/* === Header === */}
+      <div className="text-center md:text-left">
+        <h1 className="text-4xl font-extrabold tracking-tight text-gray-800">
+          Dashboard Citoyen
+        </h1>
+        <p className="text-gray-500 mt-2 text-lg">
+          Vue d’ensemble de votre activité et statistiques personnelles
+        </p>
       </div>
 
-      <div className="charts-section">
-        <div className="chart-card">
-          <h3>Candidatures par Type</h3>
-          <div className="chart-wrapper">
-            <PieChart width={350} height={250}>
+      {/* === Statistiques rapides === */}
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
+        {[
+          { label: "Candidatures", value: data.analytics.total_candidatures, color: "text-blue-600" },
+          { label: "Acceptées", value: data.analytics.accepted, color: "text-green-600" },
+          { label: "Refusées", value: data.analytics.refused, color: "text-red-600" },
+          { label: "Succès", value: `${data.analytics.success_rate}%`, color: "text-indigo-600" },
+          { label: "Engagement", value: data.analytics.avg_engagement, color: "text-purple-600" },
+        ].map((stat, idx) => (
+          <div
+            key={idx}
+            className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-shadow duration-300 p-6 text-center"
+          >
+            <p className="text-sm uppercase font-medium tracking-wide text-gray-400">
+              {stat.label}
+            </p>
+            <p className={`text-3xl font-bold mt-2 ${stat.color}`}>
+              {stat.value}
+            </p>
+          </div>
+        ))}
+      </div>
+
+      {/* === Graphiques === */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        {/* Répartition candidatures */}
+        <div className="bg-white rounded-2xl shadow-lg p-6">
+          <h2 className="text-lg font-semibold mb-4 text-gray-700">
+            Répartition des Candidatures
+          </h2>
+          <ResponsiveContainer width="100%" height={250}>
+            <PieChart>
               <Pie
-                data={typeData}
+                data={[
+                  { name: "Acceptées", value: data.analytics.accepted },
+                  { name: "Refusées", value: data.analytics.refused },
+                  { name: "En attente", value: data.analytics.pending },
+                ]}
                 cx="50%"
                 cy="50%"
-                labelLine={false}
-                outerRadius={80}
+                outerRadius={90}
                 dataKey="value"
-                label={({ name, percent }) =>
-                  `${name}: ${(percent * 100).toFixed(0)}%`
-                }
+                label
               >
-                {typeData.map((entry, index) => (
-                  <Cell
-                    key={`cell-${index}`}
-                    fill={COLORS[index % COLORS.length]}
-                  />
+                {COLORS.map((c, i) => (
+                  <Cell key={i} fill={c} />
                 ))}
               </Pie>
-              <Tooltip />
             </PieChart>
-          </div>
+          </ResponsiveContainer>
         </div>
 
-        <div className="chart-card">
-          <h3>Candidatures par Catégorie</h3>
-          <div className="chart-wrapper">
-            <BarChart
-              width={350}
-              height={250}
-              data={categoryData}
-              margin={{ top: 5, right: 20, left: 0, bottom: 5 }}
-            >
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="name" />
+        {/* Candidatures par mois */}
+        <div className="bg-white rounded-2xl shadow-lg p-6">
+          <h2 className="text-lg font-semibold mb-4 text-gray-700">
+            Candidatures par Mois
+          </h2>
+          <ResponsiveContainer width="100%" height={250}>
+            <LineChart data={data.analytics.candidatures_by_month}>
+              <XAxis dataKey="month" />
               <YAxis />
               <Tooltip />
-              <Bar dataKey="value">
-                {categoryData.map((entry, index) => (
-                  <Cell
-                    key={`cell-${index}`}
-                    fill={index % 2 === 0 ? "#89CFF0" : "#D3D3D3"}
-                  />
-                ))}
-              </Bar>
+              <Line
+                type="monotone"
+                dataKey="count"
+                stroke="#3B82F6"
+                strokeWidth={3}
+                dot={{ r: 4 }}
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+
+        {/* Candidatures par type */}
+        <div className="bg-white rounded-2xl shadow-lg p-6">
+          <h2 className="text-lg font-semibold mb-4 text-gray-700">
+            Candidatures par Type d’Annonce
+          </h2>
+          <ResponsiveContainer width="100%" height={250}>
+            <BarChart data={data.analytics.candidatures_by_type}>
+              <XAxis dataKey="annonce__type" />
+              <YAxis />
+              <Tooltip />
+              <Bar dataKey="count" fill="#10B981" radius={[10, 10, 0, 0]} />
             </BarChart>
-          </div>
+          </ResponsiveContainer>
+        </div>
+
+        {/* Réactions */}
+        <div className="bg-white rounded-2xl shadow-lg p-6">
+          <h2 className="text-lg font-semibold mb-4 text-gray-700">
+            Réactions données
+          </h2>
+          <ResponsiveContainer width="100%" height={250}>
+            <PieChart>
+              <Pie
+                data={data.analytics.reactions_by_type}
+                cx="50%"
+                cy="50%"
+                outerRadius={90}
+                dataKey="count"
+                nameKey="type"
+                label
+              >
+                {COLORS.map((c, i) => (
+                  <Cell key={i} fill={c} />
+                ))}
+              </Pie>
+            </PieChart>
+          </ResponsiveContainer>
         </div>
       </div>
 
-      <div className="section">
-        <h2 className="section-title">Dernières Candidatures</h2>
-        <div className="candidatures-grid">
-          {stats.recent_candidatures.map((cand) => (
-            <div key={cand.id} className="card">
-              <div className="card-header">
-                <h4>{cand.annonce.titre}</h4>
-                <span className={`status-badge ${cand.statut.toLowerCase()}`}>
-                  {cand.statut}
-                </span>
+            {/* === Activité récente (nouveau style) === */}
+      <div className="bg-white rounded-2xl shadow-xl p-6">
+        <h2 className="text-xl font-bold mb-6 text-gray-800 flex items-center">
+          <Clock className="mr-2 text-indigo-500" /> Activité Récente
+        </h2>
+
+        <div className="space-y-4">
+          {/* Candidatures */}
+          {data.recent_activity.candidatures.map((c, idx) => (
+            <motion.div
+              key={`cand-${idx}`}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: idx * 0.1 }}
+              className="flex items-start gap-4 bg-indigo-50 border border-indigo-100 rounded-xl p-4 hover:shadow-md transition"
+            >
+              <div className="p-2 bg-indigo-500 text-white rounded-lg">
+                <Clock className="w-5 h-5" />
               </div>
-              <p className="card-date">
-                {new Date(cand.date_candidature).toLocaleDateString()}
-              </p>
-              <p className="card-content">
-                {cand.message.substring(0, 100)}...
-              </p>
-            </div>
+              <div>
+                <p className="text-sm text-gray-600">
+                  Candidature à <strong className="text-gray-900">{c.annonce__titre}</strong>
+                </p>
+                <p className="text-xs font-medium text-indigo-600 mt-1">
+                  Statut : {c.statut}
+                </p>
+                <p className="text-xs text-gray-400 mt-1">
+                  {new Date(c.date_candidature).toLocaleDateString("fr-FR", {
+                    day: "2-digit",
+                    month: "short",
+                    year: "numeric",
+                  })}
+                </p>
+              </div>
+            </motion.div>
+          ))}
+
+          {/* Commentaires */}
+          {data.recent_activity.commentaires.map((cm, idx) => (
+            <motion.div
+              key={`com-${idx}`}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: (idx + 5) * 0.1 }}
+              className="flex items-start gap-4 bg-green-50 border border-green-100 rounded-xl p-4 hover:shadow-md transition"
+            >
+              <div className="p-2 bg-green-500 text-white rounded-lg">
+                <MessageCircle className="w-5 h-5" />
+              </div>
+              <div>
+                <p className="text-sm text-gray-600">
+                  Commentaire sur <strong className="text-gray-900">{cm.annonce__titre}</strong>
+                </p>
+                <p className="text-xs italic text-gray-500 mt-1">"{cm.contenu}"</p>
+                <p className="text-xs text-gray-400 mt-1">
+                  {new Date(cm.date_creation).toLocaleDateString("fr-FR", {
+                    day: "2-digit",
+                    month: "short",
+                    year: "numeric",
+                  })}
+                </p>
+              </div>
+            </motion.div>
+          ))}
+
+          {/* Réactions */}
+          {data.recent_activity.reactions.map((r, idx) => (
+            <motion.div
+              key={`react-${idx}`}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: (idx + 10) * 0.1 }}
+              className="flex items-start gap-4 bg-red-50 border border-red-100 rounded-xl p-4 hover:shadow-md transition"
+            >
+              <div className="p-2 bg-red-500 text-white rounded-lg">
+                <Heart className="w-5 h-5" />
+              </div>
+              <div>
+                <p className="text-sm text-gray-600">
+                  Réaction <strong className="capitalize text-gray-900">{r.type}</strong> sur{" "}
+                  <strong className="text-gray-900">{r.annonce__titre}</strong>
+                </p>
+                <p className="text-xs text-gray-400 mt-1">
+                  {new Date(r.date_creation).toLocaleDateString("fr-FR", {
+                    day: "2-digit",
+                    month: "short",
+                    year: "numeric",
+                  })}
+                </p>
+              </div>
+            </motion.div>
           ))}
         </div>
       </div>
 
-      <div className="section">
-        <h2 className="section-title">Annonces suggérées pour vous</h2>
-        {error.recommendations && (
-          <div className="error-message">{error.recommendations}</div>
-        )}
-        {recommendations.length === 0 ? (
-          <div className="no-recommendations">
-            <p>Aucune recommandation disponible pour le moment.</p>
-          </div>
-        ) : (
-          <div className="recommendations-grid">
-            {recommendations.map((annonce) => (
-              <RecommendationCard
-                key={annonce.id}
-                annonce={annonce}
-                onPostulerClick={handlePostulerClick}
-              />
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* Modal de candidature */}
-      {showModal && (
-        <div className="modal-overlay">
-          <div className="modal">
-            <div className="modal-header">
-              <h3>Postuler à {selectedAnnonce?.titre}</h3>
-              <button
-                className="close-btn"
-                onClick={() => {
-                  setShowModal(false);
-                  setMessage("");
-                }}
-              >
-                &times;
-              </button>
-            </div>
-
-            <div className="modal-body">
-              <div className="form-group">
-                <label>Votre message</label>
-                <textarea
-                  value={message}
-                  onChange={(e) => setMessage(e.target.value)}
-                  placeholder="Expliquez pourquoi vous souhaitez participer..."
-                  rows={4}
-                />
-              </div>
-            </div>
-
-            <div className="modal-footer">
-              <button
-                className="btn secondary"
-                onClick={() => {
-                  setShowModal(false);
-                  setMessage("");
-                }}
-              >
-                Annuler
-              </button>
-              <button className="btn primary" onClick={handleSubmitCandidature}>
-                Envoyer la candidature
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
-};
-
-export default Dashboard;
+}

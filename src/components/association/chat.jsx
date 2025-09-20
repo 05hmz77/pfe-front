@@ -5,6 +5,18 @@ import { useLocation } from "react-router-dom";
 import { Plus, X, CheckCheck, Bell } from "lucide-react";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { motion, AnimatePresence } from "framer-motion";
+
+
+/* Helpers pour comparer IDs/usernames proprement */
+const toId = (v) => {
+  if (v == null) return null;
+  const n = Number(v);
+  return Number.isNaN(n) ? String(v) : n;
+};
+const toName = (s) => (s || "").toString().trim().toLowerCase();
+const sameId = (a, b) => String(toId(a)) === String(toId(b));
+const sameName = (a, b) => toName(a) === toName(b);
 
 export default function Chat() {
   const [x, setX] = useState(0);
@@ -80,12 +92,8 @@ export default function Chat() {
         setLoading(true);
         const headers = { Authorization: `Bearer ${token}` };
 
-        const usersRes = await axios.get("http://127.0.0.1:8000/api/userss/", {
-          headers,
-        });
-        const conversationsRes = await axios.get("http://127.0.0.1:8000/api/my/", {
-          headers,
-        });
+        const usersRes = await axios.get("http://127.0.0.1:8000/api/userss/", { headers });
+        const conversationsRes = await axios.get("http://127.0.0.1:8000/api/my/", { headers });
 
         setUsers(usersRes.data.filter((u) => u.id !== currentUser.id));
 
@@ -126,7 +134,7 @@ export default function Chat() {
     fetchData();
   }, [currentUser.id, token]);
 
-  // Historique messages d'un receiver
+  // Historique messages d'un receiver (⚠️ compat sender_username)
   useEffect(() => {
     const fetchMessages = async () => {
       if (!receiver) return;
@@ -136,11 +144,24 @@ export default function Chat() {
           `http://127.0.0.1:8000/api/messagess/${receiver}/`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
+
+        const meName = toName(currentUser?.username);
+        console.log(res.data)
+        // L’API renvoie: { id, sender_username, receiver_username, contenu, date_envoi, is_read }
         setListMsg(
           res.data.map((msg) => ({
-            ...msg,
-            is_own: msg.sender === currentUser.id,
-            is_read: msg.is_read ?? false,
+            id: msg.id,
+            contenu: msg.contenu,
+            date_envoi: msg.date_envoi,
+            is_read: !!msg.is_read,
+            // on garde aussi les usernames pour comparaison
+            sender_username: msg.sender_username,
+            receiver_username: msg.receiver_username,
+            // fallback au cas où (anciens champs)
+            sender: msg.sender,
+            receiver: msg.receiver,
+            // séparation fiable via username, sinon via id
+            is_own: msg.is_own,
           }))
         );
       } catch (err) {
@@ -150,7 +171,7 @@ export default function Chat() {
       }
     };
     fetchMessages();
-  }, [receiver, currentUser.id, token]);
+  }, [receiver, currentUser.id, token, currentUser?.username]);
 
   useEffect(scrollToBottom, [listMsg]);
 
@@ -209,17 +230,29 @@ export default function Chat() {
 
       if (data.type === "chat_message") {
         setX((v) => v + 1);
+
+        // On supporte deux formats WS: avec usernames OU avec ids
+        const meName = toName(currentUser?.username);
+        const isOwn = data.sender_username
+          ? sameName(data.sender_username, meName)
+          : data.sender_id === currentUser.id;
+
         setListMsg((prev) => [
           ...prev,
           {
             id: data.message_id,
+            // on stocke tout ce qu’on a pour robustesse
             sender: data.sender_id,
             receiver: data.receiver_id,
+            sender_username: data.sender_username,
+            receiver_username: data.receiver_username,
             contenu: data.message,
             date_envoi: data.timestamp,
-            is_own: data.sender_id === currentUser.id,
+            is_own:data.sender_id==currentUser.id,
             is_read:
-              data.receiver_id === currentUser.id && receiver === data.sender_id,
+              data.receiver_username
+                ? sameName(data.receiver_username, meName) && receiver === data.sender_id
+                : data.receiver_id === currentUser.id && receiver === data.sender_id,
           },
         ]);
 
@@ -296,7 +329,7 @@ export default function Chat() {
         ws.close();
       } catch {}
     };
-  }, [receiver, currentUser.id, token, sendWS]);
+  }, [receiver, currentUser.id, token, sendWS, currentUser?.username]);
 
   // WS notifications
   useEffect(() => {
@@ -376,15 +409,24 @@ export default function Chat() {
     };
   }, [currentUser?.id, receiver, users]);
 
+  // 🔁 Corrigé: tenir compte des usernames pour marquer "lu"
   const markThreadAsRead = useCallback(() => {
     if (!receiver) return;
+    const peerName = toName(receiverInfo?.username);
     const unreadIncoming = listMsg.filter(
-      (m) => !m.is_own && !m.is_read && m.sender === receiver
+      (m) =>
+        !m.is_own &&
+        !m.is_read &&
+        // si on a les usernames, on compare au peer courant
+        (m.sender_username
+          ? sameName(m.sender_username, peerName)
+          // fallback ancien schéma id
+          : m.sender === receiver)
     );
     unreadIncoming.forEach((m) =>
       sendWS({ type: "message_read", message_id: m.id })
     );
-  }, [listMsg, receiver, sendWS]);
+  }, [listMsg, receiver, receiverInfo?.username, sendWS]);
 
   useEffect(() => {
     markThreadAsRead();
@@ -424,8 +466,7 @@ export default function Chat() {
       ? user.association_profile.nom
       : user?.username || "";
 
-  const formatMessageTime = (dateString) =>
-    new Date(dateString).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  
 
   const connectionBadge = (status) => {
     switch (status) {
@@ -439,264 +480,188 @@ export default function Chat() {
     }
   };
 
+  
+
+  const formatMessageTime = (dateString) =>
+    new Date(dateString).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+
   return (
-    <div className="h-[100svh] md:h-screen w-full bg-gradient-to-br from-slate-50 via-white to-slate-50 text-slate-900 flex overflow-hidden">
+    <div className="h-[100svh] md:h-screen w-full bg-gradient-to-br from-slate-100 via-white to-slate-50 text-slate-900 flex overflow-hidden">
       <ToastContainer />
 
       {/* SIDEBAR */}
-      <aside className="w-80 lg:w-96 shrink-0 border-r bg-white/80 backdrop-blur-sm flex flex-col">
+      <motion.aside
+        initial={{ x: -80, opacity: 0 }}
+        animate={{ x: 0, opacity: 1 }}
+        transition={{ type: "spring", stiffness: 100, damping: 15 }}
+        className="w-80 lg:w-96 shrink-0 border-r bg-white/90 backdrop-blur-sm flex flex-col shadow-lg"
+      >
         {/* Header sidebar */}
-        <div className="px-4 py-3 border-b sticky top-0 bg-white/70 backdrop-blur z-10 flex items-center justify-between">
+        <div className="px-4 py-3 border-b sticky top-0 bg-white/80 backdrop-blur z-10 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <h2 className="text-lg font-semibold tracking-tight">Messages {x}</h2>
             {unreadCount > 0 && (
-              <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-700 ring-1 ring-inset ring-blue-200">
+              <motion.span
+                initial={{ scale: 0.7, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-700 ring-1 ring-inset ring-blue-200"
+              >
                 <Bell size={14} />
                 {unreadCount}
-              </span>
+              </motion.span>
             )}
           </div>
           <button
-            className="inline-flex items-center justify-center rounded-lg border px-2.5 py-1.5 hover:bg-gray-50 active:scale-95 transition"
+            className="inline-flex items-center justify-center rounded-lg border px-2.5 py-1.5 hover:bg-gray-100 active:scale-95 transition"
             onClick={() => setShowAllUsers((v) => !v)}
-            title={showAllUsers ? "Fermer" : "Nouveau message"}
           >
             {showAllUsers ? <X size={18} /> : <Plus size={18} />}
           </button>
         </div>
 
-        {/* Conversations OR Users (scroll area) */}
-        {!showAllUsers ? (
-          <div className="flex-1 overflow-y-auto">
-            {loading && conversations.length === 0 ? (
-              <div className="p-4 text-sm text-gray-500">Chargement…</div>
-            ) : conversations.length > 0 ? (
-              <ul className="p-2 space-y-1">
-                {conversations.map((conv) => {
+        {/* Conversations / Users */}
+        <div className="flex-1 overflow-y-auto p-2">
+          <AnimatePresence>
+            {!showAllUsers ? (
+              conversations.length > 0 ? (
+                conversations.map((conv) => {
                   const isActive = receiver === conv.id;
                   const unread = Number(conv.last_message_not_lu || "0");
-                  const avatarImg =
-                    conv.citoyen_profile?.album_photos
-                      ? `http://localhost:8000/media/${JSON.parse(conv.citoyen_profile.album_photos)[0]}`
-                      : conv.association_profile?.logo
-                      ? `http://localhost:8000/media/${conv.association_profile.logo}`
-                      : null;
-
                   return (
-                    <li key={conv.id}>
-                      <button
-                        onClick={() => handleReceiverSelect(conv)}
-                        className={[
-                          "group w-full flex items-center gap-3 rounded-xl px-3 py-2.5 text-left transition",
-                          "hover:bg-gray-50 active:scale-[0.995]",
-                          isActive ? "bg-gray-100 ring-1 ring-inset ring-gray-200 shadow-sm" : "",
-                        ].join(" ")}
-                      >
-                        <div className="h-10 w-10 rounded-full ring-1 ring-inset ring-slate-200 overflow-hidden grid place-items-center font-semibold bg-slate-100 text-slate-700">
-                          {avatarImg ? (
-                            <img
-                              src={avatarImg}
-                              alt="avatar"
-                              className="h-full w-full object-cover"
-                              onError={(e) => (e.currentTarget.style.display = "none")}
-                            />
-                          ) : (
-                            getDisplayName(conv).charAt(0).toUpperCase()
-                          )}
-                        </div>
-
-                        <div className="min-w-0 flex-1">
-                          <div className="flex items-center gap-2">
-                            <p className="font-medium truncate">{getDisplayName(conv)}</p>
-                            {unread > 0 && (
-                              <span className="ml-auto inline-flex items-center justify-center rounded-full bg-blue-600 text-white text-xs h-5 min-w-[20px] px-1 shadow">
-                                {unread}
-                              </span>
-                            )}
-                          </div>
-                          <p className="text-xs text-gray-600 line-clamp-1">
-                            {conv.last_message || "Aucun message…"}
-                          </p>
-                        </div>
-                      </button>
-                    </li>
+                    <motion.button
+                      key={conv.id}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0 }}
+                      onClick={() => handleReceiverSelect(conv)}
+                      className={[
+                        "w-full flex items-center gap-3 rounded-xl px-3 py-2.5 mb-1 text-left transition-all",
+                        "hover:bg-gray-50 active:scale-[0.98]",
+                        isActive
+                          ? "bg-blue-50 ring-1 ring-inset ring-blue-200 shadow-sm"
+                          : "bg-white",
+                      ].join(" ")}
+                    >
+                      <div className="h-10 w-10 rounded-full bg-gradient-to-br from-slate-100 to-slate-200 grid place-items-center font-semibold text-slate-700 shadow-inner">
+                        {getDisplayName(conv).charAt(0).toUpperCase()}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="font-medium truncate">{getDisplayName(conv)}</p>
+                        <p className="text-xs text-gray-500 truncate">
+                          {conv.last_message || "Aucun message…"}
+                        </p>
+                      </div>
+                      {unread > 0 && (
+                        <span className="ml-auto rounded-full bg-blue-600 text-white text-xs h-5 min-w-[20px] px-1 grid place-items-center shadow">
+                          {unread}
+                        </span>
+                      )}
+                    </motion.button>
                   );
-                })}
-              </ul>
+                })
+              ) : (
+                <p className="p-4 text-sm text-gray-500">Aucune conversation</p>
+              )
             ) : (
-              <p className="p-4 text-sm text-gray-500">Aucune conversation</p>
-            )}
-          </div>
-        ) : (
-          <>
-            <div className="p-3 border-b sticky top-[49px] bg-white/70 backdrop-blur z-10">
-              <input
-                type="text"
-                placeholder="Rechercher des utilisateurs…"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full rounded-xl border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-
-            <div className="flex-1 overflow-y-auto">
-              <ul className="p-2 space-y-1">
+              <div>
+                <input
+                  type="text"
+                  placeholder="Rechercher..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full rounded-xl border px-3 py-2 text-sm mb-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
                 {users
                   .filter((u) =>
                     getDisplayName(u).toLowerCase().includes(searchTerm.toLowerCase())
                   )
-                  .map((user) => {
-                    const avatarImg =
-                      user.citoyen_profile?.album_photos
-                        ? `http://localhost:8000/media/${JSON.parse(user.citoyen_profile.album_photos)[0]}`
-                        : user.association_profile?.logo
-                        ? `http://localhost:8000/media/${user.association_profile.logo}`
-                        : null;
-
-                    return (
-                      <li key={user.id}>
-                        <button
-                          onClick={() => handleReceiverSelect(user)}
-                          className="w-full flex items-center gap-3 rounded-xl px-3 py-2.5 text-left hover:bg-gray-50 active:scale-[0.995] transition"
-                        >
-                          <div className="h-10 w-10 rounded-full ring-1 ring-inset ring-slate-200 overflow-hidden grid place-items-center font-semibold bg-slate-100 text-slate-700">
-                            {avatarImg ? (
-                              <img
-                                src={avatarImg}
-                                alt="avatar"
-                                className="h-full w-full object-cover"
-                                onError={(e) => (e.currentTarget.style.display = "none")}
-                              />
-                            ) : (
-                              getDisplayName(user).charAt(0).toUpperCase()
-                            )}
-                          </div>
-                          <div className="min-w-0">
-                            <p className="font-medium truncate">{getDisplayName(user)}</p>
-                            <p className="text-xs text-gray-600 truncate">@{user.username}</p>
-                          </div>
-                        </button>
-                      </li>
-                    );
-                  })}
-              </ul>
-            </div>
-          </>
-        )}
-      </aside>
+                  .map((user) => (
+                    <motion.button
+                      key={user.id}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0 }}
+                      onClick={() => handleReceiverSelect(user)}
+                      className="w-full flex items-center gap-3 rounded-xl px-3 py-2.5 mb-1 hover:bg-gray-50 transition"
+                    >
+                      <div className="h-10 w-10 rounded-full bg-slate-200 grid place-items-center font-semibold text-slate-700">
+                        {getDisplayName(user).charAt(0).toUpperCase()}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="font-medium truncate">{getDisplayName(user)}</p>
+                        <p className="text-xs text-gray-600 truncate">@{user.username}</p>
+                      </div>
+                    </motion.button>
+                  ))}
+              </div>
+            )}
+          </AnimatePresence>
+        </div>
+      </motion.aside>
 
       {/* MAIN CHAT */}
-      <main className="flex-1 flex flex-col bg-white/60 backdrop-blur-sm h-full">
+      <main className="flex-1 flex flex-col bg-white/70 backdrop-blur-sm">
         {receiver ? (
           <>
-            {/* Header chat (sticky) */}
-            <div className="px-4 py-3 border-b bg-white/70 backdrop-blur sticky top-0 z-10">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="h-10 w-10 rounded-full grid place-items-center font-semibold bg-gradient-to-br from-purple-50 to-purple-100 text-purple-700 ring-1 ring-inset ring-purple-200">
-                    {getDisplayName(receiverInfo).charAt(0).toUpperCase()}
-                  </div>
-                  <div className="min-w-0">
-                    <p className="font-semibold truncate">{getDisplayName(receiverInfo)}</p>
-                    <p className="text-xs text-gray-500 truncate">@{receiverInfo?.username}</p>
-                  </div>
+            {/* Header chat */}
+            <div className="px-4 py-3 border-b bg-white/80 backdrop-blur sticky top-0 z-10 flex justify-between items-center">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="h-10 w-10 rounded-full bg-gradient-to-br from-blue-50 to-blue-100 text-blue-700 grid place-items-center font-semibold ring-1 ring-blue-200">
+                  {getDisplayName(receiverInfo).charAt(0).toUpperCase()}
                 </div>
-
-                <div className="flex items-center gap-3">
-                  <span
-                    className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ring-1 ring-inset ${connectionBadge(
-                      connectionStatus
-                    )}`}
-                  >
-                    <span
-                      className={[
-                        "mr-1 inline-block h-2 w-2 rounded-full",
-                        connectionStatus === "Connecté"
-                          ? "bg-emerald-500"
-                          : connectionStatus.includes("Connexion")
-                          ? "bg-amber-500"
-                          : "bg-rose-500",
-                      ].join(" ")}
-                    />
-                    {connectionStatus}
-                  </span>
-
-                  <div className="relative">
-                    <button
-                      className="rounded-lg border px-2.5 py-1.5 hover:bg-gray-50 active:scale-95 transition"
-                      onClick={() => setShowMenu((prev) => !prev)}
-                    >
-                      ⋮
-                    </button>
-                    {showMenu && (
-                      <div className="absolute right-0 mt-2 w-44 rounded-xl border bg-white shadow-lg overflow-hidden z-20">
-                        <button className="w-full text-left px-3 py-2 text-sm hover:bg-gray-50">
-                          👤 Voir profil
-                        </button>
-                        <button className="w-full text-left px-3 py-2 text-sm hover:bg-gray-50">
-                          🚫 Bloquer
-                        </button>
-                        <button className="w-full text-left px-3 py-2 text-sm text-rose-600 hover:bg-rose-50">
-                          🗑️ Supprimer conversation
-                        </button>
-                      </div>
-                    )}
-                  </div>
+                <div className="min-w-0">
+                  <p className="font-semibold truncate">{getDisplayName(receiverInfo)}</p>
+                  <p className="text-xs text-gray-500 truncate">@{receiverInfo?.username}</p>
                 </div>
               </div>
             </div>
 
-            {/* Messages (scroll area) */}
-            <div className="flex-1 overflow-y-auto px-4 py-4 bg-gradient-to-b from-slate-50/60 to-white">
-              {listMsg.length > 0 ? (
-                <ul className="space-y-2">
-                  {listMsg.map((msg) => {
-                    const isOwn = msg.is_own;
-                    return (
-                      <li
-                        key={msg.id}
-                        className={`flex ${isOwn ? "justify-end" : "justify-start"} transition`}
+            {/* Messages */}
+            <div className="flex-1 overflow-y-auto px-4 py-4 bg-gradient-to-b from-slate-50/70 to-white space-y-3">
+              <AnimatePresence>
+                {listMsg.map((msg) => {
+                  const isOwn = msg.is_own;
+                  return (
+                    <motion.div
+                      key={msg.id}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0 }}
+                      className={`flex ${isOwn ? "justify-end" : "justify-start"}`}
+                    >
+                      <div
+                        className={[
+                          "max-w-[70%] rounded-2xl px-3 py-2 text-sm shadow-sm transition",
+                          isOwn
+                            ? "bg-blue-600 text-white rounded-br-sm"
+                            : "bg-white border border-slate-200 rounded-bl-sm",
+                        ].join(" ")}
                       >
+                        <p>{msg.contenu}</p>
                         <div
-                          className={[
-                            "max-w-[70%] rounded-2xl px-3 py-2 shadow-sm text-sm transition",
-                            "hover:translate-y-[-1px] hover:shadow",
-                            isOwn
-                              ? "bg-blue-600 text-white rounded-br-sm"
-                              : "bg-white text-gray-900 border rounded-bl-sm",
-                          ].join(" ")}
+                          className={`mt-1 flex items-center gap-1 text-[11px] ${
+                            isOwn ? "text-blue-100/90" : "text-gray-500"
+                          }`}
                         >
-                          <p className="whitespace-pre-wrap break-words">{msg.contenu}</p>
-                          <div
-                            className={`mt-1 flex items-center gap-1 text-[11px] ${
-                              isOwn ? "text-blue-100/90" : "text-gray-500"
-                            }`}
-                          >
-                            <span>{formatMessageTime(msg.date_envoi)}</span>
-                            {isOwn && (
-                              <span className="ml-1">
-                                {msg.is_read ? (
-                                  <CheckCheck size={14} className="inline-block align-[-2px]" />
-                                ) : (
-                                  "✓"
-                                )}
-                              </span>
-                            )}
-                          </div>
+                          <span>{formatMessageTime(msg.date_envoi)}</span>
+                          {isOwn && (
+                            <span className="ml-1">
+                              {msg.is_read ? (
+                                <CheckCheck size={14} className="inline-block" />
+                              ) : (
+                                "✓"
+                              )}
+                            </span>
+                          )}
                         </div>
-                      </li>
-                    );
-                  })}
-                </ul>
-              ) : (
-                <div className="h-full grid place-items-center text-sm text-gray-500">
-                  Aucun message pour le moment
-                </div>
-              )}
-              <div ref={messagesEndRef} />
+                      </div>
+                    </motion.div>
+                  );
+                })}
+              </AnimatePresence>
             </div>
 
-            {/* Composer (fixe en bas) */}
+            {/* Input */}
             <form onSubmit={handleSendMessage} className="border-t bg-white px-3 py-2">
               <div className="flex items-end gap-2">
                 <input
@@ -705,29 +670,34 @@ export default function Chat() {
                   onChange={(e) => setMessageInput(e.target.value)}
                   placeholder="Saisissez votre message…"
                   disabled={!isWebSocketConnected}
-                  className="flex-1 rounded-2xl border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 transition"
+                  className="flex-1 rounded-2xl border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
                 />
-                <button
+                <motion.button
                   type="submit"
+                  whileTap={{ scale: 0.9 }}
                   disabled={!isWebSocketConnected || !messageInput.trim()}
-                  className="rounded-2xl bg-blue-600 text-white px-4 py-2 text-sm font-medium hover:bg-blue-700 active:scale-95 transition disabled:opacity-60"
+                  className="rounded-2xl bg-blue-600 text-white px-4 py-2 text-sm font-medium hover:bg-blue-700 disabled:opacity-60"
                 >
                   Envoyer
-                </button>
+                </motion.button>
               </div>
             </form>
           </>
         ) : (
           <div className="flex-1 grid place-items-center">
-            <div className="text-center">
-              <div className="mx-auto h-12 w-12 rounded-2xl grid place-items-center bg-gray-100 border">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="text-center"
+            >
+              <div className="mx-auto h-12 w-12 rounded-2xl grid place-items-center bg-gray-100 border text-2xl">
                 💬
               </div>
               <h3 className="mt-3 text-lg font-semibold">Pulse Messenger</h3>
               <p className="text-sm text-gray-600">
                 Sélectionnez une conversation ou démarrez-en une nouvelle
               </p>
-            </div>
+            </motion.div>
           </div>
         )}
       </main>
