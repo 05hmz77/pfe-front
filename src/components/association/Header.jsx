@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { MessageCircle } from "lucide-react";
 import axios from "axios";
-import "./style/Header.css";
 
 export default function HeaderAssociation() {
   const [unreadCount, setUnreadCount] = useState(0);
@@ -74,18 +73,27 @@ export default function HeaderAssociation() {
   }, [currentUser?.id]);
 
   return (
-    <header className="app-header simple-header">
+    <header className="fixed top-0 left-0 w-full h-16 bg-blue-400 text-white shadow-md flex items-center justify-between px-6 z-50">
       {/* Logo */}
-      <Link to="/welcome/association" className="brand">
-        <span className="brand-badge">S</span>
-        <span className="brand-name">SolidarLink</span>
+      <Link to="/welcome/association" className="flex items-center gap-2">
+        <span className="w-8 h-8 flex items-center justify-center rounded-lg bg-white text-blue-400 font-bold text-lg shadow">
+          S
+        </span>
+        <span className="text-lg font-semibold">SolidarLink</span>
       </Link>
 
       {/* Messagerie */}
-      <div className="header-right">
-        <Link to="/welcome/association/chat" className="header-icon messages">
-          <MessageCircle size={24} />
-          {unreadCount > 0 && <span className="badge">{unreadCount}</span>}
+      <div className="relative">
+        <Link
+          to="/welcome/association/chat"
+          className="relative inline-flex items-center justify-center w-10 h-10 rounded-full bg-white text-blue-400 hover:bg-blue-50 shadow transition"
+        >
+          <MessageCircle size={22} />
+          {unreadCount > 0 && (
+            <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full px-1.5 py-0.5 shadow">
+              {unreadCount}
+            </span>
+          )}
         </Link>
       </div>
     </header>

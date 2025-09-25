@@ -73,24 +73,24 @@ export default function HeaderAssociation() {
   }, [currentUser?.id]);
 
   return (
-    <header className="fixed top-0 left-0 w-full h-16 bg-white shadow flex items-center justify-between px-6 z-50">
+    <header className="fixed top-0 left-0 w-full h-16 bg-blue-400 text-white shadow-md flex items-center justify-between px-6 z-50">
       {/* Logo */}
       <Link to="/welcome/association" className="flex items-center gap-2">
-        <span className="bg-blue-600 text-white w-8 h-8 flex items-center justify-center rounded-full font-bold">
+        <span className="bg-white text-blue-400 w-8 h-8 flex items-center justify-center rounded-lg font-bold shadow">
           S
         </span>
-        <span className="text-xl font-semibold text-blue-600">SolidarLink</span>
+        <span className="text-xl font-semibold">SolidarLink</span>
       </Link>
 
       {/* Messagerie */}
       <div className="relative">
         <Link
           to="/welcome/association/chat"
-          className="relative flex items-center justify-center p-2 text-gray-600 hover:text-blue-600 transition"
+          className="relative flex items-center justify-center w-10 h-10 bg-white text-blue-400 rounded-full shadow hover:bg-gray-100 transition"
         >
-          <MessageCircle size={28} />
+          <MessageCircle size={22} />
           {unreadCount > 0 && (
-            <span className="absolute -top-1 -right-1 bg-red-600 text-white text-xs font-bold w-5 h-5 flex items-center justify-center rounded-full">
+            <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold w-5 h-5 flex items-center justify-center rounded-full shadow">
               {unreadCount}
             </span>
           )}

@@ -486,7 +486,7 @@ export default function Chat() {
     new Date(dateString).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 
   return (
-    <div className="h-[100svh] md:h-screen w-full bg-gradient-to-br from-slate-100 via-white to-slate-50 text-slate-900 flex overflow-hidden">
+    <div className="fixed top-25 h-[calc(90vh-4rem)] w-[70%] text-gray-900 flex border-2 border-gray-200 rounded-[22px] overflow-hidden shadow-xl">
       <ToastContainer />
 
       {/* SIDEBAR */}
@@ -494,33 +494,33 @@ export default function Chat() {
         initial={{ x: -80, opacity: 0 }}
         animate={{ x: 0, opacity: 1 }}
         transition={{ type: "spring", stiffness: 100, damping: 15 }}
-        className="w-80 lg:w-96 shrink-0 border-r bg-white/90 backdrop-blur-sm flex flex-col shadow-lg"
+        className="w-80 lg:w-96 shrink-0 border-r-2 border-gray-200 bg-white flex flex-col rounded-l-[22px]"
       >
         {/* Header sidebar */}
-        <div className="px-4 py-3 border-b sticky top-0 bg-white/80 backdrop-blur z-10 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <h2 className="text-lg font-semibold tracking-tight">Messages {x}</h2>
+        <div className="px-6 py-4 border-b-2 border-gray-200 sticky top-0 bg-white z-10 flex items-center justify-between rounded-tl-[22px]">
+          <div className="flex items-center gap-3">
+            <h2 className="text-xl font-bold text-gray-900">Messages</h2>
             {unreadCount > 0 && (
               <motion.span
                 initial={{ scale: 0.7, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
-                className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-700 ring-1 ring-inset ring-blue-200"
+                className="inline-flex items-center gap-1 px-3 py-1 text-sm font-bold rounded-full bg-blue-400 text-white"
               >
-                <Bell size={14} />
+                <Bell size={16} />
                 {unreadCount}
               </motion.span>
             )}
           </div>
           <button
-            className="inline-flex items-center justify-center rounded-lg border px-2.5 py-1.5 hover:bg-gray-100 active:scale-95 transition"
+            className="inline-flex items-center justify-center rounded-xl border-2 border-gray-300 px-3 py-2 hover:bg-blue-400 hover:text-white hover:border-blue-400 active:scale-95 transition-all duration-200"
             onClick={() => setShowAllUsers((v) => !v)}
           >
-            {showAllUsers ? <X size={18} /> : <Plus size={18} />}
+            {showAllUsers ? <X size={20} /> : <Plus size={20} />}
           </button>
         </div>
 
         {/* Conversations / Users */}
-        <div className="flex-1 overflow-y-auto p-2">
+        <div className="flex-1 overflow-y-auto p-4">
           <AnimatePresence>
             {!showAllUsers ? (
               conversations.length > 0 ? (
@@ -535,24 +535,38 @@ export default function Chat() {
                       exit={{ opacity: 0 }}
                       onClick={() => handleReceiverSelect(conv)}
                       className={[
-                        "w-full flex items-center gap-3 rounded-xl px-3 py-2.5 mb-1 text-left transition-all",
-                        "hover:bg-gray-50 active:scale-[0.98]",
+                        "w-full flex items-center gap-4 rounded-[18px] px-4 py-3 mb-2 text-left transition-all duration-200",
+                        "hover:bg-blue-50 hover:border-2 hover:border-blue-100 active:scale-[0.98]",
                         isActive
-                          ? "bg-blue-50 ring-1 ring-inset ring-blue-200 shadow-sm"
-                          : "bg-white",
+                          ? "bg-blue-400 text-white border-2 border-blue-500 shadow-lg"
+                          : "bg-white border-2 border-gray-100",
                       ].join(" ")}
                     >
-                      <div className="h-10 w-10 rounded-full bg-gradient-to-br from-slate-100 to-slate-200 grid place-items-center font-semibold text-slate-700 shadow-inner">
+                      <div className={`h-12 w-12 rounded-full grid place-items-center font-bold text-lg shadow-inner ${
+                        isActive 
+                          ? "bg-white text-blue-400" 
+                          : "bg-blue-400 text-white"
+                      }`}>
                         {getDisplayName(conv).charAt(0).toUpperCase()}
                       </div>
                       <div className="min-w-0 flex-1">
-                        <p className="font-medium truncate">{getDisplayName(conv)}</p>
-                        <p className="text-xs text-gray-500 truncate">
+                        <p className={`font-semibold truncate text-base ${
+                          isActive ? "text-white" : "text-gray-900"
+                        }`}>
+                          {getDisplayName(conv)}
+                        </p>
+                        <p className={`text-sm truncate ${
+                          isActive ? "text-blue-100" : "text-gray-600"
+                        }`}>
                           {conv.last_message || "Aucun message…"}
                         </p>
                       </div>
                       {unread > 0 && (
-                        <span className="ml-auto rounded-full bg-blue-600 text-white text-xs h-5 min-w-[20px] px-1 grid place-items-center shadow">
+                        <span className={`ml-auto rounded-full text-sm font-bold h-6 min-w-[24px] px-2 grid place-items-center shadow ${
+                          isActive 
+                            ? "bg-white text-blue-400" 
+                            : "bg-blue-400 text-white"
+                        }`}>
                           {unread}
                         </span>
                       )}
@@ -560,7 +574,10 @@ export default function Chat() {
                   );
                 })
               ) : (
-                <p className="p-4 text-sm text-gray-500">Aucune conversation</p>
+                <div className="text-center py-8">
+                  <div className="text-4xl mb-2">💬</div>
+                  <p className="text-gray-600 font-medium">Aucune conversation</p>
+                </div>
               )
             ) : (
               <div>
@@ -569,7 +586,7 @@ export default function Chat() {
                   placeholder="Rechercher..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full rounded-xl border px-3 py-2 text-sm mb-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full rounded-[18px] border-2 border-gray-300 px-4 py-3 text-base mb-4 focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-200"
                 />
                 {users
                   .filter((u) =>
@@ -582,14 +599,14 @@ export default function Chat() {
                       animate={{ opacity: 1, x: 0 }}
                       exit={{ opacity: 0 }}
                       onClick={() => handleReceiverSelect(user)}
-                      className="w-full flex items-center gap-3 rounded-xl px-3 py-2.5 mb-1 hover:bg-gray-50 transition"
+                      className="w-full flex items-center gap-4 rounded-[18px] px-4 py-3 mb-2 hover:bg-blue-50 hover:border-2 hover:border-blue-100 transition-all duration-200 border-2 border-gray-100"
                     >
-                      <div className="h-10 w-10 rounded-full bg-slate-200 grid place-items-center font-semibold text-slate-700">
+                      <div className="h-12 w-12 rounded-full bg-blue-400 grid place-items-center font-bold text-white text-lg">
                         {getDisplayName(user).charAt(0).toUpperCase()}
                       </div>
                       <div className="min-w-0">
-                        <p className="font-medium truncate">{getDisplayName(user)}</p>
-                        <p className="text-xs text-gray-600 truncate">@{user.username}</p>
+                        <p className="font-semibold truncate text-gray-900">{getDisplayName(user)}</p>
+                        <p className="text-sm text-gray-600 truncate">@{user.username}</p>
                       </div>
                     </motion.button>
                   ))}
@@ -600,24 +617,24 @@ export default function Chat() {
       </motion.aside>
 
       {/* MAIN CHAT */}
-      <main className="flex-1 flex flex-col bg-white/70 backdrop-blur-sm">
+      <main className="flex-1 flex flex-col bg-white rounded-r-[22px]">
         {receiver ? (
           <>
             {/* Header chat */}
-            <div className="px-4 py-3 border-b bg-white/80 backdrop-blur sticky top-0 z-10 flex justify-between items-center">
-              <div className="flex items-center gap-3 min-w-0">
-                <div className="h-10 w-10 rounded-full bg-gradient-to-br from-blue-50 to-blue-100 text-blue-700 grid place-items-center font-semibold ring-1 ring-blue-200">
+            <div className="px-6 py-4 border-b-2 border-gray-200 bg-white sticky top-0 z-10 flex justify-between items-center rounded-tr-[22px]">
+              <div className="flex items-center gap-4 min-w-0">
+                <div className="h-12 w-12 rounded-full bg-blue-400 text-white grid place-items-center font-bold text-lg ring-2 ring-blue-300">
                   {getDisplayName(receiverInfo).charAt(0).toUpperCase()}
                 </div>
                 <div className="min-w-0">
-                  <p className="font-semibold truncate">{getDisplayName(receiverInfo)}</p>
-                  <p className="text-xs text-gray-500 truncate">@{receiverInfo?.username}</p>
+                  <p className="font-bold text-gray-900 truncate text-lg">{getDisplayName(receiverInfo)}</p>
+                  <p className="text-sm text-gray-600 truncate">@{receiverInfo?.username}</p>
                 </div>
               </div>
             </div>
 
             {/* Messages */}
-            <div className="flex-1 overflow-y-auto px-4 py-4 bg-gradient-to-b from-slate-50/70 to-white space-y-3">
+            <div className="flex-1 overflow-y-auto px-6 py-6 bg-gradient-to-b from-gray-50 to-white space-y-4">
               <AnimatePresence>
                 {listMsg.map((msg) => {
                   const isOwn = msg.is_own;
@@ -631,23 +648,23 @@ export default function Chat() {
                     >
                       <div
                         className={[
-                          "max-w-[70%] rounded-2xl px-3 py-2 text-sm shadow-sm transition",
+                          "max-w-[75%] rounded-[22px] px-4 py-3 text-base shadow-lg transition-all duration-200",
                           isOwn
-                            ? "bg-blue-600 text-white rounded-br-sm"
-                            : "bg-white border border-slate-200 rounded-bl-sm",
+                            ? "bg-blue-400 text-white rounded-br-md"
+                            : "bg-white border-2 border-gray-200 rounded-bl-md",
                         ].join(" ")}
                       >
-                        <p>{msg.contenu}</p>
+                        <p className="leading-relaxed">{msg.contenu}</p>
                         <div
-                          className={`mt-1 flex items-center gap-1 text-[11px] ${
-                            isOwn ? "text-blue-100/90" : "text-gray-500"
+                          className={`mt-2 flex items-center gap-2 text-xs ${
+                            isOwn ? "text-blue-100" : "text-gray-500"
                           }`}
                         >
                           <span>{formatMessageTime(msg.date_envoi)}</span>
                           {isOwn && (
                             <span className="ml-1">
                               {msg.is_read ? (
-                                <CheckCheck size={14} className="inline-block" />
+                                <CheckCheck size={16} className="inline-block" />
                               ) : (
                                 "✓"
                               )}
@@ -662,21 +679,21 @@ export default function Chat() {
             </div>
 
             {/* Input */}
-            <form onSubmit={handleSendMessage} className="border-t bg-white px-3 py-2">
-              <div className="flex items-end gap-2">
+            <form onSubmit={handleSendMessage} className="border-t-2 border-gray-200 bg-white px-4 py-4 rounded-br-[22px]">
+              <div className="flex items-end gap-3">
                 <input
                   type="text"
                   value={messageInput}
                   onChange={(e) => setMessageInput(e.target.value)}
                   placeholder="Saisissez votre message…"
                   disabled={!isWebSocketConnected}
-                  className="flex-1 rounded-2xl border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
+                  className="flex-1 rounded-[18px] border-2 border-gray-300 px-4 py-3 text-base focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-200 disabled:bg-gray-100"
                 />
                 <motion.button
                   type="submit"
                   whileTap={{ scale: 0.9 }}
                   disabled={!isWebSocketConnected || !messageInput.trim()}
-                  className="rounded-2xl bg-blue-600 text-white px-4 py-2 text-sm font-medium hover:bg-blue-700 disabled:opacity-60"
+                  className="rounded-[18px] bg-blue-400 text-white px-6 py-3 text-base font-bold hover:bg-blue-500 disabled:opacity-50 transition-all duration-200 shadow-lg"
                 >
                   Envoyer
                 </motion.button>
@@ -684,17 +701,17 @@ export default function Chat() {
             </form>
           </>
         ) : (
-          <div className="flex-1 grid place-items-center">
+          <div className="flex-1 grid place-items-center rounded-r-[22px] bg-gradient-to-br from-gray-50 to-white">
             <motion.div
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
               className="text-center"
             >
-              <div className="mx-auto h-12 w-12 rounded-2xl grid place-items-center bg-gray-100 border text-2xl">
+              <div className="mx-auto h-16 w-16 rounded-2xl grid place-items-center bg-blue-400 text-white text-3xl mb-4 shadow-lg">
                 💬
               </div>
-              <h3 className="mt-3 text-lg font-semibold">Pulse Messenger</h3>
-              <p className="text-sm text-gray-600">
+              <h3 className="text-2xl font-bold text-gray-900 mb-2">SolidarLink Chat</h3>
+              <p className="text-gray-600 font-medium">
                 Sélectionnez une conversation ou démarrez-en une nouvelle
               </p>
             </motion.div>

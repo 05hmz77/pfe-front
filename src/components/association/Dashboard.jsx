@@ -4,7 +4,7 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer,
   AreaChart, Area
 } from "recharts";
-// import { BarChart3, PieChart as PieIcon } from "lucide-react"; // optionnel
+import { Megaphone, FileText, MessageCircle, ThumbsUp } from "lucide-react";
 
 const API_BASE = import.meta?.env?.VITE_API_BASE || "http://127.0.0.1:8000";
 const DASHBOARD_URL = `${API_BASE}/api/associations/me/dashboard/`;
@@ -13,7 +13,7 @@ const DASHBOARD_URL = `${API_BASE}/api/associations/me/dashboard/`;
 const fmtDate = (d) => {
   if (!d) return "";
   try {
-    return new Intl.DateTimeFormat(undefined, {
+    return new Intl.DateTimeFormat("fr-FR", {
       dateStyle: "medium",
       timeStyle: "short",
     }).format(new Date(d));
@@ -22,7 +22,6 @@ const fmtDate = (d) => {
   }
 };
 
-// groupe la timeline par jour pour un petit sparkline activité
 const groupTimelineByDay = (timeline = []) => {
   const m = new Map();
   for (const item of timeline) {
@@ -31,14 +30,13 @@ const groupTimelineByDay = (timeline = []) => {
     const key = day.toISOString().slice(0, 10);
     m.set(key, (m.get(key) || 0) + 1);
   }
-  // 14 derniers jours pour le mini-chart
   const today = new Date();
   const arr = [];
   for (let i = 13; i >= 0; i--) {
     const dd = new Date(today);
     dd.setDate(today.getDate() - i);
     const key = dd.toISOString().slice(0, 10);
-    arr.push({ day: key.slice(5), events: m.get(key) || 0 }); // MM-DD
+    arr.push({ day: key.slice(5), events: m.get(key) || 0 });
   }
   return arr;
 };
@@ -56,8 +54,6 @@ export default function AssociationDashboard() {
   const [rangeDays, setRangeDays] = useState(30);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState("");
-
-  // garde-fou contre les double-fetchs en dev (React.StrictMode)
   const didFetch = useRef(false);
 
   const fetchDashboard = async (days = 30) => {
@@ -93,67 +89,56 @@ export default function AssociationDashboard() {
     if (didFetch.current) return;
     didFetch.current = true;
     fetchDashboard(rangeDays);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [rangeDays]);
 
-  // ---------- datasets pour les charts ----------
-  const pieCandidatures = useMemo(() => {
-    return (data?.candidatures_par_statut || []).map((r) => ({
+  const pieCandidatures = useMemo(() =>
+    (data?.candidatures_par_statut || []).map((r) => ({
       name: r.statut.replace("_", " "),
       value: r.n,
-    }));
-  }, [data]);
+    })), [data]);
 
-  const barReactions = useMemo(() => {
-    return (data?.reactions_par_type || []).map((r) => ({
+  const barReactions = useMemo(() =>
+    (data?.reactions_par_type || []).map((r) => ({
       name: r.type,
       count: r.n,
-    }));
-  }, [data]);
+    })), [data]);
 
-  const donutCategories = useMemo(() => {
-    return (data?.dist_categories || []).map((c) => ({
+  const donutCategories = useMemo(() =>
+    (data?.dist_categories || []).map((c) => ({
       name: c.name || c.categorie__nom || "Sans catégorie",
       value: c.n,
-    }));
-  }, [data]);
+    })), [data]);
 
   const activitySeries = useMemo(() => groupTimelineByDay(data?.timeline), [data]);
 
   if (!token) {
     return (
-      <div className="min-h-screen bg-gray-50 text-gray-900">
-        <div className="max-w-6xl mx-auto px-4 py-10">
-          <div className="rounded-xl bg-red-50 border border-red-200 p-4 text-red-700">
-            Token manquant. Veuillez vous connecter.
-          </div>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="rounded-[22px] bg-red-50 border border-red-200 p-6 text-red-700 shadow-md">
+          Token manquant. Veuillez vous connecter.
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-900">
-      <div className="max-w-7xl mx-auto px-4 py-6 md:py-8">
+    <div className="min-h-screen bg-gray-100 text-gray-900">
+      <div className="max-w-7xl mx-auto px-6 py-6">
         {/* Header */}
-        <div className="flex items-start md:items-center justify-between gap-4 mb-6">
-          <div className="flex items-center gap-4">
-            
-            <div>
-              <h1 className="text-2xl md:text-3xl font-bold tracking-tight">
-                {data?.association?.nom || currentUser?.username || "Mon Association"}
-              </h1>
-              <p className="text-gray-500">
-                Tableau de bord (fond clair) — période: {data?.range_days ?? rangeDays} jours
-              </p>
-            </div>
+        <div className="flex items-start md:items-center justify-between gap-4 mb-8">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-800">
+              {data?.association?.nom || currentUser?.username || "Mon Association"}
+            </h1>
+            <p className="text-gray-500">
+              Tableau de bord — période: {data?.range_days ?? rangeDays} jours
+            </p>
           </div>
-
           <div className="flex items-center gap-3">
             <select
               value={rangeDays}
               onChange={(e) => setRangeDays(Number(e.target.value))}
-              className="bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm shadow focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value={7}>7 jours</option>
               <option value={30}>30 jours</option>
@@ -172,12 +157,12 @@ export default function AssociationDashboard() {
         {loading && (
           <div className="grid gap-4 grid-cols-1 md:grid-cols-3">
             {[...Array(6)].map((_, i) => (
-              <div key={i} className="h-28 rounded-xl bg-white border border-gray-200 animate-pulse" />
+              <div key={i} className="h-28 rounded-[22px] bg-white border border-gray-200 animate-pulse" />
             ))}
           </div>
         )}
         {!!err && !loading && (
-          <div className="mb-6 rounded-xl bg-red-50 border border-red-200 p-4 text-red-700">
+          <div className="mb-6 rounded-[22px] bg-red-50 border border-red-200 p-4 text-red-700 shadow">
             {err}
           </div>
         )}
@@ -186,37 +171,35 @@ export default function AssociationDashboard() {
         {data && !loading && (
           <>
             {/* KPIs */}
-            <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 mb-6">
+            <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 mb-8">
               <KpiCard title="Annonces totales" value={data.cards.annonces_total} />
               <KpiCard title="Annonces actives" value={data.cards.annonces_actives} />
               <KpiCard title="Annonces expirées" value={data.cards.annonces_expirees} />
-              <KpiCard title="Candidatures" value={data.cards.candidatures_total} />
-              <KpiCard title="Commentaires" value={data.cards.engagement_total_commentaires} />
-              <KpiCard title="Messages non lus" value={data.cards.messages_non_lus} accent="blue" />
+              <KpiCard title="Candidatures" value={data.cards.candidatures_total} accent="blue" />
+              <KpiCard title="Commentaires" value={data.cards.engagement_total_commentaires} accent="green" />
+              <KpiCard title="Messages non lus" value={data.cards.messages_non_lus} accent="amber" />
             </div>
 
             {/* Activity sparkline */}
-            <div className="grid grid-cols-1 mb-6">
-              <Panel title="Activité globale (14 jours)">
-                <div className="h-40">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={activitySeries}>
-                      <defs>
-                        <linearGradient id="grad" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor="#2563EB" stopOpacity={0.4} />
-                          <stop offset="100%" stopColor="#2563EB" stopOpacity={0.05} />
-                        </linearGradient>
-                      </defs>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
-                      <XAxis dataKey="day" tick={{ fontSize: 12 }} />
-                      <YAxis allowDecimals={false} tick={{ fontSize: 12 }} />
-                      <Tooltip />
-                      <Area type="monotone" dataKey="events" stroke="#2563EB" fill="url(#grad)" />
-                    </AreaChart>
-                  </ResponsiveContainer>
-                </div>
-              </Panel>
-            </div>
+            <Panel title="Activité globale (14 jours)">
+              <div className="h-40">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={activitySeries}>
+                    <defs>
+                      <linearGradient id="grad" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#2563EB" stopOpacity={0.4} />
+                        <stop offset="100%" stopColor="#2563EB" stopOpacity={0.05} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
+                    <XAxis dataKey="day" tick={{ fontSize: 12 }} />
+                    <YAxis allowDecimals={false} tick={{ fontSize: 12 }} />
+                    <Tooltip />
+                    <Area type="monotone" dataKey="events" stroke="#2563EB" fill="url(#grad)" />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+            </Panel>
 
             {/* Charts */}
             <div className="grid gap-4 grid-cols-1 lg:grid-cols-2 mb-6">
@@ -323,34 +306,35 @@ export default function AssociationDashboard() {
             {/* Timeline + Messages + Top bénévoles */}
             <div className="grid gap-4 grid-cols-1 xl:grid-cols-3">
               <Panel title="Activité récente" className="xl:col-span-2">
-                <ul className="space-y-3">
+                <ul className="relative border-l-2 border-blue-200 ml-3 space-y-6">
                   {(!data.timeline || data.timeline.length === 0) && (
                     <li className="text-gray-500">Aucune activité.</li>
                   )}
                   {data.timeline?.map((item, i) => (
-                    <li key={i} className="p-3 rounded-lg bg-white border border-gray-200">
-                      <div className="text-xs uppercase tracking-wide text-gray-500">{item.type}</div>
-                      <div className="text-sm mt-1 text-gray-800">
-                        {item.type === "ANNONCE" && (
-                          <span>Nouvelle annonce : <b>{item.payload.titre}</b></span>
-                        )}
-                        {item.type === "CANDIDATURE" && (
-                          <span>
-                            <b>{item.payload.citoyen_username}</b> a candidaté à <b>{item.payload.annonce_titre}</b> — <i>{item.payload.statut}</i>
-                          </span>
-                        )}
-                        {item.type === "COMMENTAIRE" && (
-                          <span>
-                            <b>{item.payload.auteur_username}</b> a commenté <b>{item.payload.annonce_titre}</b> : “{item.payload.contenu}”
-                          </span>
-                        )}
-                        {item.type === "REACTION" && (
-                          <span>
-                            <b>{item.payload.utilisateur_username}</b> a réagi ({item.payload.type}) sur <b>{item.payload.annonce_titre}</b>
-                          </span>
-                        )}
+                    <li key={i} className="ml-4">
+                      <div className="absolute -left-3 w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center text-white">
+                        {item.type === "ANNONCE" && <Megaphone size={14} />}
+                        {item.type === "CANDIDATURE" && <FileText size={14} />}
+                        {item.type === "COMMENTAIRE" && <MessageCircle size={14} />}
+                        {item.type === "REACTION" && <ThumbsUp size={14} />}
                       </div>
-                      <div className="text-xs text-gray-500 mt-1">{fmtDate(item.date)}</div>
+                      <div className="bg-white border border-gray-200 rounded-[22px] shadow-sm p-4">
+                        <div className="text-sm text-gray-800">
+                          {item.type === "ANNONCE" && (
+                            <>Nouvelle annonce : <b>{item.payload.titre}</b></>
+                          )}
+                          {item.type === "CANDIDATURE" && (
+                            <><b>{item.payload.citoyen_username}</b> a candidaté à <b>{item.payload.annonce_titre}</b> — <i>{item.payload.statut}</i></>
+                          )}
+                          {item.type === "COMMENTAIRE" && (
+                            <><b>{item.payload.auteur_username}</b> a commenté <b>{item.payload.annonce_titre}</b> : “{item.payload.contenu}”</>
+                          )}
+                          {item.type === "REACTION" && (
+                            <><b>{item.payload.utilisateur_username}</b> a réagi ({item.payload.type}) sur <b>{item.payload.annonce_titre}</b></>
+                          )}
+                        </div>
+                        <div className="text-xs text-gray-500 mt-1">{fmtDate(item.date)}</div>
+                      </div>
                     </li>
                   ))}
                 </ul>
@@ -363,7 +347,7 @@ export default function AssociationDashboard() {
                       <li className="text-gray-500">Aucun message.</li>
                     )}
                     {data.dernier_messages?.map((m) => (
-                      <li key={m.id} className="p-3 rounded-lg bg-white border border-gray-200">
+                      <li key={m.id} className="p-3 rounded-[22px] bg-white border border-gray-200 shadow-sm">
                         <div className="text-sm text-gray-800">
                           <b>{m.sender_username}</b> → <b>{m.receiver_username}</b>
                         </div>
@@ -412,7 +396,7 @@ function KpiCard({ title, value, accent = "indigo" }) {
     amber: "from-amber-50 to-white border-amber-100",
   };
   return (
-    <div className={`rounded-xl bg-gradient-to-b ${accents[accent] || accents.indigo} border p-4 shadow-sm`}>
+    <div className={`rounded-[22px] bg-gradient-to-b ${accents[accent] || accents.indigo} border p-4 shadow`}>
       <div className="text-gray-500 text-sm">{title}</div>
       <div className="text-3xl font-extrabold mt-1 text-gray-900">{value ?? 0}</div>
     </div>
@@ -421,10 +405,8 @@ function KpiCard({ title, value, accent = "indigo" }) {
 
 function Panel({ title, children, className = "" }) {
   return (
-    <div className={`rounded-xl bg-white border border-gray-200 p-4 shadow-sm ${className}`}>
-      <div className="flex items-center justify-between mb-3">
-        <h2 className="font-semibold text-gray-900">{title}</h2>
-      </div>
+    <div className={`rounded-[22px] bg-white border border-gray-200 p-6 shadow-md mb-6 ${className}`}>
+      <h2 className="font-semibold text-gray-800 mb-4">{title}</h2>
       {children}
     </div>
   );

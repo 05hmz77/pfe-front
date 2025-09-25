@@ -1,415 +1,282 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import axios from "axios";
-import { confirmAlert } from "react-confirm-alert";
-import "react-confirm-alert/src/react-confirm-alert.css";
-import toast, { Toaster } from "react-hot-toast";
-import "./style/AnnonceManager.css"
+import {
+  LayoutList,
+  Search,
+  Filter,
+  Trash2,
+  Edit,
+  Calendar,
+  MapPin,
+  X,
+  Plus,
+} from "lucide-react";
 
-const AnnonceManager = () => {
+// API endpoints
+const API_ANNONCES = "http://127.0.0.1:8000/api/annonces/";
+const API_CATEGORIES = "http://127.0.0.1:8000/api/categories/";
+
+export default function AnnonceManager() {
+  const token = localStorage.getItem("accessToken");
+  const headers = token ? { Authorization: `Bearer ${token}` } : {};
+
   const [annonces, setAnnonces] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [filters, setFilters] = useState({
-    type: "",
-    categorie: "",
-    search: "",
-  });
+  const [error, setError] = useState("");
 
-  const token = localStorage.getItem("accessToken");
+  // UI state
+  const [searchTerm, setSearchTerm] = useState("");
+  const [typeFilter, setTypeFilter] = useState("TOUT");
+  const [sortBy, setSortBy] = useState("recent");
 
-  const TYPES = {
-    EVENEMENT: "Évènement",
-    DON: "Don",
-    APPEL_BENEVOLAT: "Appel au bénévolat",
-  };
+  const [editOpen, setEditOpen] = useState(false);
+  const [draft, setDraft] = useState(null);
 
-  // Fetch all data
-  const fetchData = async () => {
+  // fetch annonces + catégories
+  const fetchAll = async () => {
+    setLoading(true);
+    setError("");
     try {
-      const [annoncesRes, categoriesRes] = await Promise.all([
-        axios.get("http://127.0.0.1:8000/api/annonces/", {
-          headers: { Authorization: `Bearer ${token}` },
-        }),
-        axios.get("http://127.0.0.1:8000/api/categories/", {
-          headers: { Authorization: `Bearer ${token}` },
-        }),
+      const [annRes, catRes] = await Promise.all([
+        axios.get(API_ANNONCES, { headers }),
+        axios.get(API_CATEGORIES, { headers }),
       ]);
-
-      setAnnonces(annoncesRes.data);
-      setCategories(categoriesRes.data);
+      setAnnonces(annRes.data || []);
+      setCategories(catRes.data || []);
+    } catch (e) {
+      setError("Erreur de chargement des données");
+    } finally {
       setLoading(false);
-      toast.success("Données chargées avec succès");
-    } catch (err) {
-      setError(err.message);
-      setLoading(false);
-      toast.error("Erreur lors du chargement des données");
     }
   };
 
   useEffect(() => {
-    fetchData();
+    fetchAll();
   }, []);
 
-  // Delete an announcement
-  const handleDelete = (id) => {
-    confirmAlert({
-      title: "Confirmer la suppression",
-      message: "Êtes-vous sûr de vouloir supprimer cette annonce ?",
-      buttons: [
-        {
-          label: "Oui",
-          onClick: async () => {
-            try {
-              await axios.delete(`http://127.0.0.1:8000/api/annonces/${id}/`, {
-                headers: { Authorization: `Bearer ${token}` },
-              });
-              setAnnonces(annonces.filter((annonce) => annonce.id !== id));
-              toast.success("Annonce supprimée avec succès");
-            } catch (err) {
-              setError("Erreur lors de la suppression");
-              toast.error("Échec de la suppression de l'annonce");
-            }
-          },
-        },
-        {
-          label: "Non",
-          onClick: () => {},
-        },
-      ],
-    });
+  // delete
+  const onDeleteAnnonce = async (id) => {
+    if (!window.confirm("Supprimer définitivement cette annonce ?")) return;
+    try {
+      await axios.delete(`${API_ANNONCES}${id}/`, { headers });
+      setAnnonces((prev) => prev.filter((a) => a.id !== id));
+    } catch {
+      alert("Erreur lors de la suppression");
+    }
   };
 
-  // Format date
-  const formatDate = (dateString) => {
-    const options = {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
+  // open edit
+  const openEdit = (a) => {
+    setDraft(a);
+    setEditOpen(true);
+  };
+
+  // stats
+  const stats = useMemo(() => {
+    return {
+      total: annonces.length,
+      evenements: annonces.filter((a) => a.type === "EVENEMENT").length,
+      dons: annonces.filter((a) => a.type === "DON").length,
+      benevolat: annonces.filter((a) => a.type === "APPEL_BENEVOLAT").length,
     };
-    return new Date(dateString).toLocaleDateString("fr-FR", options);
-  };
+  }, [annonces]);
 
-  // Handle filter changes
-  const handleFilterChange = (e) => {
-    const { name, value } = e.target;
-    setFilters({
-      ...filters,
-      [name]: value,
-    });
-  };
-
-  // Filter announcements
-  const filteredAnnonces = annonces.filter((annonce) => {
-    const matchesType = !filters.type || annonce.type === filters.type;
-    const matchesCategorie =
-      !filters.categorie ||
-      (annonce.categorie !== null &&
-        annonce.categorie.toString() === filters.categorie);
-    const matchesSearch =
-      !filters.search ||
-      annonce.titre.toLowerCase().includes(filters.search.toLowerCase()) ||
-      annonce.description.toLowerCase().includes(filters.search.toLowerCase());
-
-    return matchesType && matchesCategorie && matchesSearch;
-  });
-
-  if (loading) {
-    return (
-      <div className="loading-container">
-        <div className="loading-spinner"></div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="error-container">
-        <div className="error-content">
-          <svg
-            className="error-icon"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-            />
-          </svg>
-          <h3>Erreur</h3>
-        </div>
-        <p>{error}</p>
-        <button onClick={fetchData} className="retry-btn">
-          Réessayer
-        </button>
-      </div>
-    );
-  }
+  // filtrage
+  const filtered = useMemo(() => {
+    let list = [...annonces];
+    if (typeFilter !== "TOUT") list = list.filter((a) => a.type === typeFilter);
+    if (searchTerm.trim()) {
+      const q = searchTerm.toLowerCase();
+      list = list.filter(
+        (a) =>
+          a.titre?.toLowerCase().includes(q) ||
+          a.description?.toLowerCase().includes(q) ||
+          a.lieu?.toLowerCase().includes(q)
+      );
+    }
+    if (sortBy === "recent") {
+      list.sort((a, b) => new Date(b.date_creation) - new Date(a.date_creation));
+    } else if (sortBy === "upcoming") {
+      list.sort((a, b) => new Date(a.date_debut) - new Date(b.date_debut));
+    }
+    return list;
+  }, [annonces, typeFilter, searchTerm, sortBy]);
 
   return (
-    <div className="annonce-container">
-      <Toaster
-        position="top-right"
-        toastOptions={{
-          duration: 3000,
-          style: {
-            fontSize: "14px",
-          },
-        }}
-      />
+    <div className="p-6 max-w-7xl mx-auto">
+      {/* Header */}
+      <div className="flex justify-between items-center">
+        <h1 className="text-2xl font-semibold flex items-center gap-2">
+          <LayoutList className="w-6 h-6 text-blue-600" /> Gestion des annonces
+        </h1>
+        <button
+          onClick={() =>{} }
+          className="flex items-center gap-2 px-3 py-2 rounded-xl bg-blue-600 text-white hover:bg-blue-700"
+        >
+          <Plus className="w-4 h-4" /> Nouvelle annonce
+        </button>
+      </div>
 
-      <div className="annonce-header">
-        <h1 className="annonce-title">Liste des Annonces</h1>
-
-        <div className="filters-container">
-          <div className="search-input-container">
-            <input
-              type="text"
-              name="search"
-              placeholder="Rechercher..."
-              className="search-input"
-              value={filters.search}
-              onChange={handleFilterChange}
-            />
-            <svg
-              className="search-icon"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-              />
-            </svg>
-          </div>
-
-          <div className="select-filters">
-            <select
-              name="type"
-              className="filter-select"
-              value={filters.type}
-              onChange={handleFilterChange}
-            >
-              <option value="">Tous les types</option>
-              {Object.entries(TYPES).map(([key, value]) => (
-                <option key={key} value={key}>
-                  {value}
-                </option>
-              ))}
-            </select>
-
-            <select
-              name="categorie"
-              className="filter-select"
-              value={filters.categorie}
-              onChange={handleFilterChange}
-            >
-              <option value="">Toutes catégories</option>
-              {categories.map((cat) => (
-                <option key={cat.id} value={cat.id}>
-                  {cat.nom}
-                </option>
-              ))}
-            </select>
-          </div>
+      {/* Filtres */}
+      <div className="mt-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div className="relative flex-1 max-w-md">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
+          <input
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder="Rechercher..."
+            className="w-full pl-9 pr-3 py-2 border rounded-xl focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+        <div className="flex items-center gap-2">
+          <Filter className="w-4 h-4 text-slate-500" />
+          <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value)}
+            className="px-3 py-2 border rounded-xl"
+          >
+            <option value="recent">Plus récents</option>
+            <option value="upcoming">Prochains</option>
+          </select>
         </div>
       </div>
 
-      {filteredAnnonces.length === 0 ? (
-        <div className="empty-state">
-          <svg
-            className="empty-icon"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-            />
-          </svg>
-          <h3>Aucune annonce disponible</h3>
-          <p>Aucune annonce ne correspond à vos critères de recherche.</p>
-        </div>
-      ) : (
-        <div className="annonce-list">
-          {filteredAnnonces.map((annonce) => (
-            <div key={annonce.id} className="annonce-card">
-              {/* Image principale de l'annonce */}
-              <div className="annonce-image-container">
-                {annonce.image ? (
-                  <img
-                    src={annonce.image}
-                    alt={annonce.titre}
-                    className="annonce-image"
-                    onError={(e) => {
-                      e.target.src = "/association.jpg";
-                      e.target.onerror = null; // Empêche les boucles d'erreur
-                    }}
-                  />
-                ) : (
-                  <img
-                    src="/association.jpg"
-                    alt={annonce.titre}
-                    className="annonce-image"
-                  />
-                )}
-              </div>
+      {/* Stats */}
+      <div className="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <Kpi label="Total" value={stats.total} />
+        <Kpi label="Événements" value={stats.evenements} />
+        <Kpi label="Dons" value={stats.dons} />
+        <Kpi label="Bénévolats" value={stats.benevolat} />
+      </div>
 
-              <div className="annonce-content">
-                <div className="annonce-header-card">
-                  {annonce.association.logo ? (
+      {/* Liste */}
+      <div className="mt-6">
+        {loading ? (
+          <div className="text-slate-500">Chargement...</div>
+        ) : error ? (
+          <div className="text-rose-700">{error}</div>
+        ) : filtered.length === 0 ? (
+          <div className="text-slate-500 text-center py-10">
+            Aucune annonce trouvée
+          </div>
+        ) : (
+          <ul className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+            {filtered.map((a) => (
+              <li
+                key={a.id}
+                className="border rounded-2xl bg-white shadow-sm hover:shadow-md transition overflow-hidden"
+              >
+                {/* Image */}
+                <div className="h-40 bg-slate-100">
+                  {a.image ? (
                     <img
-                      src={`http://localhost:8000/media/${annonce.association.logo}`}
-                      onError={(e) => (e.target.src = "/profile.jpg")}
-                      alt="Logo association"
-                      className="modal-img"
+                      src={a.image}
+                      alt={a.titre}
+                      className="w-full h-full object-cover"
                     />
                   ) : (
-                    <div className="default-logo">
-                      <span>No Logo</span>
+                    <div className="h-full grid place-items-center text-slate-400">
+                      <LayoutList className="w-6 h-6" />
                     </div>
                   )}
-                  <div>
-                    <h3 className="association-name">
-                      {annonce.association.nom}
-                    </h3>
-                    <p className="association-contact">
-                      {annonce.association.contact}
-                    </p>
-                  </div>
                 </div>
 
-                <div className="annonce-body">
-                  <div className="annonce-meta">
-                    <span
-                      className={`annonce-type ${annonce.type.toLowerCase()}`}
-                    >
-                      {TYPES[annonce.type] || annonce.type}
-                    </span>
-                    {annonce.categorie && (
-                      <span className="annonce-category">
-                        {
-                          categories.find((c) => c.id === annonce.categorie)
-                            ?.nom
-                        }
-                      </span>
-                    )}
+                {/* Contenu */}
+                <div className="p-4 space-y-2">
+                  <h3 className="font-semibold text-lg truncate">{a.titre}</h3>
+                  <p className="text-sm text-slate-600 line-clamp-3">
+                    {a.description}
+                  </p>
+                  <div className="flex items-center gap-2 text-sm text-slate-600">
+                    <MapPin className="w-4 h-4" /> {a.lieu}
+                  </div>
+                  <div className="flex items-center gap-2 text-sm text-slate-600">
+                    <Calendar className="w-4 h-4" /> {formatDate(a.date_debut)} →{" "}
+                    {formatDate(a.date_fin)}
                   </div>
 
-                  <h2 className="annonce-title-card">{annonce.titre}</h2>
-                  <p className="annonce-description">{annonce.description}</p>
-
-                  <div className="annonce-dates">
-                    <div className="date-item">
-                      <svg
-                        className="date-icon"
-                        width="16"
-                        height="16"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                        xmlns="http://www.w3.org/2000/svg"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                        />
-                      </svg>
-                      <span>Début: {formatDate(annonce.date_debut)}</span>
-                    </div>
-                    <div className="date-item">
-                      <svg
-                        className="date-icon"
-                        width="16"
-                        height="16"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                        xmlns="http://www.w3.org/2000/svg"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                        />
-                      </svg>
-                      <span>Fin: {formatDate(annonce.date_fin)}</span>
-                    </div>
-                  </div>
-
-                  <div className="annonce-footer">
-                    <div className="annonce-location">
-                      <svg
-                        width="16"
-                        height="16"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                        xmlns="http://www.w3.org/2000/svg"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-                        />
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-                        />
-                      </svg>
-                      <span>{annonce.lieu}</span>
-                    </div>
-
+                  {/* Actions */}
+                  <div className="flex justify-end gap-2 pt-2">
                     <button
-                      onClick={() => handleDelete(annonce.id)}
-                      className="delete-btn"
+                      onClick={() => openEdit(a)}
+                      className="px-3 py-1.5 border rounded-xl hover:bg-slate-50"
                     >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="16"
-                        height="16"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                        />
-                      </svg>
-                      Supprimer
+                      <Edit className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => onDeleteAnnonce(a.id)}
+                      className="px-3 py-1.5 border rounded-xl text-rose-600 hover:bg-rose-50"
+                    >
+                      <Trash2 className="w-4 h-4" />
                     </button>
                   </div>
                 </div>
-              </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+
+      {/* Modal Edition */}
+      {editOpen && draft && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div
+            className="absolute inset-0 bg-black/40"
+            onClick={() => setEditOpen(false)}
+          />
+          <div className="relative bg-white w-[95%] max-w-lg rounded-2xl shadow-2xl p-6">
+            <div className="flex justify-between items-center">
+              <h3 className="text-lg font-semibold">Modifier</h3>
+              <button onClick={() => setEditOpen(false)}>
+                <X className="w-5 h-5" />
+              </button>
             </div>
-          ))}
+            <form className="mt-4 space-y-3">
+              <input
+                className="w-full px-3 py-2 border rounded-xl"
+                value={draft.titre}
+                onChange={(e) =>
+                  setDraft({ ...draft, titre: e.target.value })
+                }
+              />
+              <textarea
+                className="w-full px-3 py-2 border rounded-xl"
+                value={draft.description}
+                onChange={(e) =>
+                  setDraft({ ...draft, description: e.target.value })
+                }
+              />
+              <div className="flex justify-end">
+                <button
+                  type="button"
+                  className="px-4 py-2 bg-blue-600 text-white rounded-xl"
+                  onClick={() => setEditOpen(false)}
+                >
+                  Sauvegarder
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
     </div>
   );
-};
+}
 
-export default AnnonceManager;
+/* --- Sous composants --- */
+
+function Kpi({ label, value }) {
+  return (
+    <div className="p-4 border rounded-2xl bg-white shadow-sm">
+      <div className="text-sm text-slate-500">{label}</div>
+      <div className="text-2xl font-semibold text-blue-600">{value}</div>
+    </div>
+  );
+}
+
+function formatDate(iso) {
+  if (!iso) return "-";
+  const d = new Date(iso);
+  return d.toLocaleDateString("fr-FR");
+}

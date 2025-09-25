@@ -12,7 +12,6 @@ import {
   ResponsiveContainer,
   Legend,
 } from "recharts";
-import "./style/Dashboard.css";
 
 export default function Dashboard() {
   const [stats, setStats] = useState(null);
@@ -21,7 +20,6 @@ export default function Dashboard() {
   useEffect(() => {
     const token = localStorage.getItem("accessToken");
 
-    // stats (KPIs + graphiques)
     axios
       .get("http://localhost:8000/api/dashboard/stats/", {
         headers: { Authorization: `Bearer ${token}` },
@@ -29,7 +27,6 @@ export default function Dashboard() {
       .then((res) => setStats(res.data))
       .catch((err) => console.error(err));
 
-    // activités récentes
     axios
       .get("http://localhost:8000/api/dashboard/", {
         headers: { Authorization: `Bearer ${token}` },
@@ -40,64 +37,68 @@ export default function Dashboard() {
 
   if (!stats || !activities) {
     return (
-      <p className="dashboard-loading-text">
+      <div className="flex justify-center items-center h-64 text-blue-400 font-semibold">
         ⏳ Chargement du tableau de bord...
-      </p>
+      </div>
     );
   }
 
   return (
-    <div className="dashboard-admin-container">
+    <div className="p-6 space-y-8 bg-white min-h-screen">
       {/* ==== KPIs ==== */}
-      <div className="dashboard-kpi-grid">
-        <div className="dashboard-card dashboard-kpi-card dashboard-users-card">
-          <h3 className="dashboard-card-title">👥 Utilisateurs</h3>
-          <p>Total : {stats.utilisateurs.total}</p>
-          <p>Associations : {stats.utilisateurs.associations}</p>
-          <p>Citoyens : {stats.utilisateurs.citoyens}</p>
-          <p>Nouveaux ce mois : {stats.utilisateurs.nouveaux_ce_mois}</p>
-        </div>
-
-        <div className="dashboard-card dashboard-kpi-card dashboard-annonces-card">
-          <h3 className="dashboard-card-title">📢 Annonces</h3>
-          <p>Total : {stats.annonces.total}</p>
-          <p>En cours : {stats.annonces.en_cours}</p>
-          <p>Terminées : {stats.annonces.terminees}</p>
-        </div>
-
-        <div className="dashboard-card dashboard-kpi-card dashboard-candidatures-card">
-          <h3 className="dashboard-card-title">🙋‍♂️ Candidatures</h3>
-          <p>Total : {stats.candidatures.total}</p>
-          <p>
-            Engagement moyen :{" "}
-            {stats.candidatures.engagement_moyen
-              ? stats.candidatures.engagement_moyen.toFixed(1)
-              : "N/A"}
-          </p>
-        </div>
-
-        <div className="dashboard-card dashboard-kpi-card dashboard-messages-card">
-          <h3 className="dashboard-card-title">💬 Messages</h3>
-          <p>Total : {stats.messages.total}</p>
-        </div>
+      <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+        <KpiCard
+          title="👥 Utilisateurs"
+          items={[
+            `Total : ${stats.utilisateurs.total}`,
+            `Associations : ${stats.utilisateurs.associations}`,
+            `Citoyens : ${stats.utilisateurs.citoyens}`,
+            `Nouveaux ce mois : ${stats.utilisateurs.nouveaux_ce_mois}`,
+          ]}
+          accent="blue"
+        />
+        <KpiCard
+          title="📢 Annonces"
+          items={[
+            `Total : ${stats.annonces.total}`,
+            `En cours : ${stats.annonces.en_cours}`,
+            `Terminées : ${stats.annonces.terminees}`,
+          ]}
+          accent="emerald"
+        />
+        <KpiCard
+          title="🙋‍♂️ Candidatures"
+          items={[
+            `Total : ${stats.candidatures.total}`,
+            `Engagement moyen : ${
+              stats.candidatures.engagement_moyen
+                ? stats.candidatures.engagement_moyen.toFixed(1)
+                : "N/A"
+            }`,
+          ]}
+          accent="amber"
+        />
+        <KpiCard
+          title="💬 Messages"
+          items={[`Total : ${stats.messages.total}`]}
+          accent="rose"
+        />
       </div>
 
       {/* ==== Graphiques ==== */}
-      <div className="dashboard-chart-grid">
-        <div className="dashboard-card">
-          <h3 className="dashboard-card-title">📊 Annonces par type</h3>
+      <div className="grid gap-6 grid-cols-1 lg:grid-cols-2">
+        <Panel title="📊 Annonces par type" accent="blue">
           <ResponsiveContainer width="100%" height={250}>
             <BarChart data={stats.annonces.par_type}>
               <XAxis dataKey="type" />
               <YAxis />
               <Tooltip />
-              <Bar dataKey="count" fill="#3b82f6" radius={[6, 6, 0, 0]} />
+              <Bar dataKey="count" fill="#60A5FA" radius={[6, 6, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
-        </div>
+        </Panel>
 
-        <div className="dashboard-card">
-          <h3 className="dashboard-card-title">📌 Candidatures par statut</h3>
+        <Panel title="📌 Candidatures par statut" accent="emerald">
           <ResponsiveContainer width="100%" height={250}>
             <PieChart>
               <Pie
@@ -109,10 +110,10 @@ export default function Dashboard() {
                 outerRadius={80}
                 label
               >
-                {stats.candidatures.par_statut.map((entry, index) => (
+                {stats.candidatures.par_statut.map((_, index) => (
                   <Cell
                     key={index}
-                    fill={["#10b981", "#f59e0b", "#ef4444"][index % 3]}
+                    fill={["#34D399", "#FBBF24", "#F87171"][index % 3]}
                   />
                 ))}
               </Pie>
@@ -120,84 +121,150 @@ export default function Dashboard() {
               <Legend />
             </PieChart>
           </ResponsiveContainer>
-        </div>
+        </Panel>
       </div>
 
       {/* ==== Top 5 ==== */}
-      <div className="dashboard-chart-grid">
-        <div className="dashboard-card">
-          <h3 className="dashboard-card-title">🏆 Top annonces</h3>
-          <ul className="dashboard-top-list">
+      <div className="grid gap-6 grid-cols-1 lg:grid-cols-2">
+        <Panel title="🏆 Top annonces" accent="amber">
+          <ul className="divide-y divide-gray-200">
             {stats.candidatures.top_annonces.map((a, i) => (
-              <li key={i}>
+              <li
+                key={i}
+                className="flex justify-between py-2 text-sm font-medium text-gray-700"
+              >
                 <span>{a.annonce__titre}</span>
-                <span className="dashboard-count">{a.total}</span>
+                <span className="px-2 py-1 text-white bg-amber-400 rounded-md text-xs">
+                  {a.total}
+                </span>
               </li>
             ))}
           </ul>
-        </div>
+        </Panel>
 
-        <div className="dashboard-card">
-          <h3 className="dashboard-card-title">🏅 Top citoyens</h3>
-          <ul className="dashboard-top-list">
+        <Panel title="🏅 Top citoyens" accent="rose">
+          <ul className="divide-y divide-gray-200">
             {stats.candidatures.top_citoyens.map((c, i) => (
-              <li key={i}>
+              <li
+                key={i}
+                className="flex justify-between py-2 text-sm font-medium text-gray-700"
+              >
                 <span>
                   {c.citoyen__prenom} {c.citoyen__nom}
                 </span>
-                <span className="dashboard-count">{c.total}</span>
+                <span className="px-2 py-1 text-white bg-rose-400 rounded-md text-xs">
+                  {c.total}
+                </span>
               </li>
             ))}
           </ul>
-        </div>
+        </Panel>
       </div>
 
-      <div className="dashboard-activities-container">
-        {/* Nouveaux utilisateurs */}
-        <div className="dashboard-activity-card">
-          <h4>👥 Nouveaux utilisateurs</h4>
-          <ul className="dashboard-activity-list">
-            {activities.recent_users.map((u) => (
-              <li key={u.id} className="user">
-                <span className="activity-title">
-                  {u.username} ({u.type})
-                </span>
-                <span className="activity-desc">{u.email}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
+      {/* ==== Activités récentes ==== */}
+      <div className="grid gap-6 grid-cols-1 lg:grid-cols-3">
+        <ActivityCard
+          title="👥 Nouveaux utilisateurs"
+          accent="blue"
+          items={activities.recent_users.map((u) => ({
+            id: u.id,
+            title: `${u.username} (${u.type})`,
+            desc: u.email,
+          }))}
+        />
 
-        {/* Dernières annonces */}
-        <div className="dashboard-activity-card">
-          <h4>📢 Dernières annonces</h4>
-          <ul className="dashboard-activity-list">
-            {activities.recent_annonces.map((a) => (
-              <li key={a.id} className="annonce">
-                <span className="activity-title">
-                  {a.titre} ({a.type})
-                </span>
-                <span className="activity-desc">{a.lieu}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
+        <ActivityCard
+          title="📢 Dernières annonces"
+          accent="emerald"
+          items={activities.recent_annonces.map((a) => ({
+            id: a.id,
+            title: `${a.titre} (${a.type})`,
+            desc: a.lieu,
+          }))}
+        />
 
-        {/* Dernières candidatures */}
-        <div className="dashboard-activity-card">
-          <h4>🙋‍♂️ Dernières candidatures</h4>
-          <ul className="dashboard-activity-list">
-            {activities.recent_candidatures.map((c) => (
-              <li key={c.id} className="candidature">
-                <span className="activity-title">
-                  Candidature #{c.id} – {c.statut}
-                </span>
-                <span className="activity-desc">{c.message}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
+        <ActivityCard
+          title="🙋‍♂️ Dernières candidatures"
+          accent="rose"
+          items={activities.recent_candidatures.map((c) => ({
+            id: c.id,
+            title: `Candidature #${c.id} – ${c.statut}`,
+            desc: c.message,
+          }))}
+        />
       </div>
+    </div>
+  );
+}
+
+/* === Composants UI === */
+function KpiCard({ title, items, accent }) {
+  const accentColors = {
+    blue: "border-blue-400 text-blue-600",
+    emerald: "border-emerald-400 text-emerald-600",
+    amber: "border-amber-400 text-amber-600",
+    rose: "border-rose-400 text-rose-600",
+  };
+
+  return (
+    <div
+      className={`bg-white shadow rounded-xl p-4 border-t-4 ${
+        accentColors[accent] || "border-blue-400 text-blue-600"
+      }`}
+    >
+      <h3 className="font-semibold mb-2">{title}</h3>
+      <ul className="space-y-1 text-sm text-gray-700">
+        {items.map((it, i) => (
+          <li key={i}>{it}</li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+function Panel({ title, children, accent }) {
+  const accentColors = {
+    blue: "border-blue-400",
+    emerald: "border-emerald-400",
+    amber: "border-amber-400",
+    rose: "border-rose-400",
+  };
+
+  return (
+    <div
+      className={`bg-white shadow rounded-xl p-4 border ${
+        accentColors[accent] || "border-blue-400"
+      }`}
+    >
+      <h3 className="font-semibold text-gray-800 mb-4">{title}</h3>
+      {children}
+    </div>
+  );
+}
+
+function ActivityCard({ title, items, accent }) {
+  const accentColors = {
+    blue: "border-blue-400",
+    emerald: "border-emerald-400",
+    amber: "border-amber-400",
+    rose: "border-rose-400",
+  };
+
+  return (
+    <div
+      className={`bg-white shadow rounded-xl p-4 border ${
+        accentColors[accent] || "border-blue-400"
+      }`}
+    >
+      <h4 className="font-semibold text-gray-800 mb-4">{title}</h4>
+      <ul className="divide-y divide-gray-200">
+        {items.map((it) => (
+          <li key={it.id} className="py-2">
+            <div className="text-sm font-medium text-gray-800">{it.title}</div>
+            <div className="text-xs text-gray-500">{it.desc}</div>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }
